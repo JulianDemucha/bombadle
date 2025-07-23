@@ -88,8 +88,9 @@
 			<artifactId>flyway-mysql</artifactId>
 			<version>11.10.3</version>
 		</dependency>
+
 	</dependencies>
-	
+
 
 	<build>
 		<plugins>
