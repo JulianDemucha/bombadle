@@ -8,6 +8,7 @@
 		<version>3.5.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+
 	<groupId>com.bombadle</groupId>
 	<artifactId>bombadle</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
@@ -76,6 +77,11 @@
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+			<version>11.10.3</version>
 		</dependency>
 	</dependencies>
 
