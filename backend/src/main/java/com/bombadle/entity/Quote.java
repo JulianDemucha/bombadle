@@ -1,9 +1,11 @@
 package com.bombadle.entity;
 
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "quotes")
+@NoArgsConstructor
 public class Quote {
 
     @Id
