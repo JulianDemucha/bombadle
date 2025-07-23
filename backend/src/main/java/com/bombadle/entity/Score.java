@@ -1,0 +1,23 @@
+package com.bombadle.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalTime;
+
+@Entity
+@Table(name = "score")
+public class Score {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne(mappedBy = "todayScore", fetch = FetchType.LAZY)
+    private Player player;
+
+    @Column(name = "score_time", nullable = false)
+    private LocalTime scoreTime;
+
+    @Column(name = "number_of_tries", nullable = false)
+    private int numberOfTries;
+
+}
