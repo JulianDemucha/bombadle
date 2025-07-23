@@ -3,10 +3,13 @@ package com.bombadle.entity;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.Role;
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
+
 import java.time.Instant;
 
 @Entity
 @Table(name = "player")
+@NoArgsConstructor
 public class Player {
 
     @Id

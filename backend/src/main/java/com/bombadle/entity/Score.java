@@ -1,10 +1,13 @@
 package com.bombadle.entity;
 
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalTime;
 
 @Entity
 @Table(name = "score")
+@NoArgsConstructor
 public class Score {
 
     @Id
