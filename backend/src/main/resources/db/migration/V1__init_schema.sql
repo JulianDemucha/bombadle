@@ -40,9 +40,9 @@ CREATE TABLE quotes
 
 CREATE TABLE score
 (
-    id              BIGINT AUTO_INCREMENT NOT NULL,
-    score_time      time NOT NULL,
-    number_of_tries INT  NOT NULL,
+    id               BIGINT AUTO_INCREMENT NOT NULL,
+    score_time_stamp datetime NOT NULL,
+    number_of_tries  INT      NOT NULL,
     CONSTRAINT pk_score PRIMARY KEY (id)
 );
 
