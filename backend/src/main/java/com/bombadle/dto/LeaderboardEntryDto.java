@@ -1,11 +1,10 @@
 package com.bombadle.dto;
 
 import lombok.Builder;
-import lombok.Data;
 
 
 @Builder
-public record LeaderboardEntryDto(String playerLogin,
+public record LeaderboardEntryDto(Long playerId,
                                   String playerAvatarImage,
                                   String scoreTimeStamp,
                                   int numberOfTries) {

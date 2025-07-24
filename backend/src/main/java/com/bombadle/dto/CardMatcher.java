@@ -24,8 +24,8 @@ public class CardMatcher {
     }
 
     /*
-        In the future, I might add situations where guess card has
-        all matches for today card, but also some more (currently
+        (optional) In the future, consider situations where guess card has
+        all matches for today card, but also some more (currently,
         in that specific circumstances it returns NOT_FULL_MATCH,
         which is also okay because it will be displayed as yellow
         in the frontend and can be included in the color legend).
