@@ -18,7 +18,7 @@ public class LeaderboardService {
     private final ScoreRepository repo;
 
     public List<Score> getSortedLeaderboard(){
-        return repo.findAllOrderByScoreTimestampAsc();
+        return repo.findAllByOrderByScoreTimestampAsc();
     }
 
     public List<Score> getTop10Leaderboard(){

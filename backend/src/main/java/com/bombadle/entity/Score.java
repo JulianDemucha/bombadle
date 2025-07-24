@@ -10,13 +10,14 @@ import java.time.LocalTime;
 @Entity
 @Table(name = "score")
 @NoArgsConstructor
+@Getter
 public class Score {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Getter
+
     @OneToOne(mappedBy = "todayScore", fetch = FetchType.LAZY)
     private Player player;
 

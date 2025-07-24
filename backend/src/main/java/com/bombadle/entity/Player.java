@@ -11,13 +11,13 @@ import java.time.Instant;
 @Entity
 @Table(name = "player")
 @NoArgsConstructor
+@Getter
 public class Player {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Getter
     @Column(unique = true, nullable = false)
     private String login;
 
