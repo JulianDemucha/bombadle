@@ -2,6 +2,7 @@ package com.bombadle.service;
 
 import com.bombadle.entity.Score;
 import com.bombadle.repository.ScoreRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,14 @@ public class ScoreService {
     }
     public void deleteScoreById(Long id) {
         repo.deleteById(id);
+    }
+
+    @Transactional
+    public int resetAllScores() {
+        int count = (int) repo.count();
+        repo.deleteAll();
+        repo.flush();
+        return count;
     }
 
 
