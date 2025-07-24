@@ -17,7 +17,6 @@ public class Score {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @OneToOne(mappedBy = "todayScore", fetch = FetchType.LAZY)
     private Player player;
 

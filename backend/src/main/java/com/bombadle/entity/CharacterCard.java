@@ -3,6 +3,7 @@ package com.bombadle.entity;
 import com.bombadle.enums.Affiliation;
 import com.bombadle.enums.Race;
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
@@ -11,6 +12,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(name = "character_card")
+@Getter
 public class CharacterCard {
 
     @Id
