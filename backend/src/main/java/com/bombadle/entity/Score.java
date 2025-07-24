@@ -3,6 +3,7 @@ package com.bombadle.entity;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -17,8 +18,8 @@ public class Score {
     @OneToOne(mappedBy = "todayScore", fetch = FetchType.LAZY)
     private Player player;
 
-    @Column(name = "score_time", nullable = false)
-    private LocalTime scoreTime;
+    @Column(name = "score_time_stamp", nullable = false)
+    private LocalDateTime scoreTimestamp;
 
     @Column(name = "number_of_tries", nullable = false)
     private int numberOfTries;
