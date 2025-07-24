@@ -6,7 +6,8 @@ import lombok.Data;
 
 @Builder
 public record LeaderboardEntryDto(String playerLogin,
-        String playerAvatarImage,
-        String scoreTimeStamp,
-        int numberOfTries){}
+                                  String playerAvatarImage,
+                                  String scoreTimeStamp,
+                                  int numberOfTries) {
+}
 

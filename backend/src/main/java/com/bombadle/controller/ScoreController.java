@@ -22,9 +22,10 @@ public class ScoreController {
                 .created(URI.create("/api/scores/" + saved.getId()))
                 .body(saved);
     }
+
     @DeleteMapping("/{id}")
     public void deleteScore(@RequestBody Score score) {
-        scoreService.deleteScoreById( score.getId() );
+        scoreService.deleteScoreById(score.getId());
     }
 
 }

@@ -15,21 +15,22 @@ public class ScoreService {
 
     private final ScoreRepository repo;
 
-    public Score saveScore(Score score){
+    public Score saveScore(Score score) {
         return repo.save(score);
     }
 
-    public List<Score> getAllScores(){
+    public List<Score> getAllScores() {
         return repo.findAll();
     }
 
-    public Optional<Score> getScoreByPlayerId(Long playerId){
+    public Optional<Score> getScoreByPlayerId(Long playerId) {
         return repo.findByPlayerId(playerId);
     }
 
-    public Optional<Score> getScoreById(Long id){
+    public Optional<Score> getScoreById(Long id) {
         return repo.findById(id);
     }
+
     public void deleteScoreById(Long id) {
         repo.deleteById(id);
     }
