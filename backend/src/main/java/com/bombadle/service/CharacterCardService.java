@@ -19,6 +19,10 @@ public class CharacterCardService {
         return cardMatcher.compareCharacterCards(characterCard);
     }
 
+    public CharacterCard getCurrentCharacterCard() {
+        return cardMatcher.getCurrentCharacterCard();
+    }
+
     public CharacterCard findCharacterCardById(Long id) {
         return repo.findById(id).orElse(null);
     }
