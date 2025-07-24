@@ -9,8 +9,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 public class BombadleApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(BombadleApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BombadleApplication.class, args);
+    }
 
 }

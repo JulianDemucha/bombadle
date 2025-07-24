@@ -11,7 +11,7 @@ import java.util.Set;
 
 @NoArgsConstructor
 @Entity
-@Table(name ="character_card")
+@Table(name = "character_card")
 @Getter
 public class CharacterCard {
 

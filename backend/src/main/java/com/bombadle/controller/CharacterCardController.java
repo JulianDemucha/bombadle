@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.*;
 public class CharacterCardController {
     private final CharacterCardService characterCardService;
 
+
+    /* returns a list of enums - for example:
+     [ MATCH, NOT_MATCH, MATCH, NOT_FULL_MATCH, NOT_MATCH ]
+     */
     @GetMapping("/compare/{id}")
     public CardMatcher.FieldMatcher[] compareCard(@PathVariable Long id) {
         CharacterCard characterCard = characterCardService.findCharacterCardById(id);
