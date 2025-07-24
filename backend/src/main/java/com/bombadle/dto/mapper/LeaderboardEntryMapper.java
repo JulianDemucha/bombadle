@@ -15,7 +15,7 @@ public class LeaderboardEntryMapper {
 
     public LeaderboardEntryDto toDto(Score score) {
         return LeaderboardEntryDto.builder()
-                .playerLogin(score.getPlayer().getLogin())
+                .playerId(score.getPlayer().getId())
                 .playerAvatarImage(score.getPlayer().getAvatarImage().toString() + ".png")
                 .scoreTimeStamp(score.getScoreTimestamp().toString())
                 /*
@@ -28,7 +28,7 @@ public class LeaderboardEntryMapper {
 
     public LeaderboardEntryDto toDto(Player player) {
         return LeaderboardEntryDto.builder()
-                .playerLogin(player.getLogin())
+                .playerId(player.getId())
                 .playerAvatarImage(player.getAvatarImage().toString() + ".png")
                 .scoreTimeStamp(player.getTodayScore().getScoreTimestamp().toString())
                 /*
