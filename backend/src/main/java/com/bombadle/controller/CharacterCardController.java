@@ -19,4 +19,14 @@ public class CharacterCardController {
             return characterCardService.compareCharacterCard(characterCard);
         else return null;
     }
+
+    @GetMapping("/{id}")
+    public CharacterCard getCharacterCardById(@PathVariable Long id) {
+        return characterCardService.findCharacterCardById(id);
+    }
+
+    @GetMapping("/currentCharacterCard")
+    public CharacterCard getCurrentCharacterCard() {
+        return characterCardService.getCurrentCharacterCard();
+    }
 }
