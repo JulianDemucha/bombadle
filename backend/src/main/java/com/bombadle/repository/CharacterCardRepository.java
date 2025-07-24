@@ -12,4 +12,5 @@ public interface CharacterCardRepository extends JpaRepository<CharacterCard, Lo
             , nativeQuery = true)
     CharacterCard findRandomCard();
 
+
 }
