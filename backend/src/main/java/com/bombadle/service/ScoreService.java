@@ -22,10 +22,6 @@ public class ScoreService {
         return repo.findAll();
     }
 
-    public Optional<Score> getLatestScore(){
-        return repo.findTopByOrderByScoreTimestampDesc();
-    }
-
     public Optional<Score> getScoreByPlayerId(Long playerId){
         return repo.findByPlayerId(playerId);
     }
@@ -37,7 +33,5 @@ public class ScoreService {
         repo.deleteById(id);
     }
 
-    public List<Score> getAllScoresSortedAsc(){
-        return repo.findAllOrderByScoreTimestampAsc();
-    }
+
 }

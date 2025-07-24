@@ -1,6 +1,7 @@
 package com.bombadle.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ public class Score {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Getter
     @OneToOne(mappedBy = "todayScore", fetch = FetchType.LAZY)
     private Player player;
 

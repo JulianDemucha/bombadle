@@ -3,6 +3,7 @@ package com.bombadle.entity;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.Role;
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
@@ -16,6 +17,7 @@ public class Player {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Getter
     @Column(unique = true, nullable = false)
     private String login;
 
