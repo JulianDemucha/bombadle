@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface ScoreRepository extends JpaRepository<Score, Integer> {
     List<Score> findTop10ByOrderByScoreTimestampAsc(); //zwraca pierwsze 10 score
     Optional<Score> findTopByOrderByScoreTimestampDesc(); //zwraca najnowszy score
-    List<Score> findAllOrderByScoreTimestampAsc();
+    List<Score> findAllByOrderByScoreTimestampAsc();
     Optional<Score> findByPlayerId(Long playerId);
     Optional<Score> findById(Long id);
     void deleteById(Long playerId);
