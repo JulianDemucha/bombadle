@@ -47,28 +47,35 @@ public class CardMatcher {
     }
 
     private FieldMatcher checkFirstAppearanceEpisodeMatch(CharacterCard guess) {
-        if (this.currentCharacterCard.getFirstAppearanceEpisode() == guess.getFirstAppearanceEpisode()) {
+        if (this.currentCharacterCard.getFirstAppearanceEpisode()
+                == guess.getFirstAppearanceEpisode()) {
             return CardMatcher.FieldMatcher.MATCH;
         }
 
-        if (this.currentCharacterCard.getFirstAppearanceEpisode() > guess.getFirstAppearanceEpisode()) {
+        if (this.currentCharacterCard.getFirstAppearanceEpisode()
+                > guess.getFirstAppearanceEpisode()) {
             return CardMatcher.FieldMatcher.HIGHER;
         }
 
         return CardMatcher.FieldMatcher.LOWER;
     }
 
-    // Name Race Alive Affilations FirstApperanceEpisode
+    // Name Race Alive Affiliations FirstAppearanceEpisode
     public FieldMatcher[] compareCharacterCards(CharacterCard guess) {
-        if (this.currentCharacterCard.getId() == guess.getId()) {
-            return new FieldMatcher[]{FieldMatcher.MATCH, FieldMatcher.MATCH
-                    , FieldMatcher.MATCH, FieldMatcher.MATCH, FieldMatcher.MATCH};
+        if (this.currentCharacterCard.equals(guess)) {
+            return new FieldMatcher[]{
+                    FieldMatcher.MATCH, FieldMatcher.MATCH, FieldMatcher.MATCH
+                    , FieldMatcher.MATCH, FieldMatcher.MATCH
+            };
         }
 
         return new FieldMatcher[]{
-                (this.currentCharacterCard.getName() == guess.getName() ? FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
-                (this.currentCharacterCard.getRace() == guess.getRace() ? FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
-                (this.currentCharacterCard.getAlive() == guess.getAlive() ? FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
+                (this.currentCharacterCard.getName().equals(guess.getName()) ?
+                        FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
+                (this.currentCharacterCard.getRace() == guess.getRace() ?
+                        FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
+                (this.currentCharacterCard.getAlive() == guess.getAlive() ?
+                        FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
                 (checkFirstAppearanceEpisodeMatch(guess)),
                 (checkAffiliationsMatch(guess))
         };
