@@ -14,7 +14,9 @@ public class CharacterCardController {
 
 
     /* returns a list of enums - for example:
-     [ MATCH, NOT_MATCH, MATCH, NOT_FULL_MATCH, NOT_MATCH ]
+     [ MATCH, NOT_MATCH, MATCH, NOT_MATCH, HIGHER, NOT_FULL_MATCH ]
+     where:
+     [ NAME, GENDER, RACE, ALIVE, EPISODE, AFFILIATIONS ]
      */
     @GetMapping("/compare/{id}")
     public CardMatcher.FieldMatcher[] compareCard(@PathVariable Long id) {
