@@ -35,10 +35,12 @@ public class CardMatcher {
         Set<Affiliation> today = this.currentCharacterCard.getAffiliations();
         Set<Affiliation> other = guess.getAffiliations();
 
+        // full affiliations match
         if (today.containsAll(other) && other.containsAll(today)) {
             return FieldMatcher.MATCH;
         }
 
+        // not even one common affiliation between the two lists
         if (Collections.disjoint(today, other)) {
             return FieldMatcher.NOT_MATCH;
         }
@@ -60,17 +62,20 @@ public class CardMatcher {
         return CardMatcher.FieldMatcher.LOWER;
     }
 
-    // Name Race Alive Affiliations FirstAppearanceEpisode
+    // Name Gender Race Alive Affiliations FirstAppearanceEpisode
     public FieldMatcher[] compareCharacterCards(CharacterCard guess) {
         if (this.currentCharacterCard.equals(guess)) {
             return new FieldMatcher[]{
                     FieldMatcher.MATCH, FieldMatcher.MATCH, FieldMatcher.MATCH
-                    , FieldMatcher.MATCH, FieldMatcher.MATCH
+                    , FieldMatcher.MATCH, FieldMatcher.MATCH, FieldMatcher.MATCH
+                    , FieldMatcher.MATCH
             };
         }
 
         return new FieldMatcher[]{
                 (this.currentCharacterCard.getName().equals(guess.getName()) ?
+                        FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
+                (this.currentCharacterCard.getGender() == guess.getGender() ?
                         FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
                 (this.currentCharacterCard.getRace() == guess.getRace() ?
                         FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),

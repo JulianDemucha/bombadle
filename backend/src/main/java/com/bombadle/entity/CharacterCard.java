@@ -1,6 +1,7 @@
 package com.bombadle.entity;
 
 import com.bombadle.enums.Affiliation;
+import com.bombadle.enums.Gender;
 import com.bombadle.enums.Race;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -22,15 +23,15 @@ public class CharacterCard {
     @Column(nullable = false)
     private String name;
 
-    @Column
-    private Boolean alive;
+    @Column(nullable = false)
+    private Gender gender;
 
     @Column
     @Enumerated(EnumType.STRING)
     private Race race;
 
-    @Column(name = "first_appearance_episode")
-    private int firstAppearanceEpisode;
+    @Column
+    private Boolean alive;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
@@ -40,6 +41,9 @@ public class CharacterCard {
     @Column(name = "affiliation", nullable = false)
     @Enumerated(EnumType.STRING)
     private Set<Affiliation> affiliations = new HashSet<>();
+
+    @Column(name = "first_appearance_episode")
+    private int firstAppearanceEpisode;
 
     @OneToMany(
             mappedBy = "characterCard",
