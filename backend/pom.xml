@@ -58,9 +58,14 @@
 <!--			<scope>runtime</scope>-->
 <!--			<optional>true</optional>-->
 <!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>com.mysql</groupId>-->
+<!--			<artifactId>mysql-connector-j</artifactId>-->
+<!--			<scope>runtime</scope>-->
+<!--		</dependency>-->
 		<dependency>
-			<groupId>com.mysql</groupId>
-			<artifactId>mysql-connector-j</artifactId>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -83,12 +88,15 @@
 			<artifactId>flyway-core</artifactId>
 			<version>11.10.3</version>
 		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.flywaydb</groupId>-->
+<!--			<artifactId>flyway-mysql</artifactId>-->
+<!--			<version>11.10.3</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-mysql</artifactId>
-			<version>11.10.3</version>
+			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
-
 	</dependencies>
 
 
@@ -99,9 +107,12 @@
 				<artifactId>flyway-maven-plugin</artifactId>
 				<version>11.10.3</version>
 				<configuration>
-					<url>jdbc:mysql://localhost:3306/bombadle?useSSL=false&amp;serverTimezone=UTC</url>
+					<url>jdbc:postgresql://localhost:5432/bombadle</url>
 					<user>root</user>
 					<password>root</password>
+					<locations>
+						<location>classpath:db/migration</location>
+					</locations>
 				</configuration>
 			</plugin>
 			<plugin>
