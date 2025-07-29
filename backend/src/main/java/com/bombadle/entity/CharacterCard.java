@@ -24,6 +24,7 @@ public class CharacterCard {
     private String name;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Gender gender;
 
     @Column
