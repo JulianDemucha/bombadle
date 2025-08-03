@@ -1,6 +1,6 @@
 package com.bombadle.controller;
 
-import com.bombadle.dto.CardMatcher;
+import com.bombadle.service.CardMatchingService;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.service.CharacterCardService;
 import lombok.AllArgsConstructor;
@@ -19,7 +19,7 @@ public class CharacterCardController {
      [ NAME, GENDER, RACE, ALIVE, EPISODE, AFFILIATIONS ]
      */
     @GetMapping("/compare/{id}")
-    public CardMatcher.FieldMatcher[] compareCard(@PathVariable Long id) {
+    public CardMatchingService.FieldMatcher[] compareCard(@PathVariable Long id) {
         CharacterCard characterCard = characterCardService.findCharacterCardById(id);
         if (characterCard != null)
             return characterCardService.compareCharacterCard(characterCard);

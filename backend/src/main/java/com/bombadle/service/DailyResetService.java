@@ -1,6 +1,5 @@
 package com.bombadle.service;
 
-import com.bombadle.dto.CardMatcher;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.repository.CharacterCardRepository;
 import lombok.AllArgsConstructor;
@@ -15,7 +14,7 @@ public class DailyResetService {
     private static final Logger log = LoggerFactory.getLogger(DailyResetService.class);
     private final CharacterCardRepository characterCardRepository;
     private final ScoreService scoreService;
-    private final CardMatcher cardMatcher;
+    private final CardMatchingService cardMatcher;
 
     public CharacterCard getCurrentCard() {
         return cardMatcher.getCurrentCharacterCard();
