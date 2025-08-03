@@ -1,20 +1,20 @@
-package com.bombadle.dto;
+package com.bombadle.service;
 
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.enums.Affiliation;
 import lombok.Getter;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Set;
 
-@Component
-public class CardMatcher {
-    @Getter
+@Getter
+@Service
+public class CardMatchingService {
     CharacterCard currentCharacterCard;
 
-    //higher and lower are made for firstapperanceepisode
-    //not full match is made for Affilations
+    //higher and lower are made for firstAppearanceEpisode
+    //not full match is made for Affiliations
     public enum FieldMatcher {
         MATCH,
         HIGHER,
@@ -51,15 +51,15 @@ public class CardMatcher {
     private FieldMatcher checkFirstAppearanceEpisodeMatch(CharacterCard guess) {
         if (this.currentCharacterCard.getFirstAppearanceEpisode()
                 == guess.getFirstAppearanceEpisode()) {
-            return CardMatcher.FieldMatcher.MATCH;
+            return CardMatchingService.FieldMatcher.MATCH;
         }
 
         if (this.currentCharacterCard.getFirstAppearanceEpisode()
                 > guess.getFirstAppearanceEpisode()) {
-            return CardMatcher.FieldMatcher.HIGHER;
+            return CardMatchingService.FieldMatcher.HIGHER;
         }
 
-        return CardMatcher.FieldMatcher.LOWER;
+        return CardMatchingService.FieldMatcher.LOWER;
     }
 
     // Name Gender Race Alive Affiliations FirstAppearanceEpisode

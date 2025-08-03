@@ -1,6 +1,5 @@
 package com.bombadle.service;
 
-import com.bombadle.dto.CardMatcher;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.repository.CharacterCardRepository;
 import lombok.AllArgsConstructor;
@@ -13,9 +12,9 @@ import org.springframework.stereotype.Service;
 public class CharacterCardService {
     private static final Logger log = LoggerFactory.getLogger(CharacterCardService.class);
     private final CharacterCardRepository repo;
-    private final CardMatcher cardMatcher;
+    private final CardMatchingService cardMatcher;
 
-    public CardMatcher.FieldMatcher[] compareCharacterCard(CharacterCard characterCard) {
+    public CardMatchingService.FieldMatcher[] compareCharacterCard(CharacterCard characterCard) {
         return cardMatcher.compareCharacterCards(characterCard);
     }
 
