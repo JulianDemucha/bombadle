@@ -23,8 +23,8 @@ public class CardMatchingService {
         NOT_FULL_MATCH,
     }
 
-    /*
-        (optional) In the future, consider situations where guess card has
+    /*  todo (optional)
+        In the future, consider situations where guess card has
         all matches for today card, but also some more (currently,
         in that specific circumstances it returns NOT_FULL_MATCH,
         which is also okay because it will be displayed as yellow
