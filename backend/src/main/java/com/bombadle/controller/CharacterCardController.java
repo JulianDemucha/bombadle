@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/character-cards")
+@RequestMapping("/api/character-card")
 @AllArgsConstructor
 public class CharacterCardController {
     private final CharacterCardService characterCardService;

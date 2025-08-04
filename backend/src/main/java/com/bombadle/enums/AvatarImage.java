@@ -1,5 +1,14 @@
 package com.bombadle.enums;
 
 public enum AvatarImage {
-    // np. AVATAR_WARRIOR, AVATAR_MAGE, ...
+    AVATAR_DEFAULT,
+    AVATAR_BOMBA,
+    AVATAR_GLUS,
+    AVATAR_KURVINOX,
+    AVATAR_LECINA,
+    AVATAR_JANUSZ,
+    AVATAR_SEBEK,
+    AVATAR_TORPEDA,
+    AVATAR_SKURWOL,
+    AVATAR_CQURWOZAUR
 }
