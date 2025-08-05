@@ -16,5 +16,36 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
-# out-of-order: false
-# clean-disabled: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 111245658069-imfsbp7qufki83v5no6adlo9qsm46ac3.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com
+
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: sigma
+    key-store-type: PKCS12
+    key-alias: springboot
+  servlet:
+    session:
+      cookie:
+        same-site: None
+        secure: true   # true = https
+
+logging:
+  level:
+    com.bombadle: INFO
