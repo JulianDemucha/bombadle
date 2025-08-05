@@ -1,6 +1,7 @@
 package com.bombadle.entity;
 
 import com.bombadle.enums.AvatarImage;
+import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -61,6 +62,9 @@ public class Player implements UserDetails {
 
     @Column(name = "has_guessed_today")
     private Boolean hasGuessedToday;
+
+    @Column(name = "auth_provider", nullable = false)
+    private PlayerAuthProvider authProvider;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

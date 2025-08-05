@@ -2,13 +2,13 @@ package com.bombadle.security.auth;
 
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
+import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
 import com.bombadle.repository.PlayerRepository;
 import com.bombadle.security.auth.dto.AuthenticationRequest;
 import com.bombadle.security.auth.dto.AuthenticationResponse;
 import com.bombadle.security.auth.dto.RegisterRequest;
 import com.bombadle.security.jwt.JwtService;
-import com.bombadle.service.CharacterCardService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +37,7 @@ public class AuthenticationService {
                 .createdAt(Instant.now())
                 .lastLoginAt(null)
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
+                .authProvider(PlayerAuthProvider.LOCAL)
                 .build();
 
         repo.save(user);
