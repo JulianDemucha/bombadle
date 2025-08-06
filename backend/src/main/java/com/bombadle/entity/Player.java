@@ -63,6 +63,7 @@ public class Player implements UserDetails {
     @Column(name = "has_guessed_today")
     private Boolean hasGuessedToday;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", nullable = false)
     private PlayerAuthProvider authProvider;
 
