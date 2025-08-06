@@ -24,7 +24,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             HttpServletRequest request,
             HttpServletResponse response,
             Authentication authentication
-    ) throws IOException, ServletException {
+    ) {
 
         CustomOAuth2PlayerUser principal = (CustomOAuth2PlayerUser) authentication.getPrincipal();
 

@@ -5,7 +5,6 @@ import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
 import com.bombadle.repository.PlayerRepository;
-import com.bombadle.service.CharacterCardService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -27,10 +26,8 @@ public class CustomOAuth2UserService extends OidcUserService {
     @Override
     @Transactional
     public OidcUser loadUser(OidcUserRequest userRequest) {
-        // 1) załaduj domyślnego OidcUser
         OidcUser oidcUser = super.loadUser(userRequest);
 
-        // 2) znajdź lub utwórz Playera
         String email = oidcUser.getAttribute("email");
         Player player = playerRepository.findByEmail(email)
                 .orElseGet(() -> {

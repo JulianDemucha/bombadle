@@ -17,11 +17,11 @@ public class LeaderboardService {
     private static final Logger log = LoggerFactory.getLogger(LeaderboardService.class);
     private final ScoreRepository repo;
 
-    public List<Score> getSortedLeaderboard(){
+    public List<Score> getSortedLeaderboard() {
         return repo.findAllByOrderByScoreTimestampAsc();
     }
 
-    public List<Score> getTop10Leaderboard(){
+    public List<Score> getTop10Leaderboard() {
         return repo.findTop10ByOrderByScoreTimestampAsc();
     }
 
@@ -37,7 +37,7 @@ public class LeaderboardService {
         }
     }
 
-    public Optional<Score> getLatestScore(){
+    public Optional<Score> getLatestScore() {
         return repo.findTopByOrderByScoreTimestampDesc();
     }
 

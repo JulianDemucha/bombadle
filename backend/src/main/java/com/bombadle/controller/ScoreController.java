@@ -5,9 +5,7 @@ import com.bombadle.service.ScoreService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/scores")
