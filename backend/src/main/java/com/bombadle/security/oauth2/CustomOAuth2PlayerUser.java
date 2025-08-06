@@ -33,7 +33,6 @@ public class CustomOAuth2PlayerUser implements OidcUser {
 
     @Override
     public String getName() {
-        // Możesz zwrócić delegate.getName() lub np. player.getId().toString()
         return delegate.getName();
     }
 

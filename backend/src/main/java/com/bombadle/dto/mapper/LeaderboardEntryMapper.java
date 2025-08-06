@@ -42,7 +42,7 @@ public class LeaderboardEntryMapper {
     /* lists of DTOs */
 
     public List<LeaderboardEntryDto> PlayersToDto(List<Player> leaderboardByPlayers) {
-        List<LeaderboardEntryDto> dtoLeaderboard = new ArrayList<LeaderboardEntryDto>();
+        List<LeaderboardEntryDto> dtoLeaderboard = new ArrayList<>();
         for (Player player : leaderboardByPlayers) {
             dtoLeaderboard.add(toDto(player));
         }
@@ -50,7 +50,7 @@ public class LeaderboardEntryMapper {
     }
 
     public List<LeaderboardEntryDto> ScoresToDto(List<Score> leaderboardByScore) {
-        List<LeaderboardEntryDto> dtoLeaderboard = new ArrayList<LeaderboardEntryDto>();
+        List<LeaderboardEntryDto> dtoLeaderboard = new ArrayList<>();
         for (Score score : leaderboardByScore) {
             dtoLeaderboard.add(toDto(score));
         }
