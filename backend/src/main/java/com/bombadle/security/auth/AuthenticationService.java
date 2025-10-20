@@ -35,7 +35,7 @@ public class AuthenticationService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(Role.ROLE_USER)
                 .createdAt(Instant.now())
-                .lastLoginAt(null)
+                .lastLoginAt(Instant.now())
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
                 .authProvider(PlayerAuthProvider.LOCAL)
                 .build();
@@ -44,7 +44,6 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateJwtToken(user);
         log.info("Registered new user: {}", user.getLogin());
 
-        //todo implement AuthenticatedPlayerDto and its Mapper, dont return entity
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
@@ -60,9 +59,10 @@ public class AuthenticationService {
         );
         var user = repo.findByLogin(request.getUsername())
                 .orElseThrow();
+        user.setLastLoginAt(Instant.now());
+        repo.save(user);
         var jwtToken = jwtService.generateJwtToken(user);
 
-        //todo implement AuthenticatedPlayerDto and its Mapper, dont return entity
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();

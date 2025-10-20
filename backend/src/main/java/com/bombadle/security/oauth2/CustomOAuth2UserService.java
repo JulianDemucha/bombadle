@@ -37,13 +37,15 @@ public class CustomOAuth2UserService extends OidcUserService {
                             .passwordHash("")
                             .role(Role.ROLE_USER)
                             .createdAt(Instant.now())
-                            .lastLoginAt(null)
+                            .lastLoginAt(Instant.now())
+                            .hasGuessedToday(false)
                             .avatarImage(AvatarImage.AVATAR_DEFAULT)
                             .authProvider(PlayerAuthProvider.OAUTH2_GOOGLE)
                             .build();
                     log.info(Objects.requireNonNull(oidcUser.getAttribute("name")).toString().trim());
                     return playerRepository.save(p);
                 });
+        player.setLastLoginAt(Instant.now());
 
         return new CustomOAuth2PlayerUser(oidcUser, player);
     }
