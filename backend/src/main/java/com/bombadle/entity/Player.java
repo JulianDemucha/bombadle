@@ -60,7 +60,7 @@ public class Player implements UserDetails {
     @Column(name = "total_guesses")
     private int totalGuesses;
 
-    @Column(name = "has_guessed_today")
+    @Column(name = "has_guessed_today", nullable = false)
     private Boolean hasGuessedToday;
 
     @Enumerated(EnumType.STRING)
