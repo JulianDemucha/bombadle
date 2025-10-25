@@ -1,0 +1,47 @@
+.login-mobile {
+    display: block;
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    margin: 0 auto 5rem;
+    padding: 1rem;
+    font-size: 1.1rem;
+}
+
+.login-desktop {
+    display: none;
+}
+@media (min-width: 375px) {
+    .login-mobile {
+        margin: 1rem auto 5rem;
+    }
+}
+@media (min-width: 325px) {
+    .login-mobile {
+        max-width: 300px;
+    }
+}
+
+
+@media (min-width: 1135px) {
+    .login-desktop {
+        max-width: 200px;
+        display: block;
+        position: absolute;
+        top: 4rem;
+        right: 3rem;
+    }
+
+    .login-mobile {
+        display: none;
+    }
+
+}
+
+@media (min-width: 768px) {
+
+    .login-mobile {
+        margin: -1rem auto 5rem;
+    }
+
+}
