@@ -10,7 +10,6 @@ function App() {
     return (
         <>
             <BrowserRouter>
-                <Header />
 
                 <main style={{ minHeight: '80vh' }}>
                     <Routes>
