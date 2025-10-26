@@ -1,0 +1,132 @@
+/* komponent bazowany na https://freefrontend.com/css-login-forms/ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Courier New', monospace;
+}
+
+.login-page {
+    background-image: url('../../public/img/background_img.jpeg');
+    background-repeat: no-repeat;
+    background-position: top center;
+    background-size: cover;
+    background-attachment: scroll;
+    background-color: var(--login_secondary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.login-page input::placeholder {
+    color: rgba(0,0,0,0.7);
+}
+
+.login-page .login-container {
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--login_primary);
+    padding: 40px 30px;
+    background-color: var(--login_secondary);
+    box-shadow: var(--shadow);
+    position: relative;
+    border-radius: 12px;
+
+}
+
+.login-page .login-container::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: -6px;
+    bottom: -6px;
+    border: 1px solid var(--login_primary);
+    z-index: -1;
+    border-radius: 12px;
+}
+
+.login-page h1 {
+    color: var(--login_primary);
+    margin-bottom: 30px;
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.login-page .input-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.login-page label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: var(--login_primary);
+}
+
+.login-page input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--login_primary);
+    background-color: var(--login_secondary);
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.login-page input:focus {
+    box-shadow: 4px 4px 0px var(--login_primary);
+}
+
+.login-page button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent);
+    color: var(--login_secondary);
+    border: 2px solid var(--login_primary);
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s;
+}
+
+.login-page button:hover {
+    box-shadow: 4px 4px 0px var(--login_primary);
+    transform: translate(-2px, -2px);
+}
+
+.login-page .divider {
+    display: flex;
+    align-items: center;
+    margin: 25px 0;
+    color: var(--login_primary);
+    font-weight: bold;
+}
+
+.login-page .divider::before,
+.login-page .divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 2px solid var(--login_primary);
+    margin: 0 10px;
+}
+
+.login-page .loginFooter {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--login_primary);
+}
+
+.login-page .loginFooter a {
+    color: var(--login_primary);
+    font-weight: bold;
+    text-decoration: underline;
+}
+

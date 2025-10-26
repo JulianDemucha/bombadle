@@ -1,5 +1,5 @@
 import React from 'react';
-import './style/Header.css';
+import './style/logo.css';
 import './style/login-button.css';
 
 const handleImageError = (e) => {
