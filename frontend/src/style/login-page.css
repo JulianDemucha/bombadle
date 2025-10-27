@@ -1,4 +1,4 @@
-/* komponent bazowany na https://freefrontend.com/css-login-forms/ */
+/* css komponentu bazowany na https://freefrontend.com/css-login-forms/ */
 
 * {
     margin: 0;
@@ -20,6 +20,7 @@
     align-items: center;
     min-height: 100vh;
     padding: 20px;
+    margin-top: 2rem;
 }
 
 .login-page input::placeholder {
@@ -128,5 +129,57 @@
     color: var(--login_primary);
     font-weight: bold;
     text-decoration: underline;
+}
+
+.custom-checkbox{
+    font-size: 12px;
+    margin-top: -18px;
+}
+.custom-checkbox input[type="checkbox"] {
+    opacity: 0;
+}
+
+.checkmark {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+    border: 2px solid var(--login_primary);
+    display: inline-block;
+    position: relative;
+    background: transparent;
+    top: 3px;
+    cursor: pointer;
+}
+
+.custom-checkbox input[type="checkbox"]:checked + .checkmark {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 2px 2px 0 var(--login_primary);
+}
+
+.custom-checkbox span{
+    margin-left: 5px;
+}
+
+.custom-checkbox .checkbox-text a {
+    color: var(--login_primary);
+    text-decoration: underline;
+}
+
+/* jf accessibility */
+.custom-checkbox input[type="checkbox"]:focus + .checkmark {
+    outline: 3px solid rgba(0,0,0,0.08);
+    outline-offset: 2px;
+}
+
+.form-error {
+    color: #b00020;
+    margin-bottom: 8px;
+    font-weight: 700;
+    text-align: center;
+}
+
+@media (max-width: 480px) {
+    .custom-checkbox .checkmark { font-size: 13px; width: 20px; height: 20px; top: 5px;}
 }
 
