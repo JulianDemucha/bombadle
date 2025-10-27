@@ -1,5 +1,6 @@
 import React from 'react';
 import './style/img-buttons.css';
+import NavImgButton from "./ImgNavButton.jsx";
 
 function MainPage() {
     const handleImageError = (e) => {
@@ -9,50 +10,41 @@ function MainPage() {
 
     return (
         <>
-
-
             <div className="buttons-container">
 
-                <button className="image-button image-button-responsive" type="button">
-                    <img
-                        src="/img/button_classic.png"
-                        alt="Tryb 'Klasyczny'"
-                        onError={handleImageError}
-                    />
-                </button>
+                <NavImgButton
+                    to="/"
+                    imgSrc="/img/button_classic.png"
+                    altText="Tryb 'Klasyczny'"
+                    className="image-button image-button-responsive"
+                    onError={handleImageError}
+                />
+
+                <NavImgButton
+                    to="/"
+                    imgSrc="/img/button_quote_mode.png"
+                    altText="Tryb 'Cytaty'"
+                    className="image-button image-button-responsive"
+                    onError={handleImageError}
+                />
+
+                <NavImgButton
+                    to="/"
+                    imgSrc="/img/button_training_mode.png"
+                    altText="Tryb 'Trening"
+                    className="image-button image-button-responsive"
+                    onError={handleImageError}
+                />
 
 
-                <button className="image-button image-button-responsive" type="button">
-                    <img
-                        src="/img/button_quote_mode.png"
-                        alt="Tryb 'Cytaty'"
-                        onError={handleImageError}
-                    />
-                </button>
+                <NavImgButton
+                    to="/login"
+                    imgSrc="/img/LoginButton.png"
+                    altText="Zaloguj się"
+                    className="image-button login-mobile"
+                    onError={handleImageError}
+                />
 
-                <button className="image-button image-button-responsive" type="button">
-                    <img
-                        src="/img/button_training_mode.png"
-                        alt="Tryb 'Trening"
-                        onError={handleImageError}
-                    />
-                </button>
-
-                <button className="image-button login-mobile" type="button">
-                    <img
-                        src="/img/LoginButton.png"
-                        alt="Zaloguj się"
-                        onError={handleImageError}
-                    />
-                </button>
-
-                {/*<div className="button-mode-choice-container">*/}
-                {/*    <img*/}
-                {/*        src="/img/button_mode_choice.png"*/}
-                {/*        alt="Wybierz tryb gry"*/}
-                {/*        onError={handleImageError}*/}
-                {/*    />*/}
-                {/*</div>*/}
             </div>
         </>
     );
