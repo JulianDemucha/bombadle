@@ -13,4 +13,6 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     Optional<Player> findByLogin(String Login);
     Optional<Player> findByEmail(String email);
     List<Player> findAllByOrderByIdAsc();
+    Boolean existsByLogin(String Login);
+    Boolean existsByEmail(String email);
 }
