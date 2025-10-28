@@ -9,7 +9,7 @@ export default defineConfig({
       port: 5173, // frontend (React/Vite)
       proxy: {
         '/api': {
-          target: 'http://localhost:8080',
+          target: 'https://localhost:8443',
           changeOrigin: true,
           secure: false,
         },
