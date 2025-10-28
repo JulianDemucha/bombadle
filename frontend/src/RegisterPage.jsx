@@ -19,7 +19,7 @@ const MIN_PASSWORD_LEN = 8;
 /**
  *  { exists: boolean } OR ERROR ON ENDPOINT
  */
-function useDebouncedCheck({ value, minLen = 1, url, fieldSetter, delay = 500 }) {
+function useDebouncedCheck({ value, minLen = 1, url, fieldSetter, delay = 500, fieldName}) {
     const controllerRef = useRef(null);
     const mountedRef = useRef(true);
     useEffect(() => {
@@ -43,7 +43,12 @@ function useDebouncedCheck({ value, minLen = 1, url, fieldSetter, delay = 500 })
                 const res = await axios.get(url, { signal: controller.signal });
                 if (!mountedRef.current || !active) return;
                 if (res.data?.exists) {
-                    fieldSetter("Ta wartość jest już zajęta.");
+                    fieldSetter(
+                        fieldName === "email" ?
+                            "Ten email jest już zajęty!"
+                            :
+                            "Ta nazwa użytkownika jest już zajęta!",
+                    );
                 } else {
                     fieldSetter("");
                 }
@@ -95,15 +100,17 @@ function RegisterPage() {
     useDebouncedCheck({
         value: username,
         minLen: 3,
-        url: `/api/auth/check?username=${encodeURIComponent(username)}`,
-        fieldSetter: setUsernameError
+        url: `/api/auth/check/username?username=${encodeURIComponent(username)}`,
+        fieldSetter: setUsernameError,
+        fieldName: "username"
     });
 
     useDebouncedCheck({
         value: email,
         minLen: 5,
-        url: `/api/auth/check?email=${encodeURIComponent(email)}`,
-        fieldSetter: setEmailError
+        url: `/api/auth/check/email?email=${encodeURIComponent(email)}`,
+        fieldSetter: setEmailError,
+        fieldName: "email"
     });
 
     const handleSubmit = async (e) => {
@@ -143,6 +150,7 @@ function RegisterPage() {
             if (res.status === 201 || res.status === 200) {
                 setSuccessMessage(res.data?.message || "Konto zostało utworzone. Możesz się zalogować.");
                 setTimeout(() => window.location.href = "/login", 1200);
+
             } else {
                 setErrors(prev => ({ ...prev, general: res.data?.message || "Rejestracja przebiegła częściowo." }));
             }
@@ -174,8 +182,6 @@ function RegisterPage() {
         }
     };
 
-    const canSubmit = acceptedTerms && acceptedPrivacy && password
-        && (password === confirmPassword) && email && username && validateEmail(email) && !loading;
 
     return (
         <>
@@ -282,7 +288,6 @@ function RegisterPage() {
                         </label>
                     </div>
 
-                    {/* ogólny błąd (aria-live dla czytników ekranu) */}
                     <div aria-live="polite" className="form-message">
                         {errors.general && <div className="form-error" role="alert">{errors.general}</div>}
                         {successMessage && <div className="form-success" role="status">{successMessage}</div>}
