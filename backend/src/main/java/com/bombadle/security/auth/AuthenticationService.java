@@ -44,6 +44,7 @@ public class AuthenticationService {
                 .lastLoginAt(Instant.now())
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
                 .authProvider(PlayerAuthProvider.LOCAL)
+                .hasGuessedToday(false)
                 .build();
 
         repo.save(user);
