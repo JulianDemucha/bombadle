@@ -73,4 +73,12 @@ public class AuthenticationService {
                 .token(jwtToken)
                 .build();
     }
+
+    public Boolean existsByEmail(String email) {
+        return repo.existsByEmail(email);
+    }
+
+    public Boolean existsByUsername(String username) {
+        return repo.existsByLogin(username);
+    }
 }

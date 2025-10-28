@@ -49,3 +49,6 @@ server:
 logging:
   level:
     com.bombadle: INFO
+#    org.springframework.security: DEBUG
+#    org.springframework.security.web: DEBUG
+#    org.springframework.security.config: DEBUG
