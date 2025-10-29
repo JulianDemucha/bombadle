@@ -68,7 +68,7 @@ function useDebouncedCheck({ value, minLen = 1, url, fieldSetter, delay = 500, f
                 controllerRef.current.abort();
             }
         };
-    }, [value, minLen, url, fieldSetter, delay]);
+    }, [value, minLen, url, fieldSetter, delay, fieldName]);
 }
 
 function RegisterPage() {
