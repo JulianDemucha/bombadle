@@ -1,5 +1,5 @@
 /* css komponentu bazowany na https://freefrontend.com/css-login-forms/ */
-import './style/login-page.css';
+import './style/login-register-page.css';
 import './style/GoogleButton.css';
 import './style/logo.css';
 import React, {useCallback, useEffect, useRef, useState} from "react";
@@ -126,11 +126,11 @@ function RegisterPage() {
             return;
         }
         if (username.length < MIN_USERNAME_LEN) {
-            setErrors(prev => ({ ...prev, password: `Nazwa użytkownika musi mieć co najmniej ${MIN_USERNAME_LEN} znaków.` }));
+            setErrors(prev => ({ ...prev, username: `Nazwa użytkownika musi mieć co najmniej ${MIN_USERNAME_LEN} znaków.` }));
             return;
         }
         if (username.length > MAX_USERNAME_LEN) {
-            setErrors(prev => ({ ...prev, password: `Nazwa użytkownika musi mieć co najwyżej ${MAX_USERNAME_LEN} znaków.` }));
+            setErrors(prev => ({ ...prev, username: `Nazwa użytkownika musi mieć co najwyżej ${MAX_USERNAME_LEN} znaków.` }));
             return;
         }
         if (password.length < MIN_PASSWORD_LEN) {
@@ -283,7 +283,7 @@ function RegisterPage() {
                             />
                             <span className="checkmark" aria-hidden="true" />
                             <span className="checkbox-text">
-                Akceptuję <a href="./regulamin.html" target="_blank" rel="noopener noreferrer">regulamin</a>
+                Akceptuję <a href="/regulamin.html" target="_blank" rel="noopener noreferrer">regulamin</a>
               </span>
                         </label>
 
@@ -296,7 +296,7 @@ function RegisterPage() {
                             />
                             <span className="checkmark" aria-hidden="true" />
                             <span className="checkbox-text">
-                Akceptuję <a href="./privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności / RODO</a>
+                Akceptuję <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności / RODO</a>
               </span>
                         </label>
                     </div>
@@ -306,7 +306,7 @@ function RegisterPage() {
                         {successMessage && <div className="form-success" role="status">{successMessage}</div>}
                     </div>
 
-                    <button type="submit" className="submit-btn">
+                    <button type="submit" className="submit-btn" disabled={loading}>
                         {loading ? "Ładowanie..." : "ZAREJESTRUJ SIĘ"}
                     </button>
 
