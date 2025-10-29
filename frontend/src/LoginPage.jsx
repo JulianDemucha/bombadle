@@ -1,5 +1,5 @@
 /* css komponentu bazowany na https://freefrontend.com/css-login-forms/ */
-import './style/login-page.css';
+import './style/login-register-page.css';
 import './style/GoogleButton.css'
 import './style/logo.css'
 import React from "react";
