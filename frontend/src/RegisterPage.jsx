@@ -13,8 +13,9 @@ const handleImageError = (e) => {
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const MIN_PASSWORD_LEN = 8;
-
-
+const MAX_PASSWORD_LEN = 24;
+const MIN_USERNAME_LEN = 3;
+const MAX_USERNAME_LEN = 16;
 
 /**
  *  { exists: boolean } OR ERROR ON ENDPOINT
@@ -124,8 +125,20 @@ function RegisterPage() {
             setErrors(prev => ({ ...prev, general: "Wypełnij wymagane pola." }));
             return;
         }
+        if (username.length < MIN_USERNAME_LEN) {
+            setErrors(prev => ({ ...prev, password: `Nazwa użytkownika musi mieć co najmniej ${MIN_USERNAME_LEN} znaków.` }));
+            return;
+        }
+        if (username.length > MAX_USERNAME_LEN) {
+            setErrors(prev => ({ ...prev, password: `Nazwa użytkownika musi mieć co najwyżej ${MAX_USERNAME_LEN} znaków.` }));
+            return;
+        }
         if (password.length < MIN_PASSWORD_LEN) {
             setErrors(prev => ({ ...prev, password: `Hasło musi mieć co najmniej ${MIN_PASSWORD_LEN} znaków.` }));
+            return;
+        }
+        if (password.length > MAX_PASSWORD_LEN) {
+            setErrors(prev => ({ ...prev, password: `Hasło musi mieć co najwyżej ${MAX_PASSWORD_LEN} znaków.` }));
             return;
         }
         if (!validateEmail(email)) {
