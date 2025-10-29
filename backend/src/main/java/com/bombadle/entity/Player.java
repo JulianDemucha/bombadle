@@ -42,7 +42,7 @@ public class Player implements UserDetails {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(name = "last_login_at")
+    @Column(name = "last_login_at", nullable = false)
     private Instant lastLoginAt;
 
     @OneToOne(
@@ -53,11 +53,11 @@ public class Player implements UserDetails {
     @JoinColumn(name = "today_score_id", unique = true)
     private Score todayScore;
 
-    @Column(name = "avatar_image")
+    @Column(name = "avatar_image", nullable = false)
     @Enumerated(EnumType.STRING)
     private AvatarImage avatarImage;
 
-    @Column(name = "total_guesses")
+    @Column(name = "total_guesses", nullable = false)
     private int totalGuesses;
 
     @Column(name = "has_guessed_today", nullable = false)
