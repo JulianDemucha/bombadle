@@ -46,11 +46,11 @@ public class SecurityConfig {
                         .ignoringRequestMatchers("/api/auth/register", "/api/auth/login")
                 )
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-                .securityMatcher("/api/auth/register", "/api/auth/login")
+                .securityMatcher("/api/**")
                 .sessionManagement(sess ->
-                        sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // SameSite = Lax
+                        sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/register\", \"/api/auth/login\", \"/api/auth/check/**").permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider)
