@@ -31,7 +31,7 @@ public class SecurityConfig {
 
     //todo on prod: SameSite=Lax, delete cors config, disable csrf
     //currently cross origin -> SameSite has to be None
-    // -> csrf has to be enabled -> it cant be bacause of STATELESS -> Double Submit Cookie
+    // -> csrf has to be enabled -> it cant be because of STATELESS -> Double Submit Cookie
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
         return new HttpSessionOAuth2AuthorizationRequestRepository();
@@ -50,7 +50,7 @@ public class SecurityConfig {
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register\", \"/api/auth/login\", \"/api/auth/check/**").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/check/**").permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider)
@@ -60,10 +60,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(2)   //webSecurityFilterChain
+    @Order(2)   //prod: webSecurityFilterChain
     public SecurityFilterChain oauth2LoginSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {})
+                .cors(cors -> {
+                })
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login/**", "/oauth2/**").permitAll()
                         .anyRequest().authenticated()
