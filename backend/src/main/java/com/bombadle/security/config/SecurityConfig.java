@@ -41,6 +41,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> {})
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .ignoringRequestMatchers("/api/auth/register", "/api/auth/login")
@@ -63,8 +64,7 @@ public class SecurityConfig {
     @Order(2)   //prod: webSecurityFilterChain
     public SecurityFilterChain oauth2LoginSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {
-                })
+                .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login/**", "/oauth2/**").permitAll()
                         .anyRequest().authenticated()
