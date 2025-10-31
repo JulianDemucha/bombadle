@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ScoreRepository extends JpaRepository<Score, Integer> {
+public interface ScoreRepository extends JpaRepository<Score, Long> {
     List<Score> findTop10ByOrderByScoreTimestampAsc(); //zwraca pierwsze 10 score
 
     Optional<Score> findTopByOrderByScoreTimestampDesc(); //zwraca najnowszy score
