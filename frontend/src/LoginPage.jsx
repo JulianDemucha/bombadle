@@ -2,16 +2,66 @@
 import './style/login-register-page.css';
 import './style/GoogleButton.css'
 import './style/logo.css'
-import React from "react";
+import React, {useState} from "react";
 import Footer from "./Footer.jsx";
 import NavImgButton from "./ImgNavButton.jsx";
+import axios from "axios";
 
 const handleImageError = (e) => {
     //todo make placeholders for all img / buttons
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
 };
+const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 function LoginPage() {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [errors, setErrors] = useState({
+        email: "",
+        password: "",
+        general: ""
+    });
+    const [loading, setLoading] = useState(false);
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!email || !password) {
+            setErrors(prev => ({...prev, general: "Wypełnij wymagane pola."}));
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            setErrors(prev => ({...prev, email: "Nieprawidłowy adres e-mail."}));
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const res = await axios.post("/api/auth/authenticate", {email, password});
+
+            if (res.status === 201 || res.status === 200) {
+                setTimeout(() => window.location.href = "/", 1200);
+
+            }
+
+        } catch (err) {
+            if (err?.response) {
+                const {status, data} = err.response;
+                if (status === 409) {
+
+                    setErrors(prev => ({...prev, general: data?.message || "Błąd podczas logowania."}));
+                }
+            } else {
+                setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
+            }
+        } finally {
+            setLoading(false);
+        }
+
+    };
     return (<>
 
         {/*     LOGO     */}
@@ -32,23 +82,40 @@ function LoginPage() {
             onError={handleImageError}
         />
         <div className="login-page">
-
-
-
-            <div className="login-container">
+            <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>LOGOWANIE</h1>
 
                 <div className="input-group">
                     <label htmlFor="email">EMAIL</label>
-                    <input type="email" id="email" placeholder="twoj@email.com"/>
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="twoj@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        aria-describedby="email-error"
+                    />
+                    {errors.email && <div id="email-error" className="field-error">{errors.email}</div>}
                 </div>
 
                 <div className="input-group">
                     <label htmlFor="password">HASŁO</label>
-                    <input type="password" id="password" placeholder="••••••••"/>
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        aria-describedby="password-error"
+                    />
                 </div>
 
-                <button type="submit">ZALOGUJ SIĘ</button>
+                <button type="submit" disabled={loading}>
+                    {loading ? "Ładowanie..." : "ZALOGUJ SIĘ"}
+                </button>
+
 
                 <div className="divider">LUB</div>
 
@@ -59,8 +126,8 @@ function LoginPage() {
                 <div className="loginFooter">
                     Nie masz konta? <a href="/register">Zarejestruj się</a>
                 </div>
-            </div>
-            <Footer className="defFooter"/>
+            </form>
+            <Footer/>
         </div>
     </>)
 }
