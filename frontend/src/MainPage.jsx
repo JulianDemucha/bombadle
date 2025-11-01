@@ -43,6 +43,7 @@ function MainPage() {
                     altText="Zaloguj się"
                     className="image-button login-mobile"
                     onError={handleImageError}
+                    hideIfAuthenticated={true}
                 />
 
             </div>

@@ -28,6 +28,7 @@ function Header() {
                 altText="Zaloguj się"
                 className="image-button login-desktop"
                 onError={handleImageError}
+                hideIfAuthenticated={true}
             />
 
             {/*     LOGO MOBILE     */}
