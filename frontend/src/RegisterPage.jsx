@@ -34,7 +34,6 @@ function useDebouncedCheck({ value, minLen = 1, url, fieldSetter, delay = 500, f
             return;
         }
 
-        //TODO CHECK CONTROLLER
         const controller = new AbortController();
         controllerRef.current = controller;
         let active = true;
@@ -164,8 +163,6 @@ function RegisterPage() {
                 setSuccessMessage(res.data?.message || "Konto zostało utworzone. Możesz się zalogować.");
                 setTimeout(() => window.location.href = "/login", 1200);
 
-            } else {
-                setErrors(prev => ({ ...prev, general: res.data?.message || "Rejestracja przebiegła częściowo." }));
             }
 
         } catch (err) {
