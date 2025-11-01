@@ -12,8 +12,6 @@ import com.bombadle.security.auth.dto.RegisterRequest;
 import com.bombadle.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,9 +22,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.time.Instant;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -81,11 +77,11 @@ public class AuthenticationService {
     public String authenticate(AuthenticationRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
+                        request.getEmail(),
                         request.getPassword()
                 )
         );
-        var user = repo.findByLogin(request.getUsername())
+        var user = repo.findByEmail(request.getEmail())
                 .orElseThrow();
         user.setLastLoginAt(Instant.now());
         repo.save(user);
@@ -103,8 +99,10 @@ public class AuthenticationService {
     public ResponseEntity<PlayerDto> getAuthenticatedPlayer(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        Player player = repo.findByLogin(userDetails.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("Użytkownik z tokenu nie został znaleziony w bazie: " + userDetails.getUsername()));
+        Player player = repo.findByEmail(userDetails.getUsername()) // getUsername returns email
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User from token has NOT been found in the database: " + userDetails.getUsername() //email
+                ));
         return ResponseEntity.ok(playerMapper.toDto(player));
     }
 }

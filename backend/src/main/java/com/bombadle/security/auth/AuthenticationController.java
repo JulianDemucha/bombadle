@@ -6,7 +6,6 @@ import com.bombadle.security.auth.dto.RegisterRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -65,7 +64,7 @@ public class AuthenticationController {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", ex.getMessage()));
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(500)
                     .body(Map.of("error", "Unexpected error: " + ex.getMessage()));
         }
     }
@@ -79,13 +78,19 @@ public class AuthenticationController {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", ex.getMessage()));
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(500)
                     .body(Map.of("error", "Unexpected error: " + ex.getMessage()));
         }
     }
 
     @GetMapping("/status")
     public ResponseEntity<PlayerDto> status(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
         return authenticationService.getAuthenticatedPlayer(authentication);
     }
+
 }
+
+

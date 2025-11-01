@@ -49,6 +49,9 @@ server:
 logging:
   level:
     com.bombadle: INFO
+#    org.springframework.security: TRACE
+#    org.springframework.security.web.FilterChainProxy: TRACE
+#    org.springframework.web: DEBUG
 #    org.springframework.security: DEBUG
 #    org.springframework.security.web: DEBUG
 #    org.springframework.security.config: DEBUG
