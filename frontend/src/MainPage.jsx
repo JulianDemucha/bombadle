@@ -1,6 +1,6 @@
 import React from 'react';
 import './style/img-buttons.css';
-import NavImgButton from "./ImgNavButton.jsx";
+import NavImgButton from "./NavImgButton.jsx";
 
 function MainPage() {
     const handleImageError = (e) => {
