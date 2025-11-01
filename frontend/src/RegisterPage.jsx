@@ -4,7 +4,7 @@ import './style/GoogleButton.css';
 import './style/logo.css';
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import Footer from "./Footer.jsx";
-import NavImgButton from "./ImgNavButton.jsx";
+import NavImgButton from "./NavImgButton.jsx";
 import axios from "axios";
 
 const handleImageError = (e) => {

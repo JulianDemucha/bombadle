@@ -1,7 +1,7 @@
 import React from 'react';
 import './style/logo.css';
 import './style/login-button.css';
-import NavImgButton from "./ImgNavButton.jsx";
+import NavImgButton from "./NavImgButton.jsx";
 
 const handleImageError = (e) => {
     //todo make placeholders for all img / buttons
