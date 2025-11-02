@@ -1,6 +1,7 @@
 import React from 'react';
 import './style/logo.css';
 import './style/login-button.css';
+import './style/profile-button.css';
 import NavImgButton from "./NavImgButton.jsx";
 
 const handleImageError = (e) => {
@@ -29,6 +30,15 @@ function Header() {
                 className="image-button login-desktop"
                 onError={handleImageError}
                 hideIfAuthenticated={true}
+            />
+
+            <NavImgButton
+                to="/profile"
+                imgSrc="/img/profile_button.png"
+                altText="Ustawienia Profilu"
+                className="image-button profile-button"
+                onError={handleImageError}
+                hideIfNotAuthenticated={true}
             />
 
             {/*     LOGO MOBILE     */}

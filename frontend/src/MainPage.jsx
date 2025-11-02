@@ -46,6 +46,14 @@ function MainPage() {
                     hideIfAuthenticated={true}
                 />
 
+                {/*<NavImgButton*/}
+                {/*    to="/profile"*/}
+                {/*    imgSrc="/img/profile_button.png"*/}
+                {/*    altText="Ustawienia Profilu"*/}
+                {/*    onError={handleImageError}*/}
+                {/*    hideIfNotAuthenticated={true}*/}
+                {/*/>*/}
+
             </div>
         </>
     );

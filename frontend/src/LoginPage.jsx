@@ -43,7 +43,7 @@ function LoginPage() {
             const res = await axios.post("/api/auth/authenticate", {email, password});
 
             if (res.status === 201 || res.status === 200) {
-                setTimeout(() => window.location.href = "/", 1200);
+                setTimeout(() => window.location.href = "/", 200);
 
             }
 

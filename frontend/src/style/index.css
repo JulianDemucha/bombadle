@@ -13,7 +13,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: var(--login_secondary);
-    background-image: url('../../public/img/background_img.jpeg');
+    background-image: url('../../public/img/background_img_alt.png');
     background-repeat: no-repeat;
     background-position: top center;
     background-size: cover;
