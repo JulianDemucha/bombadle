@@ -64,16 +64,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            final String username;
-            username = jwtService.extractUsername(jwt);
+            final String email;
+            email = jwtService.extractEmail(jwt);
 
-            if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+            if (email == null || SecurityContextHolder.getContext().getAuthentication() != null) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            // loadByUsername() needs subject not exactly username. subject has been changed to email. (Player.java : 81)
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
 
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

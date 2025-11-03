@@ -20,7 +20,7 @@ public class JwtService {
     private static final String SECRET_KEY =
             "6b85bba72afb18c537111263ca9fff62d9f10278437d7c9ce1c2413a3c9d8035";
 
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -33,8 +33,9 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        final String email = extractEmail(token);
+        //getUsername returns email (Player.java : 81)
+        return (email.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
