@@ -1,7 +1,5 @@
-package com.bombadle.security.auth;
+package com.bombadle.service;
 
-import com.bombadle.dto.PlayerDto;
-import com.bombadle.dto.mapper.PlayerMapper;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.PlayerAuthProvider;
@@ -13,15 +11,12 @@ import com.bombadle.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.time.Instant;
 
 @Service
@@ -32,7 +27,6 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final PlayerMapper playerMapper;
 
     public String register(RegisterRequest request) {
         if (repo.existsByEmail(request.getEmail()) || repo.existsByLogin(request.getUsername())) {
@@ -96,13 +90,5 @@ public class AuthenticationService {
         return repo.existsByLogin(username);
     }
 
-    public ResponseEntity<PlayerDto> getAuthenticatedPlayer(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        Player player = repo.findByEmail(userDetails.getUsername()) // getUsername returns email
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User from token has NOT been found in the database: " + userDetails.getUsername() //email
-                ));
-        return ResponseEntity.ok(playerMapper.toDto(player));
-    }
 }

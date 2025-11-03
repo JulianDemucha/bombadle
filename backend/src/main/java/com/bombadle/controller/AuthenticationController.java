@@ -1,6 +1,6 @@
-package com.bombadle.security.auth;
+package com.bombadle.controller;
 
-import com.bombadle.dto.PlayerDto;
+import com.bombadle.service.AuthenticationService;
 import com.bombadle.security.auth.dto.AuthenticationRequest;
 import com.bombadle.security.auth.dto.RegisterRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -46,13 +45,11 @@ public class AuthenticationController {
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(60 * 60 * 24)
+                .maxAge(60 * 60 * 24) //24h
                 .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok().build();
-
-
     }
 
     @GetMapping("/check/email")
@@ -81,14 +78,6 @@ public class AuthenticationController {
             return ResponseEntity.status(500)
                     .body(Map.of("error", "Unexpected error: " + ex.getMessage()));
         }
-    }
-
-    @GetMapping("/status")
-    public ResponseEntity<PlayerDto> status(Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(401).build();
-        }
-        return authenticationService.getAuthenticatedPlayer(authentication);
     }
 
 }
