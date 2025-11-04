@@ -1,6 +1,8 @@
 import React from 'react';
 import './style/img-buttons.css';
 import NavImgButton from "./NavImgButton.jsx";
+import Footer from "./Footer.jsx";
+import Header from "./Header.jsx";
 
 function MainPage() {
     const handleImageError = (e) => {
@@ -10,6 +12,7 @@ function MainPage() {
 
     return (
         <>
+            <Header/>
             <div className="buttons-container">
 
                 <NavImgButton
@@ -46,15 +49,8 @@ function MainPage() {
                     hideIfAuthenticated={true}
                 />
 
-                {/*<NavImgButton*/}
-                {/*    to="/profile"*/}
-                {/*    imgSrc="/img/profile_button.png"*/}
-                {/*    altText="Ustawienia Profilu"*/}
-                {/*    onError={handleImageError}*/}
-                {/*    hideIfNotAuthenticated={true}*/}
-                {/*/>*/}
-
             </div>
+            <Footer />
         </>
     );
 }

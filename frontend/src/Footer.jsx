@@ -11,6 +11,7 @@ function Footer() {
                 Wszystkie prawa do postaci, cytatów, grafik i nazw należą do ich prawowitych właścicieli.
                 Materiały wykorzystano wyłącznie w celach fanowskich, informacyjnych i rozrywkowych, bez zamiaru uzyskania korzyści majątkowych.
             </span>
+            <br></br>
         </footer>
     </>)
 }

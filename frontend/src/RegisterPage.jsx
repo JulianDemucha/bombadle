@@ -210,7 +210,7 @@ function RegisterPage() {
                 onError={handleImageError}
             />
 
-            <div className="login-page">
+            <div className="login-register-page">
                 <form className="login-container" onSubmit={handleSubmit} noValidate>
                     <h1>REJESTRACJA</h1>
 

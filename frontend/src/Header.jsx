@@ -32,6 +32,7 @@ function Header() {
                 hideIfAuthenticated={true}
             />
 
+            {/*     PROFILE SETTINGS BUTTON     */}
             <NavImgButton
                 to="/profile"
                 imgSrc="/img/profile_button.png"

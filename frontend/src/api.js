@@ -12,7 +12,7 @@ export async function apiFetch(path, opts = {}) {
 }
 
 export async function getUser() {
-    return await apiFetch('/api/auth/status', {
+    return await apiFetch('/api/players/me', {
         method: "GET"
     });
 }
@@ -25,6 +25,6 @@ export async function login(credentials) {
 }
 
 export async function isLoggedIn() {
-    const r = await apiFetch('/api/auth/status', { method: 'GET' });
+    const r = await apiFetch('/api/players/me', { method: 'GET' });
     return r.ok ? r.data : null;
 }

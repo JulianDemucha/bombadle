@@ -5,9 +5,12 @@ import LoginPage from "./LoginPage.jsx";
 import Footer from "./Footer.jsx";
 import RegisterPage from "./RegisterPage.jsx";
 import UnauthenticatedRoute from "./auth/UnauthenticatedRoute.jsx";
+import AuthenticatedRoute from "./auth/AuthenticatedRoute.jsx";
+import UserSettingsPage from "./UserSettingsPage.jsx";
 
 export const routes = [
-    { path: '/', element: <> <Header /> <MainPage/> <Footer /></> },
+    { path: '/', element: <> <MainPage /></> },
     { path: '/Login', element: <UnauthenticatedRoute><LoginPage/></UnauthenticatedRoute> },
-    { path: '/Register', element: <UnauthenticatedRoute><RegisterPage/></UnauthenticatedRoute> }
+    { path: '/Register', element: <UnauthenticatedRoute><RegisterPage/></UnauthenticatedRoute> },
+    { path: '/Profile/', element: <AuthenticatedRoute><UserSettingsPage/></AuthenticatedRoute> }
 ]

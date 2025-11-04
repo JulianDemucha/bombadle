@@ -50,7 +50,10 @@ function LoginPage() {
         } catch (err) {
             if (err?.response) {
                 const {status, data} = err.response;
-                if (status === 409) {
+                if(status === 401){
+                    setErrors(prev => ({...prev, general: data?.message || "Nieprawidłowy email lub hasło."}));
+                }
+                else if (status === 409) {
 
                     setErrors(prev => ({...prev, general: data?.message || "Błąd podczas logowania."}));
                 }
@@ -81,7 +84,7 @@ function LoginPage() {
             className="logo logo-mobile"
             onError={handleImageError}
         />
-        <div className="login-page">
+        <div className="login-register-page">
             <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>LOGOWANIE</h1>
 
@@ -112,13 +115,16 @@ function LoginPage() {
                     />
                 </div>
 
+                {errors.general && <div className="form-error" role="alert">{errors.general}</div>}
                 <button type="submit" disabled={loading}>
                     {loading ? "Ładowanie..." : "ZALOGUJ SIĘ"}
                 </button>
 
 
-                <div className="divider">LUB</div>
 
+                <div className="divider">LUB</div>
+                <div aria-live="polite" className="form-message">
+                </div>
                 <button type="button" className="login-with-google-btn">
                     ZALOGUJ SIĘ PRZEZ GOOGLE
                 </button>

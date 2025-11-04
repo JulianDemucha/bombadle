@@ -1,0 +1,189 @@
+.settings-panel-wrapper {
+    font-family: 'Courier New', monospace;
+    padding: 1.5rem;
+}
+
+.settings-panel-wrapper h1, h2, h3  {
+    margin-bottom: 1rem;
+}
+
+.settings-panel-wrapper span:last-child {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.settings-panel-wrapper .container {
+    max-width: 60rem;
+    margin-top: 3rem;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: var(--secondary);
+    opacity: 0.97;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--primary);
+    padding: 2.5rem;
+}
+
+.settings-panel-wrapper .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    /*padding-top: 1rem;*/
+    border-bottom: 2px solid var(--primary);
+    /*border-top: 2px solid var(--primary);*/
+}
+
+.settings-panel-wrapper .avatar {
+    width: 5rem;
+    border-radius: 9999px;
+    border: 2px solid var(--primary);
+}
+
+.settings-panel-wrapper .profile-info h2 {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.settings-panel-wrapper .profile-info p {
+    font-size: 0.875rem;
+    color: var(--primary);
+    margin: 0.25rem 0 0;
+}
+
+.settings-panel-wrapper .settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.settings-panel-wrapper .form-section {
+    padding-top: 2rem;
+    border-top: 2px solid var(--primary);
+}
+
+.settings-panel-wrapper .settings-form > .form-section:first-of-type {
+    padding-top: 0;
+    border-top: none;
+}
+
+.settings-panel-wrapper .form-group {
+    margin-bottom: 1.5rem;
+}
+.settings-panel-wrapper .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.settings-panel-wrapper label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+}
+
+.settings-panel-wrapper input{
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--primary);
+    background-color: var(--secondary);
+    color: var(--primary);
+    font-family: 'Courier New', monospace;
+    transition: all 0.3s;
+}
+
+.settings-panel-wrapper input:focus{
+    box-shadow: 4px 4px 0px var(--primary);
+    outline: none;
+}
+
+.settings-panel-wrapper input[disabled] {
+    background-color: #11251a33;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.settings-panel-wrapper .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.settings-panel-wrapper .btn-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    text-decoration: underline;
+}
+
+.settings-panel-wrapper .btn-primary {
+    background-color: var(--accent);
+    color: var(--secondary);
+    border-color: var(--primary);
+}
+
+.settings-panel-wrapper .btn-secondary {
+    background-color: var(--secondary);
+    color: var(--login_primary);
+    border-color: var(--primary);
+}
+
+
+.settings-panel-wrapper .btn-danger {
+    background-color: #b00020;
+    color: var(--primary);
+    border-color: var(--primary);
+}
+.settings-panel-wrapper .btn-logout {
+    background-color: #b00020;
+    color: var(--primary);
+    border-color: var(--primary);
+    margin: 0 36rem;
+
+}
+.settings-panel-wrapper .btn-primary:hover,
+.btn-secondary:hover, .btn-danger:hover, .btn-logout:hover {
+    box-shadow: 4px 4px 0px var(--primary);
+    transform: translate(-2px, -2px);
+}
+
+.settings-panel-wrapper .form-actions {
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--primary);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+    .settings-panel-wrapper {
+        padding: 1rem;
+    }
+    .settings-panel-wrapper .container {
+        padding: 1.5rem;
+    }
+    .settings-panel-wrapper h1 {
+        font-size: 1.5rem;
+    }
+    .settings-panel-wrapper .profile-header {
+        /*flex-direction: column;*/
+        /*align-items: flex-start;*/
+
+    }
+    .settings-panel-wrapper .form-actions {
+        flex-direction: column-reverse;
+    }
+    .settings-panel-wrapper .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
