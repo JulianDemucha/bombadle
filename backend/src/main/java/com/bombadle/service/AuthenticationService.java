@@ -12,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -69,17 +71,21 @@ public class AuthenticationService {
 
 
     public String authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-        var user = repo.findByEmail(request.getEmail())
-                .orElseThrow();
-        user.setLastLoginAt(Instant.now());
-        repo.save(user);
-        return jwtService.generateJwtToken(user);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+            var user = repo.findByEmail(request.getEmail())
+                    .orElseThrow();
+            user.setLastLoginAt(Instant.now());
+            repo.save(user);
+            return jwtService.generateJwtToken(user);
+        }catch (AuthenticationException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password", e);
+        }
     }
 
     public Boolean existsByEmail(String email) {

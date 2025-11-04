@@ -6,7 +6,6 @@ import com.bombadle.dto.mapper.PlayerMapper;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.repository.PlayerRepository;
-import com.bombadle.security.jwt.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -31,7 +30,6 @@ import java.util.Optional;
 public class PlayerService {
     private final PlayerRepository repo;
     private final PlayerMapper playerMapper;
-    public final JwtService jwtService;
 
     public List<Player> getAllPlayers() {
         return repo.findAllByOrderByIdAsc();
@@ -54,11 +52,13 @@ public class PlayerService {
     }
 
     @Transactional
-    public ResponseEntity<?> updatePlayer(PlayerUpdateRequest request, String jwt) {
+    public ResponseEntity<?> updatePlayer(PlayerUpdateRequest request, Authentication authentication) {
         try {
 
-            String emailExtractedFromJwt = jwtService.extractEmail(jwt);
-            Optional<Player> existingPlayer = repo.findByEmail(emailExtractedFromJwt);
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+            // user details subject is email instead of username -> getUsername() returns email
+            Optional<Player> existingPlayer = repo.findByEmail(userDetails.getUsername());
 
             if (existingPlayer.isEmpty()) {
                 return ResponseEntity.notFound().build();
@@ -77,6 +77,7 @@ public class PlayerService {
                 if provided login doesnt equal current login, check whether
                 the user with provided login already exists in the database
                 */
+
                 if(!updatedPlayer.getLogin().equals(request.login())) {
                     if (repo.existsByLogin(request.login()))
                         throw new ResponseStatusException((HttpStatus.CONFLICT),
@@ -121,9 +122,13 @@ public class PlayerService {
     }
 
     @Transactional
-    public ResponseEntity<?> deletePlayer(String jwt) {
+    public ResponseEntity<?> deletePlayer(Authentication authentication) {
         try{
-            String email = jwtService.extractEmail(jwt);
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+            // user details subject is email instead of username -> getUsername() returns email
+            String email = userDetails.getUsername();
+
             //deleteByEmail() returns number of deleted rows in database
             return repo.deleteByEmail(email) > 0 ?
                     ResponseEntity.ok().build()

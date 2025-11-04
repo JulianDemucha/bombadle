@@ -35,14 +35,14 @@ public class PlayerController {
     @PutMapping("/me")
     public ResponseEntity<?> updatePlayer(
             @NonNull @RequestBody PlayerUpdateRequest playerUpdateRequest,
-            @CookieValue(name = "jwt") String jwt
+            Authentication authentication
     ) {
-        return playerService.updatePlayer(playerUpdateRequest, jwt);
+        return playerService.updatePlayer(playerUpdateRequest, authentication);
     }
 
     @DeleteMapping("/me")
-    public ResponseEntity<?> deletePlayer(@CookieValue(name = "jwt") String jwt) {
-        return playerService.deletePlayer(jwt);
+    public ResponseEntity<?> deletePlayer(Authentication authentication) {
+        return playerService.deletePlayer(authentication);
     }
 
 }
