@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import './style/avatar-picker.css';
+import React, {useState} from 'react';
+import './avatar-picker.css';
 import {AVATAR_LIST, getAvatarUrl} from "./AvatarList.js";
 
 
 /**
  * Inner component for AvatarPicker
  */
-function AvatarModal({ onClose, onSelect }) {
+function AvatarModal({onClose, onSelect}) {
     const handleSelect = (avatar) => {
         onSelect(avatar); //save chosen avatar
         onClose();
@@ -53,7 +53,7 @@ function AvatarModal({ onClose, onSelect }) {
  * Button for choosing avatar
  * needs one property: `onAvatarSelect`
  */
-function AvatarPicker({ onAvatarSelect }) {
+function AvatarPicker({onAvatarSelect}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleSaveAvatar = (avatarUrl) => {
@@ -83,4 +83,5 @@ function AvatarPicker({ onAvatarSelect }) {
         </>
     );
 }
+
 export default AvatarPicker;

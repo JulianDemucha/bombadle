@@ -1,7 +1,7 @@
 import React from 'react';
-import './style/logo.css';
-import './style/login-button.css';
-import './style/profile-button.css';
+import '../style/logo.css';
+import '../pages/LoginRegisterPage/login-button.css';
+import '../pages/PlayerSettingsPage/profile-button.css';
 import NavImgButton from "./NavImgButton.jsx";
 
 const handleImageError = (e) => {
@@ -16,7 +16,7 @@ function Header() {
             {/*     LOGO     */}
             <NavImgButton
                 to="/"
-                imgSrc="/img/bombadle_logo.png"
+                imgSrc="src/assets/bombadle_logo.png"
                 altText="logo"
                 className="logo logo-desktop"
                 onError={handleImageError}
@@ -25,7 +25,7 @@ function Header() {
             {/*     LOGIN BUTTON     */}
             <NavImgButton
                 to="/login"
-                imgSrc="/img/LoginButton.png"
+                imgSrc="src/assets/buttons/login_button.png"
                 altText="Zaloguj się"
                 className="image-button login-desktop"
                 onError={handleImageError}
@@ -35,7 +35,7 @@ function Header() {
             {/*     PROFILE SETTINGS BUTTON     */}
             <NavImgButton
                 to="/profile"
-                imgSrc="/img/profile_button.png"
+                imgSrc="src/assets/buttons/profile_button.png"
                 altText="Ustawienia Profilu"
                 className="image-button profile-button"
                 onError={handleImageError}
@@ -45,7 +45,7 @@ function Header() {
             {/*     LOGO MOBILE     */}
             <NavImgButton
                 to="/"
-                imgSrc="/img/bombadle_logo_mobile.png"
+                imgSrc="src/assets/bombadle_logo_mobile.png"
                 altText="logoMobile"
                 className="logo logo-mobile"
                 onError={handleImageError}

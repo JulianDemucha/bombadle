@@ -21,7 +21,7 @@ export const AVATAR_LIST = [
 ]
 
 export function getAvatarUrl(avatarUrl) {
-    if (AVATAR_LIST.includes(avatarUrl)){
-        return path+avatarUrl+ext;
+    if (AVATAR_LIST.includes(avatarUrl)) {
+        return path + avatarUrl + ext;
     }
 }

@@ -11,11 +11,13 @@
 .login-desktop {
     display: none;
 }
+
 @media (min-width: 375px) {
     .login-mobile {
         margin: 1rem auto 5rem;
     }
 }
+
 @media (min-width: 325px) {
     .login-mobile {
         max-width: 300px;

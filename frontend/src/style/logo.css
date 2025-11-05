@@ -32,11 +32,10 @@
         max-width: 250px;
     }
 
-    .logo{
+    .logo {
         margin: 0 auto -1rem auto;
     }
 }
-
 
 @media (min-width: 1025px) {
 

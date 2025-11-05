@@ -1,14 +1,14 @@
-import "./style/profile-settings-page.css";
-import Footer from "./Footer.jsx";
-import {useAuth} from "./auth/UseAuth.jsx";
+import "./profile-settings-page.css";
+import Footer from "../../components/Footer.jsx";
+import {useAuth} from "../../auth/UseAuth.jsx";
 import {useEffect, useState} from "react";
-import {apiFetch} from "./api.js";
+import {apiFetch} from "../../api.js";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
 import AvatarPicker from "./AvatarPicker.jsx";
 
 
-export default function UserSettingsPage() {
+export default function PlayerSettingsPage() {
 
     const [login, setLogin] = useState("");
     const [avatar, setAvatar] = useState(null);
@@ -82,7 +82,7 @@ export default function UserSettingsPage() {
             prompt("Wprowadź hasło, aby potwierdzić permanentne usunięcie konta Anuluj aby nie zmieniać.");
         const email = user.email;
         try {
-            await axios.post("/api/auth/authenticate", { email, password });
+            await axios.post("/api/auth/authenticate", {email, password});
         } catch (error) {
             console.error("Błąd uwierzytelniania:", error);
             alert("Błędne hasło!");
@@ -150,7 +150,7 @@ export default function UserSettingsPage() {
                     <div className="profile-info">
                         <h2>{login}</h2>
                         <p>{user.email}</p>
-                        <AvatarPicker onAvatarSelect={handleAvatarSelected} />
+                        <AvatarPicker onAvatarSelect={handleAvatarSelected}/>
                         {/*<div style={{fontSize: 12, marginTop: 6}}>*/}
                         {/*    {avatar ? `Wybrano: ${avatar}` : (user?.avatarImage ? `Aktualny avatar: ${user.avatarImage}` : "Brak avatara")}*/}
                         {/*</div>*/}

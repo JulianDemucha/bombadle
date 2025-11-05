@@ -1,10 +1,10 @@
 /* css komponentu bazowany na https://freefrontend.com/css-login-forms/ */
-import './style/login-register-page.css';
-import './style/GoogleButton.css'
-import './style/logo.css'
+import './login-register-page.css';
+import './GoogleButton.css'
+import '../../style/logo.css'
 import React, {useState} from "react";
-import Footer from "./Footer.jsx";
-import NavImgButton from "./NavImgButton.jsx";
+import Footer from "../../components/Footer.jsx";
+import NavImgButton from "../../components/NavImgButton.jsx";
 import axios from "axios";
 
 const handleImageError = (e) => {
@@ -50,10 +50,9 @@ function LoginPage() {
         } catch (err) {
             if (err?.response) {
                 const {status, data} = err.response;
-                if(status === 401){
+                if (status === 401) {
                     setErrors(prev => ({...prev, general: data?.message || "Nieprawidłowy email lub hasło."}));
-                }
-                else if (status === 409) {
+                } else if (status === 409) {
 
                     setErrors(prev => ({...prev, general: data?.message || "Błąd podczas logowania."}));
                 }
@@ -70,7 +69,7 @@ function LoginPage() {
         {/*     LOGO     */}
         <NavImgButton
             to="/"
-            imgSrc="/img/bombadle_logo.png"
+            imgSrc="src/assets/bombadle_logo.png"
             altText="logo"
             className="logo logo-desktop"
             onError={handleImageError}
@@ -79,7 +78,7 @@ function LoginPage() {
         {/*     LOGO MOBILE     */}
         <NavImgButton
             to="/"
-            imgSrc="/img/bombadle_logo_mobile.png"
+            imgSrc="src/assets/bombadle_logo_mobile.png"
             altText="logoMobile"
             className="logo logo-mobile"
             onError={handleImageError}
@@ -119,8 +118,6 @@ function LoginPage() {
                 <button type="submit" disabled={loading}>
                     {loading ? "Ładowanie..." : "ZALOGUJ SIĘ"}
                 </button>
-
-
 
                 <div className="divider">LUB</div>
                 <div aria-live="polite" className="form-message">

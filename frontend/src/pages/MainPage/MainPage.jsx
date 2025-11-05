@@ -1,8 +1,8 @@
 import React from 'react';
-import './style/img-buttons.css';
-import NavImgButton from "./NavImgButton.jsx";
-import Footer from "./Footer.jsx";
-import Header from "./Header.jsx";
+import '../../style/img-buttons.css';
+import NavImgButton from "../../components/NavImgButton.jsx";
+import Footer from "../../components/Footer.jsx";
+import Header from "../../components/Header.jsx";
 
 function MainPage() {
     const handleImageError = (e) => {
@@ -17,7 +17,7 @@ function MainPage() {
 
                 <NavImgButton
                     to="/"
-                    imgSrc="/img/button_classic.png"
+                    imgSrc="src/assets/buttons/button_classic.png"
                     altText="Tryb 'Klasyczny'"
                     className="image-button image-button-responsive"
                     onError={handleImageError}
@@ -25,7 +25,7 @@ function MainPage() {
 
                 <NavImgButton
                     to="/"
-                    imgSrc="/img/button_quote_mode.png"
+                    imgSrc="src/assets/buttons/button_quote_mode.png"
                     altText="Tryb 'Cytaty'"
                     className="image-button image-button-responsive"
                     onError={handleImageError}
@@ -33,7 +33,7 @@ function MainPage() {
 
                 <NavImgButton
                     to="/"
-                    imgSrc="/img/button_training_mode.png"
+                    imgSrc="src/assets/buttons/button_training_mode.png"
                     altText="Tryb 'Trening"
                     className="image-button image-button-responsive"
                     onError={handleImageError}
@@ -42,7 +42,7 @@ function MainPage() {
 
                 <NavImgButton
                     to="/login"
-                    imgSrc="/img/LoginButton.png"
+                    imgSrc="src/assets/buttons/login_button.png"
                     altText="Zaloguj się"
                     className="image-button login-mobile"
                     onError={handleImageError}
@@ -50,7 +50,7 @@ function MainPage() {
                 />
 
             </div>
-            <Footer />
+            <Footer/>
         </>
     );
 }

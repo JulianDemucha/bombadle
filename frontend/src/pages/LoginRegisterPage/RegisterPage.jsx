@@ -1,10 +1,10 @@
 /* css komponentu bazowany na https://freefrontend.com/css-login-forms/ */
-import './style/login-register-page.css';
-import './style/GoogleButton.css';
-import './style/logo.css';
+import './login-register-page.css';
+import './GoogleButton.css';
+import '../../style/logo.css';
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import Footer from "./Footer.jsx";
-import NavImgButton from "./NavImgButton.jsx";
+import Footer from "../../components/Footer.jsx";
+import NavImgButton from "../../components/NavImgButton.jsx";
 import axios from "axios";
 
 const handleImageError = (e) => {
@@ -20,12 +20,14 @@ const MAX_USERNAME_LEN = 16;
 /**
  *  { exists: boolean } OR ERROR ON ENDPOINT
  */
-function useDebouncedCheck({ value, minLen = 1, url, fieldSetter, delay = 500, fieldName}) {
+function useDebouncedCheck({value, minLen = 1, url, fieldSetter, delay = 500, fieldName}) {
     const controllerRef = useRef(null);
     const mountedRef = useRef(true);
     useEffect(() => {
         mountedRef.current = true;
-        return () => { mountedRef.current = false; };
+        return () => {
+            mountedRef.current = false;
+        };
     }, []);
 
     useEffect(() => {
@@ -40,7 +42,7 @@ function useDebouncedCheck({ value, minLen = 1, url, fieldSetter, delay = 500, f
 
         const timer = setTimeout(async () => {
             try {
-                const res = await axios.get(url, { signal: controller.signal });
+                const res = await axios.get(url, {signal: controller.signal});
                 if (!mountedRef.current || !active) return;
                 if (res.data?.exists) {
                     fieldSetter(
@@ -87,11 +89,11 @@ function RegisterPage() {
     });
 
     const setUsernameError = useCallback((msg) => {
-        setErrors(prev => ({ ...prev, username: msg }));
+        setErrors(prev => ({...prev, username: msg}));
     }, [setErrors]);
 
     const setEmailError = useCallback((msg) => {
-        setErrors(prev => ({ ...prev, email: msg }));
+        setErrors(prev => ({...prev, email: msg}));
     }, [setErrors]);
 
     const [loading, setLoading] = useState(false);
@@ -116,48 +118,53 @@ function RegisterPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         // reset
-        setErrors({ email: "", username: "", password: "", confirmPassword: "", general: "" });
+        setErrors({email: "", username: "", password: "", confirmPassword: "", general: ""});
         setSuccessMessage("");
 
         // client-side validations
         if (!email || !username || !password) {
-            setErrors(prev => ({ ...prev, general: "Wypełnij wymagane pola." }));
+            setErrors(prev => ({...prev, general: "Wypełnij wymagane pola."}));
             return;
         }
         if (username.length < MIN_USERNAME_LEN) {
-            setErrors(prev => ({ ...prev, username: `Nazwa użytkownika musi mieć co najmniej ${MIN_USERNAME_LEN} znaków.` }));
+            setErrors(prev => ({
+                ...prev,
+                username: `Nazwa użytkownika musi mieć co najmniej ${MIN_USERNAME_LEN} znaków.`
+            }));
             return;
         }
         if (username.length > MAX_USERNAME_LEN) {
-            setErrors(prev => ({ ...prev, username: `Nazwa użytkownika musi mieć co najwyżej ${MAX_USERNAME_LEN} znaków.` }));
+            setErrors(prev => ({
+                ...prev,
+                username: `Nazwa użytkownika musi mieć co najwyżej ${MAX_USERNAME_LEN} znaków.`
+            }));
             return;
         }
         if (password.length < MIN_PASSWORD_LEN) {
-            setErrors(prev => ({ ...prev, password: `Hasło musi mieć co najmniej ${MIN_PASSWORD_LEN} znaków.` }));
+            setErrors(prev => ({...prev, password: `Hasło musi mieć co najmniej ${MIN_PASSWORD_LEN} znaków.`}));
             return;
         }
         if (password.length > MAX_PASSWORD_LEN) {
-            setErrors(prev => ({ ...prev, password: `Hasło musi mieć co najwyżej ${MAX_PASSWORD_LEN} znaków.` }));
+            setErrors(prev => ({...prev, password: `Hasło musi mieć co najwyżej ${MAX_PASSWORD_LEN} znaków.`}));
             return;
         }
         if (!validateEmail(email)) {
-            setErrors(prev => ({ ...prev, email: "Nieprawidłowy adres e-mail." }));
+            setErrors(prev => ({...prev, email: "Nieprawidłowy adres e-mail."}));
             return;
         }
         if (password !== confirmPassword) {
-            setErrors(prev => ({ ...prev, confirmPassword: "Hasła nie są zgodne." }));
+            setErrors(prev => ({...prev, confirmPassword: "Hasła nie są zgodne."}));
             return;
         }
         if (!acceptedTerms || !acceptedPrivacy) {
-            setErrors(prev => ({ ...prev, general: "Musisz zaakceptować regulamin i politykę prywatności." }));
+            setErrors(prev => ({...prev, general: "Musisz zaakceptować regulamin i politykę prywatności."}));
             return;
         }
-
 
 
         setLoading(true);
         try {
-            const res = await axios.post("/api/auth/register", { email, username, password });
+            const res = await axios.post("/api/auth/register", {email, username, password});
 
             if (res.status === 201 || res.status === 200) {
                 setSuccessMessage(res.data?.message || "Konto zostało utworzone. Możesz się zalogować.");
@@ -167,25 +174,25 @@ function RegisterPage() {
 
         } catch (err) {
             if (err?.response) {
-                const { status, data } = err.response;
+                const {status, data} = err.response;
                 if (status === 409) {
                     const msg = data?.message || "Email lub nazwa użytkownika już istnieją.";
                     if (data?.field === "email") {
-                        setErrors(prev => ({ ...prev, email: msg }));
+                        setErrors(prev => ({...prev, email: msg}));
                     } else if (data?.field === "username") {
-                        setErrors(prev => ({ ...prev, username: msg }));
+                        setErrors(prev => ({...prev, username: msg}));
                     } else {
-                        setErrors(prev => ({ ...prev, general: msg }));
+                        setErrors(prev => ({...prev, general: msg}));
                     }
                 } else if (status === 422 && data?.errors) {
-                    setErrors(prev => ({ ...prev, ...data.errors }));
+                    setErrors(prev => ({...prev, ...data.errors}));
                 } else {
-                    setErrors(prev => ({ ...prev, general: data?.message || "Błąd podczas rejestracji." }));
+                    setErrors(prev => ({...prev, general: data?.message || "Błąd podczas rejestracji."}));
                 }
             } else if (err?.code === "ERR_CANCELED" || err?.name === "CanceledError") {
                 // request anulowany (raczej nie wystąpi w submit)
             } else {
-                setErrors(prev => ({ ...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie." }));
+                setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
             }
         } finally {
             setLoading(false);
@@ -197,14 +204,14 @@ function RegisterPage() {
         <>
             <NavImgButton
                 to="/"
-                imgSrc="/img/bombadle_logo.png"
+                imgSrc="src/assets/bombadle_logo.png"
                 altText="logo"
                 className="logo logo-desktop"
                 onError={handleImageError}
             />
             <NavImgButton
                 to="/"
-                imgSrc="/img/bombadle_logo_mobile.png"
+                imgSrc="src/assets/bombadle_logo_mobile.png"
                 altText="logoMobile"
                 className="logo logo-mobile"
                 onError={handleImageError}
@@ -267,7 +274,8 @@ function RegisterPage() {
                             required
                             aria-describedby="confirm-error"
                         />
-                        {errors.confirmPassword && <div id="confirm-error" className="field-error">{errors.confirmPassword}</div>}
+                        {errors.confirmPassword &&
+                            <div id="confirm-error" className="field-error">{errors.confirmPassword}</div>}
                     </div>
 
                     <div className="checkboxes">
@@ -278,7 +286,7 @@ function RegisterPage() {
                                 checked={acceptedTerms}
                                 onChange={(e) => setAcceptedTerms(e.target.checked)}
                             />
-                            <span className="checkmark" aria-hidden="true" />
+                            <span className="checkmark" aria-hidden="true"/>
                             <span className="checkbox-text">
                 Akceptuję <a href="/regulamin.html" target="_blank" rel="noopener noreferrer">regulamin</a>
               </span>
@@ -291,9 +299,10 @@ function RegisterPage() {
                                 checked={acceptedPrivacy}
                                 onChange={(e) => setAcceptedPrivacy(e.target.checked)}
                             />
-                            <span className="checkmark" aria-hidden="true" />
+                            <span className="checkmark" aria-hidden="true"/>
                             <span className="checkbox-text">
-                Akceptuję <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności / RODO</a>
+                Akceptuję <a href="/src/pages/PrivacyPolicyPage/privacy_policy.html" target="_blank"
+                             rel="noopener noreferrer">politykę prywatności / RODO</a>
               </span>
                         </label>
                     </div>
@@ -318,7 +327,7 @@ function RegisterPage() {
                     </div>
                 </form>
 
-                <Footer />
+                <Footer/>
             </div>
         </>
     );

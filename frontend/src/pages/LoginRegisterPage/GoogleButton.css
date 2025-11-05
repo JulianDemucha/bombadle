@@ -6,7 +6,7 @@
 
     color: #757575;
     background-size: 12px 12px;
-    background-image: url(../../public/img/google.svg);
+    background-image: url(../../assets/google.svg);
     background-color: white;
     background-repeat: no-repeat;
     background-position: 4px 15px;
@@ -20,7 +20,7 @@
 }
 
 @media (min-width: 405px) {
-    .login-with-google-btn{
+    .login-with-google-btn {
         background-size: 25px 25px;
         background-position: 12px 8px;
     }

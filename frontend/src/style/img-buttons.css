@@ -39,7 +39,6 @@
 /*}*/
 
 
-
 /*.image-button .button-text {*/
 /*    position: absolute;*/
 /*    top: 47%;*/
@@ -51,12 +50,12 @@
 /*    pointer-events: none;*/
 /*}*/
 
-.image-button-responsive{
+.image-button-responsive {
     max-width: 300px;
 }
 
 @media (min-width: 380px) {
-    .image-button-responsive{
+    .image-button-responsive {
         max-width: 500px;
     }
 }
@@ -82,11 +81,12 @@
     transition-duration: 0.05s;
 }
 
-.button-mode-choice-container{
+.button-mode-choice-container {
     display: flex;
     justify-content: center;
 }
-.button-mode-choice-container img{
+
+.button-mode-choice-container img {
     min-width: 400px;
     -webkit-user-drag: none;
     user-select: none;

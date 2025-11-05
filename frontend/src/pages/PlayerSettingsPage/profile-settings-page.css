@@ -3,7 +3,7 @@
     padding: 1.5rem;
 }
 
-.settings-panel-wrapper h1, h2, h3  {
+.settings-panel-wrapper h1, h2, h3 {
     margin-bottom: 1rem;
 }
 
@@ -72,6 +72,7 @@
 .settings-panel-wrapper .form-group {
     margin-bottom: 1.5rem;
 }
+
 .settings-panel-wrapper .form-group:last-child {
     margin-bottom: 0;
 }
@@ -84,7 +85,7 @@
     margin-bottom: 0.25rem;
 }
 
-.settings-panel-wrapper input{
+.settings-panel-wrapper input {
     width: 100%;
     padding: 0.5rem 0.75rem;
     border: 2px solid var(--primary);
@@ -94,7 +95,7 @@
     transition: all 0.3s;
 }
 
-.settings-panel-wrapper input:focus{
+.settings-panel-wrapper input:focus {
     box-shadow: 4px 4px 0px var(--primary);
     outline: none;
 }
@@ -143,6 +144,7 @@
     color: var(--primary);
     border-color: var(--primary);
 }
+
 .settings-panel-wrapper .btn-logout {
     background-color: #b00020;
     color: var(--primary);
@@ -151,6 +153,7 @@
     margin-right: 0;
 
 }
+
 .settings-panel-wrapper .btn-primary:hover,
 .btn-secondary:hover, .btn-danger:hover, .btn-logout:hover {
     box-shadow: 4px 4px 0px var(--primary);
@@ -169,20 +172,25 @@
     .settings-panel-wrapper {
         padding: 1rem;
     }
+
     .settings-panel-wrapper .container {
         padding: 1.5rem;
     }
+
     .settings-panel-wrapper h1 {
         font-size: 1.5rem;
     }
+
     .settings-panel-wrapper .profile-header {
         /*flex-direction: column;*/
         /*align-items: flex-start;*/
 
     }
+
     .settings-panel-wrapper .form-actions {
         flex-direction: column-reverse;
     }
+
     .settings-panel-wrapper .btn {
         width: 100%;
         text-align: center;

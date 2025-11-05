@@ -5,6 +5,7 @@
     top: 2.5rem;
     right: 0.7rem;
 }
+
 @media (min-width: 370px) {
     .profile-button {
         max-width: 60px;
@@ -12,6 +13,7 @@
         right: 0.7rem;
     }
 }
+
 @media (min-width: 500px) {
     .profile-button {
         max-width: 70px;

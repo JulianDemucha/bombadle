@@ -1,16 +1,16 @@
-import MainPage from "./MainPage.jsx";
-import Header from "./Header.jsx";
+import MainPage from "./pages/MainPage/MainPage.jsx";
+import Header from "./components/Header.jsx";
 import React from "react";
-import LoginPage from "./LoginPage.jsx";
-import Footer from "./Footer.jsx";
-import RegisterPage from "./RegisterPage.jsx";
+import LoginPage from "./pages/LoginRegisterPage/LoginPage.jsx";
+import Footer from "./components/Footer.jsx";
+import RegisterPage from "./pages/LoginRegisterPage/RegisterPage.jsx";
 import UnauthenticatedRoute from "./auth/UnauthenticatedRoute.jsx";
 import AuthenticatedRoute from "./auth/AuthenticatedRoute.jsx";
-import UserSettingsPage from "./UserSettingsPage.jsx";
+import PlayerSettingsPage from "./pages/PlayerSettingsPage/PlayerSettingsPage.jsx";
 
 export const routes = [
-    { path: '/', element: <> <MainPage /></> },
-    { path: '/Login', element: <UnauthenticatedRoute><LoginPage/></UnauthenticatedRoute> },
-    { path: '/Register', element: <UnauthenticatedRoute><RegisterPage/></UnauthenticatedRoute> },
-    { path: '/Profile/', element: <AuthenticatedRoute><UserSettingsPage/></AuthenticatedRoute> }
+    {path: '/', element: <> <MainPage/></>},
+    {path: '/Login', element: <UnauthenticatedRoute><LoginPage/></UnauthenticatedRoute>},
+    {path: '/Register', element: <UnauthenticatedRoute><RegisterPage/></UnauthenticatedRoute>},
+    {path: '/Profile/', element: <AuthenticatedRoute><PlayerSettingsPage/></AuthenticatedRoute>}
 ]
