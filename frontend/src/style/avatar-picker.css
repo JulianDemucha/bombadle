@@ -1,0 +1,67 @@
+.avatar-wrapper {
+    position: relative;
+}
+.avatar-image {
+    height: 160px;
+    width: 160px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    max-width: 448px;
+    width: auto;
+    border-radius: 8px;
+    background-color: var(--secondary);
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+}
+.avatar-option {
+    height: 96px;
+    width: 96px;
+    cursor: pointer;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid;
+    border-color: var(--accent);
+}
+
+.avatar-option:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    border-color: var(--primary);
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    height: 32px;
+    width: 32px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    color: white;
+    cursor: pointer;
+    font-size: 20px;
+
+}
+.modal-close-btn:hover {
+    background-color: #111111;
+}

@@ -147,7 +147,8 @@
     background-color: #b00020;
     color: var(--primary);
     border-color: var(--primary);
-    margin: 0 36rem;
+    margin-left: auto;
+    margin-right: 0;
 
 }
 .settings-panel-wrapper .btn-primary:hover,

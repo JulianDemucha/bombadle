@@ -1,4 +1,3 @@
-// import React, { useState } from 'react';
 import "./style/profile-settings-page.css";
 import Footer from "./Footer.jsx";
 import {useAuth} from "./auth/UseAuth.jsx";
@@ -6,6 +5,7 @@ import {useEffect, useState} from "react";
 import {apiFetch} from "./api.js";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
+import AvatarPicker from "./AvatarPicker.jsx";
 
 
 export default function UserSettingsPage() {
@@ -14,16 +14,22 @@ export default function UserSettingsPage() {
     const [avatar, setAvatar] = useState(null);
     const [saving, setSaving] = useState(false);
     // const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+
     const context = useAuth();
     const user = context.user;
     const reload = context.reload;
     const logout = context.logout;
+
     useEffect(() => {
         if (user) {
             setLogin(user.login ?? "");
             setAvatar(user.avatarImage ?? null);
         }
     }, [user]);
+
+    const handleAvatarSelected = (avatarUrl) => {
+        setAvatar(avatarUrl);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -32,7 +38,7 @@ export default function UserSettingsPage() {
             const body = {
                 // if login didnt change -> null -> backend wont change the value if null is given
                 login: (login === (user.login ?? "")) ? null : (login.trim() === "" ? null : login.trim()),
-                email: user.email, // backend wymaga
+
                 // if avatarLogin didnt change -> null
                 avatarImage: (avatar === (user.avatarImage ?? null)) ? null : (avatar ?? null)
             };
@@ -115,14 +121,9 @@ export default function UserSettingsPage() {
         }
     }
 
-    const handleChooseAvatar = () => {
-        const av = prompt("Wpisz nazwę avatara (enum), np. AVATAR1 — to jest do testów. Anuluj aby nie zmieniać.");
-        if (av !== null) setAvatar(av || null);
-    };
-
     const navigate = useNavigate();
 
-    // const avatarText = avatar ?? user?.avatarImage ?? "AVATAR_DEFAULT";
+    const avatarText = avatar ?? user?.avatarImage ?? "AVATAR_DEFAULT";
     return (
         <div className="settings-panel-wrapper">
 
@@ -144,17 +145,15 @@ export default function UserSettingsPage() {
 
                 <div className="profile-header">
                     <img className="avatar"
-                         src="https://placehold.co/100x100/1c3c2a/a05f3d?text=AV" // "./img/{avatarText}.png
+                         src={`./avatar/${avatarText}.jpg`}
                          alt="User Avatar"/>
                     <div className="profile-info">
-                        <h2>{user.login}</h2>
+                        <h2>{login}</h2>
                         <p>{user.email}</p>
-                        <button type="button" className="btn-link" onClick={handleChooseAvatar}>
-                            Wybierz avatar
-                        </button>
-                        <div style={{fontSize: 12, marginTop: 6}}>
-                            {avatar ? `Wybrano: ${avatar}` : (user?.avatarImage ? `Aktualny avatar: ${user.avatarImage}` : "Brak avatara")}
-                        </div>
+                        <AvatarPicker onAvatarSelect={handleAvatarSelected} />
+                        {/*<div style={{fontSize: 12, marginTop: 6}}>*/}
+                        {/*    {avatar ? `Wybrano: ${avatar}` : (user?.avatarImage ? `Aktualny avatar: ${user.avatarImage}` : "Brak avatara")}*/}
+                        {/*</div>*/}
                     </div>
                 </div>
 
