@@ -37,9 +37,12 @@
 }
 
 .settings-panel-wrapper .avatar {
-    width: 5rem;
-    border-radius: 9999px;
-    border: 2px solid var(--primary);
+    width: 5.5rem;
+    cursor: pointer;
+    border-radius: 40%;
+    object-fit: cover;
+    border: 2px solid;
+    border-color: var(--accent);;
 }
 
 .settings-panel-wrapper .profile-info h2 {

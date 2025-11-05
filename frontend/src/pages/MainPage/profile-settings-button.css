@@ -1,0 +1,7 @@
+.avatar-image {
+    cursor: pointer;
+    border-radius: 40%;
+    object-fit: cover;
+    border: 2px solid;
+    border-color: var(--accent);
+}

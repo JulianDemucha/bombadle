@@ -2,14 +2,6 @@
     position: relative;
 }
 
-.avatar-image {
-    height: 160px;
-    width: 160px;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -33,14 +25,14 @@
 .avatar-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
+    gap: 7px;
 }
 
 .avatar-option {
     height: 96px;
     width: 96px;
     cursor: pointer;
-    border-radius: 50%;
+    border-radius: 40%;
     object-fit: cover;
     border: 2px solid;
     border-color: var(--accent);
