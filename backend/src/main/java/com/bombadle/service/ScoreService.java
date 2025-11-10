@@ -16,6 +16,9 @@ public class ScoreService {
     private final ScoreRepository repo;
 
     public Score saveScore(Score score) {
+        if (score == null)
+            throw new IllegalArgumentException("Score cannot be null");
+
         return repo.save(score);
     }
 
@@ -41,6 +44,10 @@ public class ScoreService {
         repo.deleteAll();
         repo.flush();
         return count;
+    }
+
+    public boolean existsById(Long id) {
+        return repo.existsById(id);
     }
 
 
