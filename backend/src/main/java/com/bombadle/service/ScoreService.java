@@ -38,9 +38,10 @@ public class ScoreService {
         repo.deleteById(id);
     }
 
+    //todo integration test
     @Transactional
-    public int resetAllScores() {
-        int count = (int) repo.count();
+    public long resetAllScores() {
+        long count = repo.count();
         repo.deleteAll();
         repo.flush();
         return count;

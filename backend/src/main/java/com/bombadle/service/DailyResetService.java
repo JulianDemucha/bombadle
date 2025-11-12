@@ -25,7 +25,7 @@ public class DailyResetService {
     @Scheduled(cron = "0 0 7 * * *", zone = "Europe/Warsaw")
     public void pickNewCharacterCardAndResetScores() {
         log.info("7:00 - ITS SHOWTIMEEEEEE - Daily reset triggered: selecting new character and resetting scores.");
-        int count;
+        long count;
         cardMatcher.refreshCharacterCard(characterCardRepository.findRandomCard());
         log.info("new Character card has been picked: {}", cardMatcher.getCurrentCharacterCard());
         count = scoreService.resetAllScores();

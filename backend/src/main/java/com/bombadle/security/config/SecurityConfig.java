@@ -18,7 +18,6 @@ import org.springframework.security.oauth2.client.web.HttpSessionOAuth2Authoriza
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -29,9 +28,6 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
-    //todo on prod: SameSite=Lax, delete cors config, disable csrf
-    //currently cross origin -> SameSite has to be None
-    // -> csrf has to be enabled -> it cant be because of STATELESS -> Double Submit Cookie
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
         return new HttpSessionOAuth2AuthorizationRequestRepository();
@@ -41,13 +37,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {
-                })
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/api/auth/register", "/api/auth/authenticate", "/api/players/me")
-                )
-                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .csrf(AbstractHttpConfigurer::disable)
                 .securityMatcher("/api/**")
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -58,7 +48,10 @@ public class SecurityConfig {
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider)
                 .oauth2Login(AbstractHttpConfigurer::disable)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // Custom csrf - excluded paths are in StatelessCsrfFilter : 21
+                .addFilterAfter(new StatelessCsrfFilter(), JwtAuthenticationFilter.class);
+
         return http.build();
     }
 
