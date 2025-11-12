@@ -6,10 +6,6 @@ import com.bombadle.dto.mapper.PlayerMapper;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.repository.PlayerRepository;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -103,17 +99,9 @@ public class PlayerService {
 
             return ResponseEntity.ok(playerMapper.toDto(updatedPlayer));
 
-        } catch (ExpiredJwtException e) {
-            log.debug("UpdatePlayer: Expired JWT token");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token wygasł");
-
         } catch (UsernameNotFoundException e) {
             log.debug("UpdatePlayer: Username not found");
             return ResponseEntity.badRequest().body("Username not found");
-
-        } catch (SignatureException | MalformedJwtException | UnsupportedJwtException e) {
-            log.debug("UpdatePlayer: Invalid JWT token");
-            return ResponseEntity.badRequest().body("Invalid JWT token");
 
         } catch (Exception e) {
             log.error("UpdatePlayer: Unexpected error while extracting username from JWT token", e);
@@ -134,17 +122,9 @@ public class PlayerService {
                     ResponseEntity.ok().build()
                     :
                     ResponseEntity.notFound().build();
-        } catch (ExpiredJwtException e) {
-            log.debug("DeletePlayer: Expired JWT token");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token wygasł");
-
         } catch (UsernameNotFoundException e) {
             log.debug("DeletePlayer: Username not found");
             return ResponseEntity.badRequest().body("Username not found");
-
-        } catch (SignatureException | MalformedJwtException | UnsupportedJwtException e) {
-            log.debug("DeletePlayer: Invalid JWT token");
-            return ResponseEntity.badRequest().body("Invalid JWT token");
 
         } catch (Exception e) {
             log.error("DeletePlayer: Unexpected error while extracting username from JWT token", e);
