@@ -1,6 +1,7 @@
 package com.bombadle.dto.mapper;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.entity.Player;
+import com.bombadle.entity.Score;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -10,7 +11,6 @@ import java.util.Optional;
 
 @Component
 public class PlayerMapper {
-    /* single DTOs */
 
     public PlayerDto toDto(Player player) {
         return PlayerDto.builder()
@@ -23,9 +23,10 @@ public class PlayerMapper {
                 .lastLoginAt(player.getLastLoginAt().toString())
                 .hasGuessedToday(player.getHasGuessedToday())
                 .todayScore(Optional.ofNullable(player.getTodayScore())
+                        .map(Score::getScoreTimestamp)
                         .map(Object::toString)
                         .orElse(null))
-                .totalGuesses(Integer.toString(player.getTotalGuesses()))
+                .totalGuesses(player.getTotalGuesses())
                 .authProvider(player.getAuthProvider().toString())
                 .build();
         /*

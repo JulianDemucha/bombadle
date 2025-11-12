@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,7 +23,7 @@ public class Score {
     private Player player;
 
     @Column(name = "score_time_stamp", nullable = false)
-    private LocalDateTime scoreTimestamp;
+    private Instant scoreTimestamp;
 
     @Column(name = "number_of_tries", nullable = false)
     private int numberOfTries;

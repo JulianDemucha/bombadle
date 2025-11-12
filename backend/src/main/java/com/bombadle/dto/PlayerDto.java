@@ -13,6 +13,6 @@ public record PlayerDto (
     String lastLoginAt,
     boolean hasGuessedToday,
     String todayScore,
-    String totalGuesses,
+    int totalGuesses,
     String authProvider
 ){}
