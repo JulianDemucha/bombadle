@@ -101,7 +101,7 @@ public class PlayerService {
 
             repo.save(updatedPlayer);
 
-            return ResponseEntity.ok(updatedPlayer);
+            return ResponseEntity.ok(playerMapper.toDto(updatedPlayer));
 
         } catch (ExpiredJwtException e) {
             log.debug("UpdatePlayer: Expired JWT token");
