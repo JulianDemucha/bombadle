@@ -1,8 +1,11 @@
 package com.bombadle.security.config;
 
+import com.bombadle.security.filter.CsrfCookieFilter;
+import com.bombadle.security.filter.StatelessCsrfFilter;
 import com.bombadle.security.jwt.JwtAuthenticationFilter;
 import com.bombadle.security.oauth2.CustomOAuth2UserService;
 import com.bombadle.security.oauth2.OAuth2SuccessHandler;
+import com.bombadle.service.CsrfCookieService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +21,7 @@ import org.springframework.security.oauth2.client.web.HttpSessionOAuth2Authoriza
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -34,8 +38,25 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CsrfCookieFilter csrfCookieFilter(CsrfCookieService csrfCookieService) {
+        return new CsrfCookieFilter(csrfCookieService);
+    }
+
+    @Bean
+    public StatelessCsrfFilter statelessCsrfFilter() {
+        return new StatelessCsrfFilter(List.of(
+                "/api/auth/authenticate",
+                "/api/auth/register",
+                "/api/auth/csrf"
+        ));
+    }
+
+
+    @Bean
     @Order(1)
-    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http,
+                                                      CsrfCookieFilter csrfCookieFilter,
+                                                      StatelessCsrfFilter statelessCsrfFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .securityMatcher("/api/**")
@@ -48,9 +69,12 @@ public class SecurityConfig {
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider)
                 .oauth2Login(AbstractHttpConfigurer::disable)
+
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                // Custom csrf - excluded paths are in StatelessCsrfFilter : 21
-                .addFilterAfter(new StatelessCsrfFilter(), JwtAuthenticationFilter.class);
+                .addFilterAfter(csrfCookieFilter, JwtAuthenticationFilter.class)
+                .addFilterAfter(statelessCsrfFilter, CsrfCookieFilter.class);
+
 
         return http.build();
     }

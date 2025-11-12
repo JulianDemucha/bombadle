@@ -1,4 +1,4 @@
-package com.bombadle.security.config;
+package com.bombadle.security.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,13 +16,12 @@ import java.util.List;
 @Slf4j
 public class StatelessCsrfFilter extends OncePerRequestFilter {
 
-    private static final List<String> PROTECTED_METHODS = Arrays.asList("POST", "PUT", "DELETE", "PATCH");
+    private static final List<String> PROTECTED_METHODS = List.of("POST", "PUT", "DELETE", "PATCH");
+    private final List<String> excludedPathPrefixes;
 
-    private static final List<String> EXCLUDED_PATHS = Arrays.asList(
-            "/api/auth/authenticate",
-            "/api/auth/register",
-            "/api/auth/csrf"
-    );
+    public StatelessCsrfFilter(List<String> excludedPathPrefixes) {
+        this.excludedPathPrefixes = excludedPathPrefixes;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -31,19 +30,19 @@ public class StatelessCsrfFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        log.info("StatelessCsrfFilter: Checking request {} {}", request.getMethod(), request.getRequestURI());
-
         String path = request.getRequestURI();
-        if (EXCLUDED_PATHS.contains(path)) {
-            log.info("StatelessCsrfFilter: Path {} is excluded from CSRF protection", path);
+
+        // excluded jeśli ścieżka zaczyna się od któregoś prefiksu (obsługuje query params)
+        boolean excluded = excludedPathPrefixes.stream().anyMatch(path::startsWith);
+        if (excluded) {
             filterChain.doFilter(request, response);
             return;
         }
 
         if (PROTECTED_METHODS.contains(request.getMethod())) {
-            log.info("StatelessCsrfFilter: Protected method [{}]. Starting validation...", request.getMethod());
 
             String headerToken = request.getHeader("X-XSRF-TOKEN");
+
             String cookieToken = null;
             if (request.getCookies() != null) {
                 cookieToken = Arrays.stream(request.getCookies())
@@ -53,16 +52,11 @@ public class StatelessCsrfFilter extends OncePerRequestFilter {
                         .orElse(null);
             }
 
-            log.debug("StatelessCsrfFilter: Header Token: {}", headerToken);
-            log.debug("StatelessCsrfFilter: Cookie Token: {}", cookieToken);
-
             if (headerToken == null || cookieToken == null || !headerToken.equals(cookieToken)) {
-                log.warn("StatelessCsrfFilter: Invalid Token (Header: [{}], Cookie: [{}])", headerToken, cookieToken);
+                log.warn("StatelessCsrfFilter: CSRF validation failed for path {}", path);
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid CSRF Token");
                 return;
             }
-
-            log.info("StatelessCsrfFilter: Tokens match. Allowing request.");
         }
 
         filterChain.doFilter(request, response);

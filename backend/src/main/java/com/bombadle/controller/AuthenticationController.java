@@ -3,6 +3,8 @@ package com.bombadle.controller;
 import com.bombadle.service.AuthenticationService;
 import com.bombadle.security.auth.dto.AuthenticationRequest;
 import com.bombadle.security.auth.dto.RegisterRequest;
+import com.bombadle.service.CsrfCookieService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -11,12 +13,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
+    private final CsrfCookieService csrfCookieService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(
@@ -29,7 +33,7 @@ public class AuthenticationController {
                 .secure(true)
                 .path("/")
                 .maxAge(60 * 60 * 24)
-                .sameSite("None")
+                .sameSite("Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok().build();
@@ -38,7 +42,8 @@ public class AuthenticationController {
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(
             @RequestBody AuthenticationRequest request,
-            HttpServletResponse response
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse
     ) {
         String jwt = authenticationService.authenticate(request);
         ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
@@ -46,9 +51,10 @@ public class AuthenticationController {
                 .secure(true)
                 .path("/")
                 .maxAge(60 * 60 * 24) //24h
-                .sameSite("None")
+                .sameSite("Lax")
                 .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        csrfCookieService.ensureCsrfCookie(httpRequest, httpResponse);
         return ResponseEntity.ok().build();
     }
 
