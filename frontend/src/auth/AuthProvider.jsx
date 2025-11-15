@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from "react";
 import {AuthContext} from "./AuthContext";
-import {apiFetch} from "../api.js";
+import {apiFetch} from "../api/api.js";
 import {useNavigate} from "react-router-dom";
+import axios from "../api/axios.js";
 
 export function AuthProvider({children}) {
     const [user, setUser] = useState(null);
@@ -10,14 +11,20 @@ export function AuthProvider({children}) {
 
     async function loadUser() {
         setLoading(true);
-        const res = await apiFetch("/api/players/me", {method: "GET"});
-        if (res.status === 401) {
-            setUser(null);
+        try {
+            const res = await axios.get('/api/players/me');
+            setUser(res.data);
+        } catch (err) {
+            if (err.response?.status === 401) {
+                setUser(null);
+            } else {
+                console.error('Błąd podczas ładowania użytkownika:', err);
+                setUser(null);
+            }
+
+        }finally {
             setLoading(false);
-            return;
-        } else if (res.ok) setUser(res.data);
-        else setUser(null);
-        setLoading(false);
+        }
     }
 
     useEffect(() => {
@@ -25,6 +32,12 @@ export function AuthProvider({children}) {
     }, []);
 
     async function logout() {
+        const xsrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('XSRF-TOKEN'))
+            ?.split('=')[1];
+
+        axios.defaults.headers.common['X-XSRF-TOKEN'] = xsrfToken;
         await apiFetch("/api/auth/logout", {method: "POST"});
         setUser(null);
 
