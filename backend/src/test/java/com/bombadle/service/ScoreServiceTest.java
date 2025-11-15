@@ -18,6 +18,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 public class ScoreServiceTest {
@@ -46,36 +48,24 @@ public class ScoreServiceTest {
     void saveScoreShouldAddScoreSuccessfully() {
         Player player = getExamplePlayer();
         Score score = new Score();
-        score.setScoreTimestamp(LocalDateTime.now());
+        score.setScoreTimestamp(Instant.now());
         score.setId((long) 1);
         score.setNumberOfTries(5);
         score.setPlayer(player);
         player.setTodayScore(score);
 
-        Mockito.when(scoreRepository.save(score)).thenReturn(score);
+        when(scoreRepository.save(score)).thenReturn(score);
         Score savedScore = scoreService.saveScore(score);
 
         Assertions.assertNotNull(savedScore);
         Assertions.assertEquals(player.getEmail(), savedScore.getPlayer().getEmail());
         Assertions.assertEquals(score.getId(), savedScore.getId());
+        verify(scoreRepository, times(1)).save(score);
     }
 
     @Test
     void saveScoreShouldThrowExceptionWhenScoreIsNull() {
         Assertions.assertThrows(IllegalArgumentException.class, () -> scoreService.saveScore(null));
-    }
-
-//    @Test
-//    void getAllScoresShouldReturnAllScores() {
-//        List<Score> returnedScores = scoreService.getAllScores();
-//    }
-
-    @Test
-    void getScoreByIdShouldReturnScoreSuccessfully() {
-        Long id = (long) 1;
-        Optional<Score> score = scoreService.getScoreById(id);
-        if (score.isPresent())
-            Assertions.assertEquals(id, score.get().getId());
     }
 
     @Test
@@ -84,7 +74,7 @@ public class ScoreServiceTest {
         Score score = new Score();
         score.setPlayer(player);
 
-        Mockito.when(scoreRepository.findByPlayerId(player.getId())).thenReturn(Optional.of(score));
+        when(scoreRepository.findByPlayerId(player.getId())).thenReturn(Optional.of(score));
 
         Optional<Score> result = scoreService.getScoreByPlayerId(player.getId());
 
@@ -93,7 +83,3 @@ public class ScoreServiceTest {
     }
 
 }
-//
-//@Test
-//void
-//
