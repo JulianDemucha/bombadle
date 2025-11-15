@@ -1,8 +1,8 @@
 package com.bombadle.controller;
 
 import com.bombadle.service.AuthenticationService;
-import com.bombadle.security.auth.dto.AuthenticationRequest;
-import com.bombadle.security.auth.dto.RegisterRequest;
+import com.bombadle.dto.request.AuthenticationRequest;
+import com.bombadle.dto.request.RegisterRequest;
 import com.bombadle.service.CsrfCookieService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
