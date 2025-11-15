@@ -1,12 +1,13 @@
 package com.bombadle.controller;
 
 import com.bombadle.dto.PlayerDto;
-import com.bombadle.dto.PlayerUpdateRequest;
+import com.bombadle.dto.request.PlayerUpdateRequest;
 import com.bombadle.dto.mapper.PlayerMapper;
 import com.bombadle.service.PlayerService;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,8 +31,7 @@ public class PlayerController {
         if (authentication == null) {
             return ResponseEntity.status(401).build();
         }
-        //getAuthenticatedPlayer returns ResponseEntity<PlayerDto>
-        return playerService.getAuthenticatedPlayer(authentication);
+        return ResponseEntity.ok(playerService.getAuthenticatedPlayer(authentication));
     }
 
     @PutMapping("/me")
@@ -39,14 +39,16 @@ public class PlayerController {
             @NonNull @RequestBody PlayerUpdateRequest playerUpdateRequest,
             Authentication authentication
     ) {
-        //updatePlayer returns ResponseEntity<?>
-        return playerService.updatePlayer(playerUpdateRequest, authentication);
+        if (authentication == null || authentication.getPrincipal() == null)
+            throw new AuthenticationCredentialsNotFoundException("Authentication required");
+
+        return ResponseEntity.ok(playerService.updatePlayer(playerUpdateRequest, authentication));
     }
 
     @DeleteMapping("/me")
     public ResponseEntity<?> deletePlayer(Authentication authentication) {
-        //deletePlayer returns ResponseEntity<?>
-        return playerService.deletePlayer(authentication);
+        playerService.deletePlayer(authentication);
+        return ResponseEntity.ok().build();
     }
 
 }
