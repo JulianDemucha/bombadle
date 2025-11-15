@@ -43,7 +43,7 @@ server:
   servlet:
     session:
       cookie:
-        same-site: None
+        same-site: Lax
         secure: true   # true = https
 
 logging:
