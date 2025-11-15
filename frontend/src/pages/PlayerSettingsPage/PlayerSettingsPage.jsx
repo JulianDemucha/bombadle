@@ -2,8 +2,8 @@ import "./profile-settings-page.css";
 import Footer from "../../components/Footer.jsx";
 import {useAuth} from "../../auth/UseAuth.jsx";
 import {useEffect, useState} from "react";
-import {apiFetch} from "../../api.js";
-import axios from "axios";
+import {apiFetch} from "../../api/api.js";
+import axios from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
 import AvatarPicker from "./AvatarPicker.jsx";
 

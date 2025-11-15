@@ -5,7 +5,7 @@ import '../../style/logo.css';
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import NavImgButton from "../../components/NavImgButton.jsx";
-import axios from "axios";
+import axios from "../../api/axios.js";
 
 const handleImageError = (e) => {
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
