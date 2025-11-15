@@ -1,4 +1,4 @@
-package com.bombadle.dto;
+package com.bombadle.dto.request;
 
 import lombok.Builder;
 
