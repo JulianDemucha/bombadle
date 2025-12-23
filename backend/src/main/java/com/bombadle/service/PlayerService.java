@@ -3,7 +3,6 @@ package com.bombadle.service;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.exception.UsernameAlreadyTakenException;
 import com.bombadle.dto.request.PlayerUpdateRequest;
-import com.bombadle.dto.mapper.PlayerMapper;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.repository.PlayerRepository;
@@ -22,7 +21,6 @@ import java.util.List;
 @AllArgsConstructor
 public class PlayerService {
     private final PlayerRepository repo;
-    private final PlayerMapper playerMapper;
 
     public List<Player> getAllPlayers() {
         return repo.findAllByOrderByIdAsc();
@@ -35,7 +33,7 @@ public class PlayerService {
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User from token has NOT been found in the database: " + userDetails.getUsername() //email
                 ));
-        return playerMapper.toDto(player);
+        return PlayerDto.toDto(player);
     }
 
     private Boolean isNullOrIsBlank(String s) {
@@ -87,7 +85,7 @@ public class PlayerService {
 
         repo.save(updatedPlayer);
 
-        return playerMapper.toDto(updatedPlayer);
+        return PlayerDto.toDto(updatedPlayer);
     }
 
     @Transactional

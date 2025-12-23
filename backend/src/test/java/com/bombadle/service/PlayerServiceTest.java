@@ -3,7 +3,6 @@ package com.bombadle.service;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.exception.UsernameAlreadyTakenException;
 import com.bombadle.dto.request.PlayerUpdateRequest;
-import com.bombadle.dto.mapper.PlayerMapper;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.repository.PlayerRepository;
@@ -27,8 +26,6 @@ class PlayerServiceTest {
     PlayerRepository repo;
     @InjectMocks
     PlayerService playerService;
-    @Mock
-    PlayerMapper playerMapper;
 
     private Authentication mockAuthWithEmail(String email) {
         Authentication auth = mock(Authentication.class);
@@ -62,15 +59,14 @@ class PlayerServiceTest {
         player.setEmail("test@test.test");
         PlayerDto dto = getExamplePlayerDto(email);
         when(repo.findByEmail(email)).thenReturn(Optional.of(player));
-        when(playerMapper.toDto(player)).thenReturn(dto);
+        when(PlayerDto.toDto(player)).thenReturn(dto);
 
         PlayerDto returnedDto = playerService.getAuthenticatedPlayer(auth);
 
         assertEquals(dto, returnedDto);
 
-        // check if findByEmail() and toDto() have been called
+        // check if findByEmail() has been called
         verify(repo).findByEmail(email);
-        verify(playerMapper).toDto(player);
     }
 
     @Test
@@ -94,7 +90,7 @@ class PlayerServiceTest {
         PlayerDto dto = getExamplePlayerDto(email);
 
         when(repo.findByEmail(email)).thenReturn(Optional.of(existingPlayer));
-        when(playerMapper.toDto(existingPlayer)).thenReturn(dto);
+        when(PlayerDto.toDto(existingPlayer)).thenReturn(dto);
 
         PlayerUpdateRequest request = new PlayerUpdateRequest("testtest", "AVATAR_DEFAULT");
         PlayerDto returnedDto = playerService.updatePlayer(request, auth);
@@ -104,7 +100,6 @@ class PlayerServiceTest {
         assertEquals(AvatarImage.AVATAR_DEFAULT, existingPlayer.getAvatarImage());
 
         verify(repo).findByEmail(email);
-        verify(playerMapper).toDto(existingPlayer);
         verify(repo).save(existingPlayer);
     }
 
