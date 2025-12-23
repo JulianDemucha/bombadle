@@ -45,5 +45,10 @@ public class ApplicationConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public ApplicationConfigProperties.JwtConfig jwtConfig(ApplicationConfigProperties config) {
+        return config.jwt();
+    }
+
 
 }

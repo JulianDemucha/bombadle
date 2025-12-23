@@ -1,10 +1,37 @@
+bombadle:
+  jwt:
+    secret: ${JWT_SECRET}
+    # czas zycia jwt
+    expiration-seconds: 3600 # 1h
+    # czas zycia refreshTokena
+    refresh-expiration-seconds: 2592000 # 30 dni
+
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+    http-only: true
+    same-site: ${COOKIE_SAME_SITE:Lax}
+    domain: ${COOKIE_DOMAIN:}
+
+server:
+  port: ${SERVER_PORT}
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: sigma
+    key-store-type: PKCS12
+    key-alias: springboot
+  servlet:
+    session:
+      cookie:
+        same-site: Lax
+        secure: true   # true = https
+
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/bombadle
-    username: postgres
-    password: root
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: none
@@ -31,20 +58,6 @@ spring:
         provider:
           google:
             issuer-uri: https://accounts.google.com
-
-server:
-  port: 8443
-  ssl:
-    enabled: true
-    key-store: classpath:keystore.p12
-    key-store-password: sigma
-    key-store-type: PKCS12
-    key-alias: springboot
-  servlet:
-    session:
-      cookie:
-        same-site: Lax
-        secure: true   # true = https
 
 logging:
   level:
