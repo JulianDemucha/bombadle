@@ -1,8 +1,10 @@
 package com.bombadle.service;
-import org.springframework.beans.factory.annotation.Value;
+
+import com.bombadle.config.ApplicationConfigProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,16 +13,10 @@ import java.util.Arrays;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class CsrfCookieService {
 
-    @Value("${app.security.csrf-cookie-max-age-seconds:3600}") //default 1h
-    private long maxAgeSeconds;
-
-    @Value("${app.security.secure-cookies:true}") //default true
-    private boolean secureCookies;
-
-    @Value("${app.security.csrf-cookie-same-site:Lax}") //default lax
-    private String sameSite;
+    private final ApplicationConfigProperties properties;
 
     public void ensureCsrfCookie(HttpServletRequest request, HttpServletResponse response) {
         if (hasXsrfCookie(request)) return;
@@ -28,13 +24,15 @@ public class CsrfCookieService {
     }
 
     private void addCsrfCookie(HttpServletResponse response) {
+        var csrfConfig = properties.csrf();
+
         String token = UUID.randomUUID().toString();
         ResponseCookie cookie = ResponseCookie.from("XSRF-TOKEN", token)
                 .httpOnly(false)
-                .secure(secureCookies)
+                .secure(csrfConfig.secure())
                 .path("/")
-                .maxAge(maxAgeSeconds)
-                .sameSite(sameSite)
+                .maxAge(csrfConfig.cookieMaxAgeSeconds())
+                .sameSite(csrfConfig.sameSite())
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

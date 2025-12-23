@@ -7,10 +7,15 @@ bombadle:
     refresh-expiration-seconds: 2592000 # 30 dni
 
   cookie:
-    secure: ${COOKIE_SECURE:false}
+    secure: ${COOKIE_SECURE:true}
     http-only: true
     same-site: ${COOKIE_SAME_SITE:Lax}
     domain: ${COOKIE_DOMAIN:}
+
+  csrf:
+    cookie-max-age-seconds: 3600
+    secure: ${COOKIE_SECURE:true}
+    same-site: Lax
 
 server:
   port: ${SERVER_PORT}
