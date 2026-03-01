@@ -6,6 +6,7 @@ import React, {useCallback, useEffect, useRef, useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import NavImgButton from "../../components/NavImgButton.jsx";
 import axios from "../../api/axios.js";
+import {useNavigate} from "react-router-dom";
 
 const handleImageError = (e) => {
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
@@ -88,6 +89,8 @@ function RegisterPage() {
         general: ""
     });
 
+    const navigate = useNavigate();
+
     const setUsernameError = useCallback((msg) => {
         setErrors(prev => ({...prev, username: msg}));
     }, [setErrors]);
@@ -167,8 +170,9 @@ function RegisterPage() {
             const res = await axios.post("/api/auth/register", {email, username, password});
 
             if (res.status === 201 || res.status === 200) {
-                setSuccessMessage(res.data?.message || "Konto zostało utworzone. Możesz się zalogować.");
-                setTimeout(() => window.location.href = "/login", 1200);
+                setSuccessMessage(res.data?.message || "Konto zostało utworzone.");
+                setTimeout(200);
+                navigate("/");
 
             }
 

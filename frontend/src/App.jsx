@@ -1,12 +1,15 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import './pages/MainPage/MainPage.jsx';
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import './pages/LoginRegisterPage/login-button.css';
 import {routes} from "./routes.jsx";
 import {AuthProvider} from "./auth/AuthProvider.jsx";
+import {setupSilentRefresh} from "./api/axios.js";
 
 function App() {
-
+    useEffect(() => {
+        setupSilentRefresh();
+    }, []);
     return (
         <>
             <BrowserRouter>

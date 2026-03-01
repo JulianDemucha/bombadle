@@ -6,6 +6,8 @@ import React, {useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import NavImgButton from "../../components/NavImgButton.jsx";
 import axios from "axios";
+import {setupSilentRefresh} from "../../api/axios.js";
+import {useNavigate} from "react-router-dom";
 
 const handleImageError = (e) => {
     //todo make placeholders for all img / buttons
@@ -22,7 +24,7 @@ function LoginPage() {
         general: ""
     });
     const [loading, setLoading] = useState(false);
-
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -43,8 +45,9 @@ function LoginPage() {
             const res = await axios.post("/api/auth/authenticate", {email, password});
 
             if (res.status === 201 || res.status === 200) {
-                setTimeout(() => window.location.href = "/", 200);
-
+                setTimeout(400);
+                navigate("/");
+                setupSilentRefresh();
             }
 
         } catch (err) {
