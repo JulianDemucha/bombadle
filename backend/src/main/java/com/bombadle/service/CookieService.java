@@ -11,18 +11,31 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CookieService {
     private final RefreshTokenService refreshTokenService;
-    //todo zrobic config i z niego pobierac maxage
+    //todo create cookieconfig for maxage, httponly etc. from .env
     private int jwtMaxAge = 60*15;
     private int refreshTokenMaxAge = 60*60;
+    private boolean httpOnly = true;
+    private boolean secure = true;
+    private String sameSite = "Lax";
+
+    private ResponseCookie createCookie(String name, String value, long maxAgeSeconds) {
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(name, value)
+                .httpOnly(httpOnly)
+                .secure(secure)
+                .path("/")
+                .maxAge(maxAgeSeconds)
+                .sameSite(sameSite);
+
+        // prod
+        // if (cookieConfig.domain() != null && !cookieConfig.domain().isBlank()) {
+        //    builder.domain(cookieConfig.domain());
+        // }
+
+        return builder.build();
+    }
 
     public ResponseCookie createJwtCookie(String jwt) {
-        return ResponseCookie.from("jwt", jwt)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(jwtMaxAge)
-                .sameSite("Lax")
-                .build();
+        return createCookie("jwt", jwt, jwtMaxAge);
     }
 
     public ResponseCookie createJwtTimerCookie() {
@@ -36,13 +49,7 @@ public class CookieService {
     }
 
     public ResponseCookie createRefreshCookie(String refreshToken) {
-        return ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(refreshTokenMaxAge)
-                .sameSite("Strict")
-                .build();
+        return createCookie("refreshToken", refreshToken, refreshTokenMaxAge);
     }
 
     public void setAuthCookies(String jwt, String refreshToken, HttpServletResponse response) {
@@ -71,6 +78,13 @@ public class CookieService {
                         .toString());
         response.addHeader(HttpHeaders.SET_COOKIE, createRefreshCookie(refreshTokenCookieDto.getRefreshToken())
                 .toString());
+    }
+
+    public void clearCookies(HttpServletResponse response) {
+        response.addHeader(HttpHeaders.SET_COOKIE, createCookie("jwt", "", 0).toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, createCookie("refreshToken", "", 0).toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, createCookie("JWT-EXPIRES-AT", "", 0).toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, createCookie("XSRF-TOKEN", "", 0).toString());
     }
 
 

@@ -7,13 +7,17 @@ import com.bombadle.dto.request.RegisterRequest;
 import com.bombadle.service.CookieService;
 import com.bombadle.service.CsrfCookieService;
 import com.bombadle.service.RefreshTokenService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -98,6 +102,27 @@ public class AuthenticationController {
         cookieService.setAuthCookies(refreshTokenCookieDto, response);
 
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        Optional<Cookie> refreshCookie = Optional.empty();
+        if (request.getCookies() != null) {
+            refreshCookie = Arrays.stream(request.getCookies())
+                    .filter(c -> "refreshToken".equals(c.getName()))
+                    .findFirst();
+        }
+
+        refreshCookie.ifPresent(cookie -> {
+            String token = cookie.getValue();
+            refreshTokenService.revokeRefreshToken(token);
+        });
+
+        cookieService.clearCookies(response);
+
+        SecurityContextHolder.clearContext();
+
+        return ResponseEntity.noContent().build();
     }
 
 }
