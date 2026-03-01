@@ -171,7 +171,6 @@ function RegisterPage() {
 
             if (res.status === 201 || res.status === 200) {
                 setSuccessMessage(res.data?.message || "Konto zostało utworzone.");
-                setTimeout(200);
                 navigate("/");
 
             }

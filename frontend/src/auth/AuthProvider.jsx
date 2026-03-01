@@ -40,7 +40,6 @@ export function AuthProvider({children}) {
         axios.defaults.headers.common['X-XSRF-TOKEN'] = xsrfToken;
         await apiFetch("/api/auth/logout", {method: "POST"});
         setUser(null);
-
         navigate("/login");
     }
 

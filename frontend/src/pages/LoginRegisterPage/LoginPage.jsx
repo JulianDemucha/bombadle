@@ -45,7 +45,6 @@ function LoginPage() {
             const res = await axios.post("/api/auth/authenticate", {email, password});
 
             if (res.status === 201 || res.status === 200) {
-                setTimeout(400);
                 navigate("/");
                 setupSilentRefresh();
             }
