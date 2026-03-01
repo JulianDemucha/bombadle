@@ -14,12 +14,12 @@ import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
-public class StatelessCsrfFilter extends OncePerRequestFilter {
+public class StatelessCsrfValidationFilter extends OncePerRequestFilter {
 
     private static final List<String> PROTECTED_METHODS = List.of("POST", "PUT", "DELETE", "PATCH");
     private final List<String> excludedPathPrefixes;
 
-    public StatelessCsrfFilter(List<String> excludedPathPrefixes) {
+    public StatelessCsrfValidationFilter(List<String> excludedPathPrefixes) {
         this.excludedPathPrefixes = excludedPathPrefixes;
     }
 
@@ -32,7 +32,6 @@ public class StatelessCsrfFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // excluded jeśli ścieżka zaczyna się od któregoś prefiksu (obsługuje query params)
         boolean excluded = excludedPathPrefixes.stream().anyMatch(path::startsWith);
         if (excluded) {
             filterChain.doFilter(request, response);
@@ -40,8 +39,6 @@ public class StatelessCsrfFilter extends OncePerRequestFilter {
         }
 
         if (PROTECTED_METHODS.contains(request.getMethod())) {
-
-            String headerToken = request.getHeader("X-XSRF-TOKEN");
 
             String cookieToken = null;
             if (request.getCookies() != null) {
@@ -51,6 +48,8 @@ public class StatelessCsrfFilter extends OncePerRequestFilter {
                         .findFirst()
                         .orElse(null);
             }
+
+            String headerToken = request.getHeader("X-XSRF-TOKEN");
 
             if (headerToken == null || cookieToken == null || !headerToken.equals(cookieToken)) {
                 log.warn("StatelessCsrfFilter: CSRF validation failed for path {}", path);

@@ -1,8 +1,8 @@
 package com.bombadle.security.config;
 
-import com.bombadle.security.filter.CsrfCookieFilter;
-import com.bombadle.security.filter.StatelessCsrfFilter;
-import com.bombadle.security.jwt.JwtAuthenticationFilter;
+import com.bombadle.security.filter.CsrfCookieInjectionFilter;
+import com.bombadle.security.filter.StatelessCsrfValidationFilter;
+import com.bombadle.security.filter.JwtAuthenticationFilter;
 import com.bombadle.security.oauth2.CustomOAuth2UserService;
 import com.bombadle.security.oauth2.OAuth2SuccessHandler;
 import com.bombadle.service.CsrfCookieService;
@@ -38,13 +38,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CsrfCookieFilter csrfCookieFilter(CsrfCookieService csrfCookieService) {
-        return new CsrfCookieFilter(csrfCookieService);
+    public CsrfCookieInjectionFilter csrfCookieFilter(CsrfCookieService csrfCookieService) {
+        return new CsrfCookieInjectionFilter(csrfCookieService);
     }
 
     @Bean
-    public StatelessCsrfFilter statelessCsrfFilter() {
-        return new StatelessCsrfFilter(List.of(
+    public StatelessCsrfValidationFilter statelessCsrfFilter() {
+        return new StatelessCsrfValidationFilter(List.of(
                 "/api/auth/authenticate",
                 "/api/auth/register",
                 "/api/auth/csrf"
@@ -55,8 +55,8 @@ public class SecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http,
-                                                      CsrfCookieFilter csrfCookieFilter,
-                                                      StatelessCsrfFilter statelessCsrfFilter) throws Exception {
+                                                      CsrfCookieInjectionFilter csrfCookieFilter,
+                                                      StatelessCsrfValidationFilter statelessCsrfFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .securityMatcher("/api/**")
@@ -73,7 +73,7 @@ public class SecurityConfig {
 
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(csrfCookieFilter, JwtAuthenticationFilter.class)
-                .addFilterAfter(statelessCsrfFilter, CsrfCookieFilter.class);
+                .addFilterAfter(statelessCsrfFilter, CsrfCookieInjectionFilter.class);
 
 
         return http.build();

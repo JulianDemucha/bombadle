@@ -12,12 +12,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-public class CsrfCookieFilter extends OncePerRequestFilter {
+public class CsrfCookieInjectionFilter extends OncePerRequestFilter {
 
     private final CsrfCookieService csrfCookieService;
 
     //manual injection
-    public CsrfCookieFilter(CsrfCookieService csrfCookieService) {
+    public CsrfCookieInjectionFilter(CsrfCookieService csrfCookieService) {
         this.csrfCookieService = csrfCookieService;
     }
 
