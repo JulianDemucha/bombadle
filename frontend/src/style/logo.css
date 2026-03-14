@@ -17,6 +17,10 @@
     outline: none;
 }
 
+.logo.logo-75,
+.logo.logo-75 img {
+    width: 75%;
+}
 
 .logo-mobile {
     display: block;

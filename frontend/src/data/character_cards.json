@@ -1,0 +1,7 @@
+[
+  { "id":  1, "name":  "Kapitan Bomba", "image":  "kapitan_bomba.jpg"},
+  { "id":  4, "name":  "Marik1234", "image":  "marik1234.jpg"},
+  { "id":  5, "name":  "Michał Głuś", "image":  "michal_glus.jpg"},
+  { "id":  6, "name":  "Sułtan Kosmitów", "image":  "sultan_kosmitow.jpg"},
+  { "id":  7, "name":  "Bogusław Łęcina", "image":  "boguslaw_lecina.jpg"}
+]

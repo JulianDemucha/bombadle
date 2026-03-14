@@ -9,7 +9,8 @@ const handleImageError = (e) => {
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
 };
 
-function Header() {
+function Header({logoClassName}) {
+    logoClassName = logoClassName || 'logo logo-desktop';
     return (
         <header className="header-container">
 
@@ -18,7 +19,7 @@ function Header() {
                 to="/"
                 imgSrc="src/assets/bombadle_logo.png"
                 altText="logo"
-                className="logo logo-desktop"
+                className={logoClassName}
                 onError={handleImageError}
             />
 

@@ -1,4 +1,5 @@
-import React from 'react';
+import
+    React from 'react';
 import '../../style/img-buttons.css';
 import NavImgButton from "../../components/NavImgButton.jsx";
 import Footer from "../../components/Footer.jsx";
@@ -16,7 +17,7 @@ function MainPage() {
             <div className="buttons-container">
 
                 <NavImgButton
-                    to="/"
+                    to="/Classic"
                     imgSrc="src/assets/buttons/button_classic.png"
                     altText="Tryb 'Klasyczny'"
                     className="image-button image-button-responsive"
