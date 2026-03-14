@@ -13,13 +13,19 @@ public class CharacterCardController {
     private final CharacterCardService characterCardService;
 
 
-    /* returns a list of enums - for example:
-     [ MATCH, NOT_MATCH, MATCH, NOT_MATCH, HIGHER, NOT_FULL_MATCH ]
-     where:
-     [ NAME, GENDER, RACE, ALIVE, EPISODE, AFFILIATIONS ]
+    /* returns an array of CardField - for example:
+     [
+     (name_value, MATCH),
+     (gender_value, NOT_MATCH),
+     (race_value, MATCH),
+     (alive_value, NOT_MATCH),
+     (affiliations_value, NOT_FULL_MATCH),
+     (first_episode_value, HIGHER)
+     ]
      */
+
     @GetMapping("/compare/{id}")
-    public CardMatchingService.FieldMatcher[] compareCard(@PathVariable Long id) {
+    public CardMatchingService.CardField<?>[] compareCard(@PathVariable Long id) {
         CharacterCard characterCard = characterCardService.findCharacterCardById(id);
         if (characterCard != null)
             return characterCardService.compareCharacterCard(characterCard);

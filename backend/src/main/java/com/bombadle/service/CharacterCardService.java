@@ -14,7 +14,7 @@ public class CharacterCardService {
     private final CharacterCardRepository repo;
     private final CardMatchingService cardMatcher;
 
-    public CardMatchingService.FieldMatcher[] compareCharacterCard(CharacterCard characterCard) {
+    public CardMatchingService.CardField<?>[] compareCharacterCard(CharacterCard characterCard) {
         return cardMatcher.compareCharacterCards(characterCard);
     }
 

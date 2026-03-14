@@ -2,6 +2,8 @@ package com.bombadle.service;
 
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.enums.Affiliation;
+import com.bombadle.enums.Gender;
+import com.bombadle.enums.Race;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +17,15 @@ public class CardMatchingService {
 
     //higher and lower are made for firstAppearanceEpisode
     //not full match is made for Affiliations
-    public enum FieldMatcher {
+    public enum FieldMatch {
         MATCH,
         HIGHER,
         LOWER,
         NOT_MATCH,
         NOT_FULL_MATCH,
     }
+
+    public record CardField<T>(T value, FieldMatch match){}
 
     /*  todo (optional)
         In the future, consider situations where guess card has
@@ -31,58 +35,64 @@ public class CardMatchingService {
         in the frontend and can be included in the color legend).
      */
 
-    private FieldMatcher checkAffiliationsMatch(CharacterCard guess) {
+    private CardField<Set<Affiliation>> checkAffiliationsMatch(Set<Affiliation> affiliations) {
         Set<Affiliation> today = this.currentCharacterCard.getAffiliations();
-        Set<Affiliation> other = guess.getAffiliations();
 
         // full affiliations match
-        if (today.containsAll(other) && other.containsAll(today)) {
-            return FieldMatcher.MATCH;
+        if (today.containsAll(affiliations) && affiliations.containsAll(today)) {
+            return new CardField<>(affiliations, FieldMatch.MATCH);
         }
 
         // not even one common affiliation between the two lists
-        if (Collections.disjoint(today, other)) {
-            return FieldMatcher.NOT_MATCH;
+        if (Collections.disjoint(today, affiliations)) {
+            return new CardField<>(affiliations, FieldMatch.NOT_MATCH);
         }
 
-        return FieldMatcher.NOT_FULL_MATCH;
+        return new CardField<>(affiliations, FieldMatch.NOT_FULL_MATCH);
     }
 
-    private FieldMatcher checkFirstAppearanceEpisodeMatch(CharacterCard guess) {
+    private CardField<Integer> checkFirstAppearanceEpisodeMatch(int firstAppearanceEpisode) {
         if (this.currentCharacterCard.getFirstAppearanceEpisode()
-                == guess.getFirstAppearanceEpisode()) {
-            return CardMatchingService.FieldMatcher.MATCH;
+                == firstAppearanceEpisode) {
+            return new CardField<>(firstAppearanceEpisode, FieldMatch.MATCH);
         }
 
         if (this.currentCharacterCard.getFirstAppearanceEpisode()
-                > guess.getFirstAppearanceEpisode()) {
-            return CardMatchingService.FieldMatcher.HIGHER;
+                > firstAppearanceEpisode) {
+            return new CardField<>(firstAppearanceEpisode, FieldMatch.HIGHER);
         }
 
-        return CardMatchingService.FieldMatcher.LOWER;
+        return new CardField<>(firstAppearanceEpisode, FieldMatch.LOWER);
     }
 
     // Name Gender Race Alive Affiliations FirstAppearanceEpisode
-    public FieldMatcher[] compareCharacterCards(CharacterCard guess) {
+    public CardField<?>[] compareCharacterCards(CharacterCard guess) {
+        String name = guess.getName();
+        Gender gender = guess.getGender();
+        Race race = guess.getRace();
+        Boolean alive = guess.getAlive();
+        Set<Affiliation> affiliations = guess.getAffiliations();
+        int firstAppearanceEpisode = guess.getFirstAppearanceEpisode();
+
         if (this.currentCharacterCard.equals(guess)) {
-            return new FieldMatcher[]{
-                    FieldMatcher.MATCH, FieldMatcher.MATCH, FieldMatcher.MATCH
-                    , FieldMatcher.MATCH, FieldMatcher.MATCH, FieldMatcher.MATCH
-                    , FieldMatcher.MATCH
+            return new CardField[]{
+                    new CardField<>(name, FieldMatch.MATCH),new CardField<>(gender, FieldMatch.MATCH),
+                    new CardField<>(race, FieldMatch.MATCH), new CardField<>(alive, FieldMatch.MATCH),
+                    new CardField<>(affiliations, FieldMatch.MATCH),
+                    new CardField<>(firstAppearanceEpisode, FieldMatch.MATCH)
             };
         }
 
-        return new FieldMatcher[]{
-                (this.currentCharacterCard.getName().equals(guess.getName()) ?
-                        FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
-                (this.currentCharacterCard.getGender() == guess.getGender() ?
-                        FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
-                (this.currentCharacterCard.getRace() == guess.getRace() ?
-                        FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
-                (this.currentCharacterCard.getAlive() == guess.getAlive() ?
-                        FieldMatcher.MATCH : FieldMatcher.NOT_MATCH),
-                (checkFirstAppearanceEpisodeMatch(guess)),
-                (checkAffiliationsMatch(guess))
+        return new CardField[]{
+                new CardField<>(name, FieldMatch.NOT_MATCH),
+                new CardField<>(gender,(this.currentCharacterCard.getGender() == gender ?
+                        FieldMatch.MATCH : FieldMatch.NOT_MATCH)),
+                new CardField<>(race,(this.currentCharacterCard.getRace() == race ?
+                        FieldMatch.MATCH : FieldMatch.NOT_MATCH)),
+                new CardField<>(alive,(this.currentCharacterCard.getAlive() == alive ?
+                        FieldMatch.MATCH : FieldMatch.NOT_MATCH)),
+                (checkFirstAppearanceEpisodeMatch(guess.getFirstAppearanceEpisode())),
+                (checkAffiliationsMatch(guess.getAffiliations()))
         };
 
     }
