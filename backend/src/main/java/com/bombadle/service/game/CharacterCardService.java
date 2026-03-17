@@ -1,4 +1,4 @@
-package com.bombadle.service;
+package com.bombadle.service.game;
 
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.repository.CharacterCardRepository;
@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @AllArgsConstructor
 public class CharacterCardService {
@@ -14,16 +16,8 @@ public class CharacterCardService {
     private final CharacterCardRepository repo;
     private final CardMatchingService cardMatcher;
 
-    public CardMatchingService.CardField<?>[] compareCharacterCard(CharacterCard characterCard) {
-        return cardMatcher.compareCharacterCards(characterCard);
-    }
-
-    public CharacterCard getCurrentCharacterCard() {
-        return cardMatcher.getCurrentCharacterCard();
-    }
-
-    public CharacterCard findCharacterCardById(Long id) {
-        return repo.findById(id).orElse(null);
+    public Optional<CharacterCard> findCharacterCardById(Long id) {
+        return repo.findById(id);
     }
 
 }

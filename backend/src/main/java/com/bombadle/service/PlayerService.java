@@ -15,12 +15,17 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @AllArgsConstructor
 public class PlayerService {
     private final PlayerRepository repo;
+
+    public Optional<Player> findByEmail(String email){
+        return repo.findByEmail(email);
+    }
 
     public List<Player> getAllPlayers() {
         return repo.findAllByOrderByIdAsc();
@@ -36,10 +41,16 @@ public class PlayerService {
         return PlayerDto.toDto(player);
     }
 
-    private Boolean isNullOrIsBlank(String s) {
-        if (s == null) {
-            return true;
-        } else return s.isBlank();
+    public void registerScore(Player player) {
+        player.setHasGuessedToday(true);
+        player.setTotalSuccessfulGuesses(player.getTotalSuccessfulGuesses() + 1);
+        repo.save(player);
+    }
+
+    @Transactional
+    public void resetAllGuessFlags() {
+        repo.resetAllGuessFlags();
+        repo.flush();
     }
 
     @Transactional
@@ -100,5 +111,11 @@ public class PlayerService {
 
         if (deleted == 0)
             throw new UsernameNotFoundException("User from token has NOT been found: " + email);
+    }
+
+    private Boolean isNullOrIsBlank(String s) {
+        if (s == null) {
+            return true;
+        } else return s.isBlank();
     }
 }

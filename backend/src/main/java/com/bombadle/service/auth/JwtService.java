@@ -1,4 +1,4 @@
-package com.bombadle.security.jwt;
+package com.bombadle.service.auth;
 
 import com.bombadle.config.ApplicationConfigProperties;
 import io.jsonwebtoken.Claims;

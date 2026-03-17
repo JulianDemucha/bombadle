@@ -1,12 +1,12 @@
 package com.bombadle.controller;
 
 import com.bombadle.dto.RefreshTokenCookieDto;
-import com.bombadle.service.AuthenticationService;
+import com.bombadle.service.auth.AuthenticationService;
 import com.bombadle.dto.request.AuthenticationRequest;
 import com.bombadle.dto.request.RegisterRequest;
-import com.bombadle.service.CookieService;
-import com.bombadle.service.CsrfCookieService;
-import com.bombadle.service.RefreshTokenService;
+import com.bombadle.service.auth.CookieService;
+import com.bombadle.service.auth.CsrfCookieService;
+import com.bombadle.service.auth.RefreshTokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

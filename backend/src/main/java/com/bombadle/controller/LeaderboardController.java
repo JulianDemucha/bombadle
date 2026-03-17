@@ -2,7 +2,7 @@ package com.bombadle.controller;
 
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.dto.mapper.LeaderboardEntryMapper;
-import com.bombadle.service.LeaderboardService;
+import com.bombadle.service.stats.LeaderboardService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,6 +1,6 @@
 package com.bombadle.security.filter;
 
-import com.bombadle.service.CsrfCookieService;
+import com.bombadle.service.auth.CsrfCookieService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

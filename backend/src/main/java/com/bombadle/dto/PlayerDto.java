@@ -35,7 +35,7 @@ public record PlayerDto (
                         .map(Score::getScoreTimestamp)
                         .map(Object::toString)
                         .orElse(null))
-                .totalGuesses(player.getTotalGuesses())
+                .totalGuesses(player.getTotalSuccessfulGuesses())
                 .authProvider(player.getAuthProvider().toString())
                 .build();
         /*

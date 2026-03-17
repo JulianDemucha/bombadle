@@ -1,11 +1,11 @@
-package com.bombadle.security.config;
+package com.bombadle.config.security;
 
 import com.bombadle.security.filter.CsrfCookieInjectionFilter;
 import com.bombadle.security.filter.StatelessCsrfValidationFilter;
 import com.bombadle.security.filter.JwtAuthenticationFilter;
 import com.bombadle.security.oauth2.CustomOAuth2UserService;
 import com.bombadle.security.oauth2.OAuth2SuccessHandler;
-import com.bombadle.service.CsrfCookieService;
+import com.bombadle.service.auth.CsrfCookieService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -59,12 +59,12 @@ public class SecurityConfig {
                                                       StatelessCsrfValidationFilter statelessCsrfFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityMatcher("/api/**")
+                .securityMatcher("/api/**", "swagger-ui")
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/players/me", "/api/auth/check/**", "/api/auth/register"
-                                , "/api/auth/authenticate").permitAll()
+                                , "/api/auth/authenticate", "/api/card-guessing/**").permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider)
@@ -73,7 +73,8 @@ public class SecurityConfig {
 
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(csrfCookieFilter, JwtAuthenticationFilter.class)
-                .addFilterAfter(statelessCsrfFilter, CsrfCookieInjectionFilter.class);
+                .addFilterAfter(statelessCsrfFilter, CsrfCookieInjectionFilter.class)
+        ;
 
 
         return http.build();

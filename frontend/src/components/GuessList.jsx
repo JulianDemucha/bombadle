@@ -33,7 +33,7 @@ const GuessList = () => {
             gender: 'Mężczyzna',
             race: 'Kurvinox',
             isAlive: 'Tak',
-            affiliation: 'Gwiezdna Flota',
+            affiliation: 'Gwiezdna Flota, Kosmici, Sługa sułtana kosmitów',
             firstAppearance: '55',
             status: { gender: 'correct', race: 'correct', isAlive: 'wrong', affiliation: 'wrong', firstAppearance: 'wrong' }
         }
@@ -62,12 +62,12 @@ const GuessList = () => {
                                 <img src={`/character_card_avatars/${guess.image}`} alt={guess.name} />
                             </div>
 
-                            <div className={`tile ${guess.status.name}`}>{guess.name}</div>
-                            <div className={`tile ${guess.status.gender}`}>{guess.gender}</div>
-                            <div className={`tile ${guess.status.race}`}>{guess.race}</div>
-                            <div className={`tile ${guess.status.isAlive}`}>{guess.isAlive}</div>
-                            <div className={`tile ${guess.status.affiliation}`}>{guess.affiliation}</div>
-                            <div className={`tile ${guess.status.firstAppearance}`}>{guess.firstAppearance}</div>
+                            <div className={`tile text-tile ${guess.status.name}`} data-fulltext={guess.name}><span className="tile-text">{guess.name}</span></div>
+                            <div className={`tile text-tile ${guess.status.gender}`} data-fulltext={guess.gender}><span className="tile-text">{guess.gender}</span></div>
+                            <div className={`tile text-tile ${guess.status.race}`} data-fulltext={guess.race}><span className="tile-text">{guess.race}</span></div>
+                            <div className={`tile text-tile ${guess.status.isAlive}`} data-fulltext={guess.isAlive}><span className="tile-text">{guess.isAlive}</span></div>
+                            <div className={`tile text-tile ${guess.status.affiliation}`} data-fulltext={guess.affiliation}><span className="tile-text">{guess.affiliation}</span></div>
+                            <div className={`tile text-tile ${guess.status.firstAppearance}`} data-fulltext={guess.firstAppearance}><span className="tile-text">{guess.firstAppearance}</span></div>
 
                         </div>
                     ))}

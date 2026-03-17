@@ -1,4 +1,4 @@
-package com.bombadle.service;
+package com.bombadle.service.stats;
 
 import com.bombadle.entity.Player;
 import com.bombadle.entity.Score;

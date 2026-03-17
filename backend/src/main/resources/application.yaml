@@ -1,10 +1,10 @@
 bombadle:
   jwt:
     secret: ${JWT_SECRET}
-    # czas zycia jwt
-    expiration-seconds: 3600 # 1h
-    # czas zycia refreshTokena
-    refresh-expiration-seconds: 2592000 # 30 dni
+    # for jwt
+    expiration-seconds: 3600 # 1 hour
+    # for refresh token
+    refresh-expiration-seconds: 2592000 # 30 days
 
   cookie:
     secure: ${COOKIE_SECURE:true}

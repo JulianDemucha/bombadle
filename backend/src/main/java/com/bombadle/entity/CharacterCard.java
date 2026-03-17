@@ -1,23 +1,25 @@
 package com.bombadle.entity;
 
 import com.bombadle.enums.Affiliation;
+import com.bombadle.enums.Color;
 import com.bombadle.enums.Gender;
 import com.bombadle.enums.Race;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "character_card")
 @Getter
 public class CharacterCard {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -33,6 +35,15 @@ public class CharacterCard {
 
     @Column
     private Boolean alive;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "character_colors",
+            joinColumns = @JoinColumn(name = "character_id")
+    )
+    @Column(name = "colors", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Set<Color> colors = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(

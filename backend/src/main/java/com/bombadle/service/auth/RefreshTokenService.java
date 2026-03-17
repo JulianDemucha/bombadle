@@ -1,11 +1,10 @@
-package com.bombadle.service;
+package com.bombadle.service.auth;
 
 import com.bombadle.dto.RefreshTokenCookieDto;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.RefreshToken;
 import com.bombadle.repository.PlayerRepository;
 import com.bombadle.repository.RefreshTokenRepository;
-import com.bombadle.security.jwt.JwtService;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;

@@ -1,8 +1,8 @@
 package com.bombadle.security.oauth2;
 
 import com.bombadle.entity.Player;
-import com.bombadle.security.jwt.JwtService;
-import com.bombadle.service.CsrfCookieService;
+import com.bombadle.service.auth.JwtService;
+import com.bombadle.service.auth.CsrfCookieService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.bombadle.service;
+package com.bombadle.service.auth;
 
 import com.bombadle.dto.RefreshTokenCookieDto;
 import jakarta.servlet.http.HttpServletResponse;

@@ -2,7 +2,7 @@ package com.bombadle.security.filter;
 
 import java.io.IOException;
 
-import com.bombadle.security.jwt.JwtService;
+import com.bombadle.service.auth.JwtService;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import io.jsonwebtoken.ExpiredJwtException;

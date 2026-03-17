@@ -1,7 +1,7 @@
 package com.bombadle.controller;
 
 import com.bombadle.entity.Score;
-import com.bombadle.service.ScoreService;
+import com.bombadle.service.stats.ScoreService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

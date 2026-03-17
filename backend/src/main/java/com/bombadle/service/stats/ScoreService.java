@@ -1,11 +1,13 @@
-package com.bombadle.service;
+package com.bombadle.service.stats;
 
+import com.bombadle.entity.Player;
 import com.bombadle.entity.Score;
 import com.bombadle.repository.ScoreRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,8 +28,22 @@ public class ScoreService {
         return repo.findAll();
     }
 
-    public Optional<Score> getScoreByPlayerId(Long playerId) {
+    public Optional<Score> findScoreByPlayerId(Long playerId) {
         return repo.findByPlayerId(playerId);
+    }
+
+    public Optional<Score> findScoreByPlayerEmail(String playerEmail) {
+        return repo.findByPlayerEmail(playerEmail);
+    }
+
+    @Transactional
+    public void registerScore(Player player, int numberOfTries) {
+        Score score = Score.builder()
+                .player(player)
+                .scoreTimestamp(Instant.now())
+                .numberOfTries(numberOfTries)
+                .build();
+        repo.save(score);
     }
 
     public Optional<Score> getScoreById(Long id) {

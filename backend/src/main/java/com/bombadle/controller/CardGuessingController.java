@@ -1,0 +1,69 @@
+package com.bombadle.controller;
+
+import com.bombadle.dto.GuessResponse;
+import com.bombadle.service.game.CardMatchingService;
+import com.bombadle.service.game.CharacterCardService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController()
+@RequestMapping("/api/card-guessing")
+@RequiredArgsConstructor
+public class CardGuessingController {
+    private final CardMatchingService cardMatchingService;
+    private final CharacterCardService characterCardService;
+
+
+///
+/// Returns an GuessResponse which has CardField parameters - for example:
+/// ```json
+/// "correct": "false",
+/// {
+///     "name": {
+///         "value": "Sebastian Bąk",
+///         "match": "NOT_MATCH"
+///     },
+///     "gender": {
+///         "value": "MALE",
+///         "match": "MATCH"
+///     },
+///     "race": {
+///         "value": "Czlowiek",
+///         "match": "MATCH"
+///     },
+///     "alive": {
+///         "value": true,
+///         "match": "MATCH"
+///     },
+///     "colors": {
+///         "value": [
+///             "ZIELONY"
+///         ],
+///         "match": "NOT_MATCH"
+///     },
+///     "affiliations": {
+///         "value": [
+///             "Gwiezdna_Flota",
+///             "Szeregowy_Gwiezdnej_Floty"
+///         ],
+///         "match": "NOT_FULL_MATCH"
+///     },
+///     "firstAppearanceEpisode": {
+///         "value": 1,
+///         "match": "MATCH"
+///     }
+/// }
+/// ```
+    @GetMapping("/classic/guess/{id}")
+    public GuessResponse compareCard(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return cardMatchingService.compareCharacterCardClassic(id, userDetails);
+    }
+}

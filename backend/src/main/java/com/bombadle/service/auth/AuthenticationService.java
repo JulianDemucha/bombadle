@@ -1,4 +1,4 @@
-package com.bombadle.service;
+package com.bombadle.service.auth;
 
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
@@ -7,7 +7,6 @@ import com.bombadle.enums.Role;
 import com.bombadle.repository.PlayerRepository;
 import com.bombadle.dto.request.AuthenticationRequest;
 import com.bombadle.dto.request.RegisterRequest;
-import com.bombadle.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

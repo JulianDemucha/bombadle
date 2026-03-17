@@ -6,5 +6,6 @@ public enum Race {
     Skurwol,
     Kutanoid,
     Chuj,
-    Chujew
+    Chujew,
+    Kurwczerw
 }

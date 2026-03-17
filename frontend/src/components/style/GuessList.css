@@ -43,8 +43,15 @@
 }
 
 .guess-row {
+    position: relative;
+    z-index: 1;
     align-items: stretch;
     animation: slideDown 0.3s ease-out forwards;
+}
+
+.guess-row:hover,
+.guess-row:focus-within {
+    z-index: 30;
 }
 
 .header-label {
@@ -70,25 +77,53 @@
     font-size: 0.75rem;
     box-shadow: 0 2px 0px rgba(0,0,0,0.2);
     background-color: #7f8c8d;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
     overflow: hidden;
     text-overflow: ellipsis;
     border: 2px solid rgba(43, 43, 43, 0.45);
+    height: 58px;
     min-height: 58px;
 }
 
-/* Imie moze byc dluzsze (np. Kapitan Bomba), wiec ma prawo zejsc do 2 linii. */
-.guess-row .tile:nth-child(2) {
-    white-space: normal;
-    text-overflow: clip;
-    overflow-wrap: anywhere;
+.text-tile {
+    position: relative;
+    overflow: visible;
+}
+
+.tile-text {
+    display: -webkit-box;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.1;
 }
 
-/* Powiązania bywają najdłuższe, więc tylko tu dopuszczamy zawijanie. */
-.guess-row .tile:nth-child(6) {
+/* Pokazuje caly tekst w dymku bez zmiany ukladu listy. */
+.text-tile:hover::after {
+    content: attr(data-fulltext);
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 6px);
+    transform: translateX(-50%);
+    min-width: 120px;
+    max-width: 260px;
+    width: max-content;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 2px solid var(--accent);
+    background: #f7f0e6;
+    color: #2b2b2b;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    text-align: center;
     white-space: normal;
-    line-height: 1.1;
+    word-break: break-word;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 100;
 }
 
 .avatar-tile {
@@ -114,6 +149,8 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    position: relative;
+    overflow: visible;
 }
 
 @media (max-width: 768px) {
@@ -131,6 +168,7 @@
 
     .tile {
         font-size: 0.68rem;
+        height: 52px;
         min-height: 52px;
         padding: 4px;
     }
@@ -158,6 +196,7 @@
 
     .tile {
         font-size: 0.6rem;
+        height: 46px;
         min-height: 46px;
         line-height: 1.1;
     }

@@ -1,10 +1,7 @@
 package com.bombadle.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
 
@@ -12,7 +9,7 @@ import java.time.Instant;
 @Entity
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 public class RefreshToken {
 
@@ -30,6 +27,6 @@ public class RefreshToken {
     private Instant revokedAt;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "player_id", referencedColumnName = "id")
     private Player player;
 }

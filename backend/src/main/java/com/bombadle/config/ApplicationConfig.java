@@ -17,10 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 public class ApplicationConfig {
 
-    private final PlayerRepository repo;
-
     @Bean
-    public UserDetailsService userDetailsService() {
+    public UserDetailsService userDetailsService(PlayerRepository repo) {
         return email -> repo.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("user with email " + email + " not found"));
     }
@@ -50,5 +48,9 @@ public class ApplicationConfig {
         return config.jwt();
     }
 
+    @Bean
+    public CurrentCharacterCardWrapper currentCharacterCard() {
+        return new CurrentCharacterCardWrapper(null);
+    }
 
 }

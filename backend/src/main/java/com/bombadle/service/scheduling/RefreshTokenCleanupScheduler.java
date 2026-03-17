@@ -1,5 +1,6 @@
-package com.bombadle.service;
+package com.bombadle.service.scheduling;
 
+import com.bombadle.service.auth.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;

@@ -17,13 +17,13 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "player")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Getter
 public class Player implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -58,7 +58,7 @@ public class Player implements UserDetails {
     private AvatarImage avatarImage;
 
     @Column(name = "total_guesses", nullable = false)
-    private int totalGuesses;
+    private int totalSuccessfulGuesses;
 
     @Column(name = "has_guessed_today", nullable = false)
     private Boolean hasGuessedToday;

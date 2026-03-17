@@ -17,6 +17,8 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
 
     Optional<Score> findByPlayerId(Long playerId);
 
+    Optional<Score> findByPlayerEmail(String playerEmail);
+
     Optional<Score> findById(Long id);
 
     void deleteById(Long playerId);

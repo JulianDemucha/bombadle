@@ -1,16 +1,14 @@
 package com.bombadle.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "score")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
 public class Score {
@@ -28,4 +26,10 @@ public class Score {
     @Column(name = "number_of_tries", nullable = false)
     private int numberOfTries;
 
+    @Builder
+    public Score(Player player, Instant scoreTimestamp, int numberOfTries) {
+        this.player = player;
+        this.scoreTimestamp = scoreTimestamp;
+        this.numberOfTries = numberOfTries;
+    }
 }

@@ -1,4 +1,4 @@
-package com.bombadle.security.config;
+package com.bombadle.config.security;
 
 
 import org.springframework.context.annotation.Bean;

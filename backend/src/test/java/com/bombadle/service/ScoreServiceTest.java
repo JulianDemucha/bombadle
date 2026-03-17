@@ -6,16 +6,15 @@ import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
 import com.bombadle.repository.ScoreRepository;
+import com.bombadle.service.stats.ScoreService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.mockito.Mockito.*;
@@ -40,7 +39,7 @@ public class ScoreServiceTest {
         player.setCreatedAt(Instant.now());
         player.setLastLoginAt(Instant.now());
         player.setHasGuessedToday(true);
-        player.setTotalGuesses(1);
+        player.setTotalSuccessfulGuesses(1);
         return player;
     }
 
@@ -76,7 +75,7 @@ public class ScoreServiceTest {
 
         when(scoreRepository.findByPlayerId(player.getId())).thenReturn(Optional.of(score));
 
-        Optional<Score> result = scoreService.getScoreByPlayerId(player.getId());
+        Optional<Score> result = scoreService.findScoreByPlayerId(player.getId());
 
         Assertions.assertTrue(result.isPresent());
         Assertions.assertEquals(player.getId(), result.get().getPlayer().getId());
