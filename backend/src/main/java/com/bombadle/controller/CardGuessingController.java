@@ -6,10 +6,7 @@ import com.bombadle.service.game.CharacterCardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController()
 @RequestMapping("/api/card-guessing")
@@ -59,7 +56,7 @@ public class CardGuessingController {
 ///     }
 /// }
 /// ```
-    @GetMapping("/classic/guess/{id}")
+    @PostMapping("/classic/guess/{id}")
     public GuessResponse compareCard(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails
