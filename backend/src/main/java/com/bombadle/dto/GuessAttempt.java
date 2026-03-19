@@ -1,6 +1,7 @@
 package com.bombadle.dto;
 
 import com.bombadle.enums.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 
 import java.util.Set;
@@ -16,6 +17,7 @@ public record GuessAttempt(
         CardField<Integer> firstAppearanceEpisode
 
 ) {
+    @JsonIgnore
     public boolean isCorrect() {
         return name.match().equals(MatchType.MATCH);
     }

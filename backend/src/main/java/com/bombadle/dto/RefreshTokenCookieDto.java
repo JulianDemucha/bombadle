@@ -3,10 +3,12 @@ package com.bombadle.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.Instant;
+
 @Data
 @Builder
 public class RefreshTokenCookieDto {
     private String refreshToken;
-    private String expiresAt;
+    private Instant expiresAt;
     private String jwt;
 }

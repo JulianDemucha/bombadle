@@ -14,7 +14,6 @@ import java.util.Optional;
 public class CharacterCardService {
     private static final Logger log = LoggerFactory.getLogger(CharacterCardService.class);
     private final CharacterCardRepository repo;
-    private final CardMatchingService cardMatcher;
 
     public Optional<CharacterCard> findCharacterCardById(Long id) {
         return repo.findById(id);

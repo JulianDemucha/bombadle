@@ -1,13 +1,15 @@
 package com.bombadle.service.auth;
 
+import com.bombadle.config.ApplicationConfigProperties;
 import com.bombadle.dto.RefreshTokenCookieDto;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.RefreshToken;
-import com.bombadle.repository.PlayerRepository;
 import com.bombadle.repository.RefreshTokenRepository;
 
+import com.bombadle.service.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,14 +21,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
-    private final PlayerRepository playerRepository;
+    private final PlayerService playerService;
     private final JwtService jwtService;
+    private final ApplicationConfigProperties.JwtConfig jwtConfig;
 
     public RefreshTokenCookieDto createRefreshToken(String email) {
         String token = UUID.randomUUID().toString();
         String hashedToken = DigestUtils.sha256Hex(token);
-        Instant expiresAt = Instant.now().plusSeconds(60 * 60); //1h
-        Player player = playerRepository.findByEmail(email).orElseThrow(
+        Instant expiresAt = Instant.now().plusSeconds(jwtConfig.refreshExpirationSeconds()); //1h
+        Player player = playerService.findByEmail(email).orElseThrow(
                 () -> new UsernameNotFoundException("User not found: " + email)
         );
 
@@ -43,7 +46,7 @@ public class RefreshTokenService {
 
         return RefreshTokenCookieDto.builder()
                 .refreshToken(token)
-                .expiresAt(expiresAt.toString())
+                .expiresAt(expiresAt)
                 .jwt(jwtService.generateJwtToken(player))
                 .build();
     }
@@ -67,7 +70,7 @@ public class RefreshTokenService {
 
         return RefreshTokenCookieDto.builder()
                 .refreshToken(newToken)
-                .expiresAt(expiresAt.toString())
+                .expiresAt(expiresAt)
                 .jwt(jwtService.generateJwtToken(player))
                 .build();
     }

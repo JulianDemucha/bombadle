@@ -49,6 +49,12 @@ public class ApplicationConfig {
     }
 
     @Bean
+    public ApplicationConfigProperties.CookieConfig cookieConfig(ApplicationConfigProperties config) {
+        return config.cookie();
+    }
+
+
+    @Bean
     public CurrentCharacterCardWrapper currentCharacterCard() {
         return new CurrentCharacterCardWrapper(null);
     }

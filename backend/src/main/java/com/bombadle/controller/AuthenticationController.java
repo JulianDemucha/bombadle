@@ -1,16 +1,14 @@
 package com.bombadle.controller;
 
 import com.bombadle.dto.RefreshTokenCookieDto;
-import com.bombadle.service.auth.AuthenticationService;
+import com.bombadle.service.auth.*;
 import com.bombadle.dto.request.AuthenticationRequest;
 import com.bombadle.dto.request.RegisterRequest;
-import com.bombadle.service.auth.CookieService;
-import com.bombadle.service.auth.CsrfCookieService;
-import com.bombadle.service.auth.RefreshTokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +24,7 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final CsrfCookieService csrfCookieService;
     private final RefreshTokenService refreshTokenService;
-    private final CookieService cookieService;
+    private final AuthCookiesService authCookieService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(
@@ -35,7 +33,7 @@ public class AuthenticationController {
             HttpServletResponse httpResponse
     ) {
         String jwt = authenticationService.register(registerRequest);
-        cookieService.setAuthCookies(
+        authCookieService.setAuthCookies(
                 jwt,
                 refreshTokenService.createRefreshToken(registerRequest.getEmail()).getRefreshToken(),
                 httpResponse
@@ -51,7 +49,7 @@ public class AuthenticationController {
             HttpServletResponse httpResponse
     ) {
         String jwt = authenticationService.authenticate(authRequest);
-        cookieService.setAuthCookies(
+        authCookieService.setAuthCookies(
                 jwt,
                 refreshTokenService.createRefreshToken(authRequest.getEmail()).getRefreshToken(),
                 httpResponse
@@ -99,7 +97,7 @@ public class AuthenticationController {
 
         RefreshTokenCookieDto refreshTokenCookieDto = refreshTokenService.createRefreshTokenAndRevokeOld(refreshToken);
 
-        cookieService.setAuthCookies(refreshTokenCookieDto, response);
+        authCookieService.setAuthCookies(refreshTokenCookieDto.getJwt(), refreshTokenCookieDto.getRefreshToken(), response);
 
         return ResponseEntity.ok().build();
     }
@@ -118,11 +116,14 @@ public class AuthenticationController {
             refreshTokenService.revokeRefreshToken(token);
         });
 
-        cookieService.clearCookies(response);
+        HttpHeaders clearCookiesHeaders = authCookieService.createClearCookiesHeaders();
 
         SecurityContextHolder.clearContext();
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .headers(clearCookiesHeaders)
+                .build();
     }
 
 }

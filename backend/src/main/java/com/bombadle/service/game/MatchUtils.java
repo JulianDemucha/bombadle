@@ -29,7 +29,6 @@ public class MatchUtils {
 
     public static GuessAttempt getFullMatch(CharacterCard guess) {
         return GuessAttempt.builder()
-                .guessed(true)
                 .name(
                         getManualMatch(guess.getName(), MatchType.MATCH)
                 )
@@ -85,7 +84,6 @@ public class MatchUtils {
         }
 
         return GuessAttempt.builder()
-                .guessed(false)
                 .name(new CardField<>(guess.getName(), MatchType.NOT_MATCH))
                 .gender(getMatch(
                         guess.getGender(),

@@ -1,5 +1,4 @@
 package com.bombadle.config;
-import jakarta.servlet.http.Cookie;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "bombadle")
