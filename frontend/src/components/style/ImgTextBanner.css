@@ -10,14 +10,14 @@
     display: inline-block;
     max-width: 100%;
     width: 16%;
-    margin-left: 42%;
-    opacity: 0.85;
+    margin: 0 auto;
 }
 
 .background-image {
     width: 100%;
     height: auto;
     display: block;
+    opacity: 0.85;
 }
 .title-banner-container {
     position: absolute;
@@ -34,6 +34,7 @@
     font-family: 'PixelifySans', serif;
     -webkit-font-smoothing: none;
     color: rgba(0, 0, 0, 0.6);
+    font-weight: bold;
     font-size: 1.65rem;
     margin-bottom: 0.5rem; /* shadow makes real image be a lil bit higher */
 }

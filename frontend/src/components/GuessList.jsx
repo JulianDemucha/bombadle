@@ -11,9 +11,10 @@ const GuessList = () => {
             gender: 'Mezczyzna',
             race: 'Człowiek',
             isAlive: 'Tak',
+            colors: 'Niebieski, Żółty',
             affiliation: 'Gwiezdna Flota',
             firstAppearance: '1',
-            status: { gender: 'correct', race: 'correct', isAlive: 'correct', affiliation: 'correct', firstAppearance: 'wrong' }
+            status: { gender: 'correct', race: 'correct', isAlive: 'correct', colors: 'correct', affiliation: 'correct', firstAppearance: 'wrong' }
         },
         {
             id: 4,
@@ -22,9 +23,10 @@ const GuessList = () => {
             gender: 'Mężczyzna',
             race: 'Nieznana',
             isAlive: 'Nie',
+            colors: 'Szary, Czarny',
             affiliation: 'marik1234',
             firstAppearance: '104',
-            status: { gender: 'wrong', race: 'correct', isAlive: 'correct', affiliation: 'wrong', firstAppearance: 'partial' }
+            status: { gender: 'wrong', race: 'correct', isAlive: 'correct', colors: 'wrong', affiliation: 'wrong', firstAppearance: 'partial' }
         },
         {
             id: 5,
@@ -33,9 +35,10 @@ const GuessList = () => {
             gender: 'Mężczyzna',
             race: 'Kurvinox',
             isAlive: 'Tak',
+            colors: 'Zielony, Purpurowy',
             affiliation: 'Gwiezdna Flota, Kosmici, Sługa sułtana kosmitów',
             firstAppearance: '55',
-            status: { gender: 'correct', race: 'correct', isAlive: 'wrong', affiliation: 'wrong', firstAppearance: 'wrong' }
+            status: { gender: 'correct', race: 'correct', isAlive: 'wrong', colors: 'partial', affiliation: 'wrong', firstAppearance: 'wrong' }
         }
     ]);
     useEffect(() => {
@@ -50,6 +53,7 @@ const GuessList = () => {
                     <div className="header-label">Płeć</div>
                     <div className="header-label">Rasa</div>
                     <div className="header-label">Żywy</div>
+                    <div className="header-label">Kolorystyka</div>
                     <div className="header-label">Powiązania</div>
                     <div className="header-label">Pierwsze pojawienie</div>
                 </div>
@@ -66,6 +70,7 @@ const GuessList = () => {
                             <div className={`tile text-tile ${guess.status.gender}`} data-fulltext={guess.gender}><span className="tile-text">{guess.gender}</span></div>
                             <div className={`tile text-tile ${guess.status.race}`} data-fulltext={guess.race}><span className="tile-text">{guess.race}</span></div>
                             <div className={`tile text-tile ${guess.status.isAlive}`} data-fulltext={guess.isAlive}><span className="tile-text">{guess.isAlive}</span></div>
+                            <div className={`tile text-tile ${guess.status.colors}`} data-fulltext={guess.colors}><span className="tile-text">{guess.colors}</span></div>
                             <div className={`tile text-tile ${guess.status.affiliation}`} data-fulltext={guess.affiliation}><span className="tile-text">{guess.affiliation}</span></div>
                             <div className={`tile text-tile ${guess.status.firstAppearance}`} data-fulltext={guess.firstAppearance}><span className="tile-text">{guess.firstAppearance}</span></div>
 

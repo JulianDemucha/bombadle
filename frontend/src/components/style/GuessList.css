@@ -1,14 +1,12 @@
-:root {
-    --correct: #6ea04b;
-    --wrong: #a84834;
-    --partial: #d3913b;
-    --accent: #2b2b2b;
-    --panel-bg: rgba(173, 140, 115, 0.82);
-    --panel-border: #2b2b2b;
-    --tile-text: #f7f0e6;
-}
-
 .game-wrapper {
+    --guess-correct: #6ea04b;
+    --guess-wrong: #a84834;
+    --guess-partial: #d3913b;
+    --guess-accent: #2b2b2b;
+    --guess-panel-bg: rgba(173, 140, 115, 0.82);
+    --guess-panel-border: #2b2b2b;
+    --guess-tile-text: #f7f0e6;
+
     width: 100%;
     display: flex;
     justify-content: center;
@@ -20,13 +18,13 @@
 
 .board-container {
     width: 100%;
-    max-width: 580px;
+    max-width: 700px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background-color: var(--panel-bg);
-    border: 3px solid var(--panel-border);
+    background-color: var(--guess-panel-bg);
+    border: 3px solid #5a463a;
     border-radius: 10px;
     padding: 12px;
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
@@ -34,7 +32,7 @@
 
 .guess-grid {
     display: grid;
-    grid-template-columns: 64px 1.35fr 1.25fr 1.15fr 0.9fr 1.15fr 1.1fr;
+    grid-template-columns: 64px 1.35fr 1.25fr 1.15fr 0.9fr 1.3fr 1.15fr 1.1fr;
     gap: 6px;
 }
 
@@ -59,8 +57,8 @@
     font-size: 0.8rem;
     font-weight: bold;
     text-transform: uppercase;
-    color: #2b2b2b;
-    border-bottom: 2px solid var(--accent);
+    color: #4f4035;
+    border-bottom: 2px solid var(--guess-accent);
     padding-bottom: 4px;
     font-family: 'PixelifySans', monospace;
 }
@@ -72,7 +70,7 @@
     text-align: center;
     padding: 5px 4px;
     border-radius: 6px;
-    color: var(--tile-text);
+    color: var(--guess-tile-text);
     font-weight: bold;
     font-size: 0.75rem;
     box-shadow: 0 2px 0px rgba(0,0,0,0.2);
@@ -113,7 +111,7 @@
     width: max-content;
     padding: 6px 8px;
     border-radius: 6px;
-    border: 2px solid var(--accent);
+    border: 2px solid var(--guess-accent);
     background: #f7f0e6;
     color: #2b2b2b;
     font-size: 0.72rem;
@@ -131,7 +129,7 @@
     padding: 0;
     overflow: hidden;
     background-color: #fff;
-    border: 2px solid var(--accent);
+    border: 2px solid var(--guess-accent);
     box-shadow: none;
 }
 
@@ -141,9 +139,9 @@
     object-fit: cover;
 }
 
-.correct { background-color: var(--correct); }
-.wrong { background-color: var(--wrong); }
-.partial { background-color: var(--partial); }
+.correct { background-color: var(--guess-correct); }
+.wrong { background-color: var(--guess-wrong); }
+.partial { background-color: var(--guess-partial); }
 
 .guesses-stack {
     display: flex;

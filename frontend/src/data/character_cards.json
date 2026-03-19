@@ -1,7 +1,18 @@
 [
-  { "id":  1, "name":  "Kapitan Bomba", "image":  "kapitan_bomba.jpg"},
-  { "id":  4, "name":  "Marik1234", "image":  "marik1234.jpg"},
-  { "id":  5, "name":  "Michał Głuś", "image":  "michal_glus.jpg"},
-  { "id":  6, "name":  "Sułtan Kosmitów", "image":  "sultan_kosmitow.jpg"},
-  { "id":  7, "name":  "Bogusław Łęcina", "image":  "boguslaw_lecina.jpg"}
+  { "id": 1, "name": "Kapitan Bomba", "imageSrc": "/character_card_avatars/kapitan_bomba.jpg" },
+  { "id": 2, "name": "Sebastian Bąk", "imageSrc": "/avatar/AVATAR_SEBEK.jpg" },
+  { "id": 3, "name": "Janusz Sram", "imageSrc": "/avatar/AVATAR_JANUSZ.jpg" },
+  { "id": 4, "name": "Marik1234", "imageSrc": "/character_card_avatars/marik1234.jpg" },
+  { "id": 5, "name": "Michał Głuś", "imageSrc": "/character_card_avatars/michal_glus.jpg" },
+  { "id": 6, "name": "Sułtan Kosmitów", "imageSrc": "/character_card_avatars/sultan_kosmitow.jpg" },
+  { "id": 7, "name": "JJ Torpeda", "imageSrc": "/avatar/AVATAR_TORPEDA.jpg" },
+  { "id": 8, "name": "Admirał Marycjusz Borubar", "imageSrc": "/avatar/AVATAR_DEFAULT.jpg" },
+  { "id": 9, "name": "Generał Lufa", "imageSrc": "/avatar/AVATAR_DEFAULT.jpg" },
+  { "id": 10, "name": "Michał Parchaś", "imageSrc": "/avatar/AVATAR_DEFAULT.jpg" },
+  { "id": 11, "name": "Matka Sułtana Kosmitów", "imageSrc": "/avatar/AVATAR_DEFAULT.jpg" },
+  { "id": 12, "name": "Admiral Ignacy Kuj", "imageSrc": "/avatar/AVATAR_DEFAULT.jpg" },
+  { "id": 13, "name": "Sztygar Mkbewe", "imageSrc": "/avatar/AVATAR_MKBEWE.jpg" },
+  { "id": 14, "name": "Modest Bomba", "imageSrc": "/avatar/AVATAR_BOMBA.jpg" },
+  { "id": 15, "name": "Ojciec Pijo", "imageSrc": "/avatar/AVATAR_PAPA.jpg" }
 ]
+

@@ -1,0 +1,19 @@
+.classic-mode-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    gap: 20px;
+}
+
+.classic-mode-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.classic-mode-page > footer {
+    margin-top: auto;
+}
+

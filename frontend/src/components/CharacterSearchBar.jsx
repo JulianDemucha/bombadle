@@ -1,10 +1,25 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import './style/CharacterSearchBar.css';
-import character_cards from '../data/character_cards.json'
+import characterCards from '../data/character_cards.json';
 
-const CharacterSearchBar = () => {
+const normalizeText = (value) =>
+    (value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+const CharacterSearchBar = ({ onSelectCharacterId }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
+
+    const filteredCards = useMemo(() => {
+        const term = normalizeText(searchTerm.trim());
+        if (!term) return [];
+
+        return characterCards
+            .filter((card) => normalizeText(card.name).includes(term))
+            .slice(0, 10);
+    }, [searchTerm]);
 
     return (
         <div className="search-container">
@@ -14,9 +29,11 @@ const CharacterSearchBar = () => {
                 placeholder="Wpisz nazwę..."
                 value={searchTerm}
                 onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setIsOpen(e.target.value.length > 0);
+                    const value = e.target.value;
+                    setSearchTerm(value);
+                    setIsOpen(value.trim().length > 0);
                 }}
+                onFocus={() => setIsOpen(searchTerm.trim().length > 0)}
             />
 
             {isOpen && (
@@ -24,14 +41,21 @@ const CharacterSearchBar = () => {
 
                     <ul className="search-dropdown-scrollbox">
 
-                        {character_cards.map((characterCard, id) => (
-                            <li key={id} className="search-dropdown-item"
+                        {filteredCards.length === 0 && (
+                            <li className="search-dropdown-empty">Brak wynikow</li>
+                        )}
+
+                        {filteredCards.map((characterCard) => (
+                            <li key={characterCard.id} className="search-dropdown-item"
                                 onClick={() => {
+                                    if (onSelectCharacterId) {
+                                        onSelectCharacterId(characterCard.id);
+                                    }
                                     setSearchTerm('');
                                     setIsOpen(false);
                                 }
                             }>
-                                <img src={`/character_card_avatars/${characterCard.image}`} alt={characterCard.name} className="pixelated-icon dropdown-avatar" />
+                                <img src={characterCard.imageSrc} alt={characterCard.name} className="pixelated-icon dropdown-avatar" />
                                 <span>{characterCard.name}</span>
                             </li>
                         ))}

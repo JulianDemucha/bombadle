@@ -62,7 +62,7 @@ body {
     position: relative;
     width: 300px;
     margin: 0 auto;
-    z-index: 20;
+    z-index: 120;
 }
 
 .search-input-image {
@@ -94,6 +94,7 @@ body {
     background-repeat: no-repeat;
     padding: 20px 20px 75px 20px;
     box-sizing: border-box;
+    z-index: 220;
 
 }
 
@@ -123,6 +124,13 @@ body {
 
 .search-dropdown-item:hover {
     background-color: rgba(28, 60, 42, 0.15);
+}
+
+.search-dropdown-empty {
+    font-family: 'PixelifySans', monospace;
+    font-size: 1rem;
+    color: #2b2b2b;
+    padding: 8px 6px;
 }
 
 .dropdown-avatar {
