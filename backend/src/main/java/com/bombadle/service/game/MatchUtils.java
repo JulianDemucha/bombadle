@@ -163,7 +163,7 @@ public class MatchUtils {
 
         return switch (guessSet) {
             case Set<T> gs when
-                    (gs.containsAll(currentCardSet)) -> MatchType.MATCH;
+                    ((gs.containsAll(currentCardSet)) && currentCardSet.containsAll(gs)) -> MatchType.MATCH;
 
             case Set<T> gs when
                     (Collections.disjoint(gs, currentCardSet)) -> MatchType.NOT_MATCH;
