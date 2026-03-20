@@ -1,48 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './style/GuessList.css';
 
-const GuessList = () => {
-    // const [guesses, setGuesses] = useState([]);
-    const [guesses, setGuesses] = useState([
-        {
-            id: 1,
-            name: 'Kapitan Bomba',
-            image: 'kapitan_bomba.jpg',
-            gender: 'Mezczyzna',
-            race: 'Człowiek',
-            isAlive: 'Tak',
-            colors: 'Niebieski, Żółty',
-            affiliation: 'Gwiezdna Flota',
-            firstAppearance: '1',
-            status: { gender: 'correct', race: 'correct', isAlive: 'correct', colors: 'correct', affiliation: 'correct', firstAppearance: 'wrong' }
-        },
-        {
-            id: 4,
-            name: 'Marik1234',
-            image: 'marik1234.jpg',
-            gender: 'Mężczyzna',
-            race: 'Nieznana',
-            isAlive: 'Nie',
-            colors: 'Szary, Czarny',
-            affiliation: 'marik1234',
-            firstAppearance: '104',
-            status: { gender: 'wrong', race: 'correct', isAlive: 'correct', colors: 'wrong', affiliation: 'wrong', firstAppearance: 'partial' }
-        },
-        {
-            id: 5,
-            name: 'Michal Glus',
-            image: 'michal_glus.jpg',
-            gender: 'Mężczyzna',
-            race: 'Kurvinox',
-            isAlive: 'Tak',
-            colors: 'Zielony, Purpurowy',
-            affiliation: 'Gwiezdna Flota, Kosmici, Sługa sułtana kosmitów',
-            firstAppearance: '55',
-            status: { gender: 'correct', race: 'correct', isAlive: 'wrong', colors: 'partial', affiliation: 'wrong', firstAppearance: 'wrong' }
-        }
-    ]);
-    useEffect(() => {
-    }, []);
+const GuessList = ({ guesses = [] }) => {
+
+    if (!guesses || guesses.length === 0) {
+        return null;
+    }
 
     return (
         <div className="game-wrapper">
@@ -59,23 +22,80 @@ const GuessList = () => {
                 </div>
 
                 <div className="guesses-stack">
-                    {guesses.map((guess, index) => (
-                        <div key={guess.id || index} className="guess-grid guess-row">
+                    {guesses.map((guess, index) => {
+                        const isNew = index === 0;
+                        return (
+                            <div key={guess.id || index} className={`guess-grid guess-row ${isNew ? 'new-row' : 'existing-row'}`}>
 
-                            <div className="tile avatar-tile">
-                                <img src={`/character_card_avatars/${guess.image}`} alt={guess.name} />
+                                <div className="tile avatar-tile">
+                                    <img
+                                        src={guess.imageSrc || (guess.image ? `/character_card_avatars/${guess.image}` : '/avatar/AVATAR_DEFAULT.jpg')}
+                                        alt={guess.name}
+                                    />
+                                </div>
+
+                                <div className="tile text-tile name-tile" data-fulltext={guess.name}>
+                                    <div className="tile-inner">
+                                        <div className="tile-front"></div>
+                                        <div className="tile-back">
+                                            <span className="tile-text">{guess.name}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`tile text-tile gender-tile ${guess.status.gender}`} data-fulltext={guess.gender}>
+                                    <div className="tile-inner">
+                                        <div className="tile-front"></div>
+                                        <div className="tile-back">
+                                            <span className="tile-text">{guess.gender}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`tile text-tile race-tile ${guess.status.race}`} data-fulltext={guess.race}>
+                                    <div className="tile-inner">
+                                        <div className="tile-front"></div>
+                                        <div className="tile-back">
+                                            <span className="tile-text">{guess.race}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`tile text-tile alive-tile ${guess.status.isAlive}`} data-fulltext={guess.isAlive}>
+                                    <div className="tile-inner">
+                                        <div className="tile-front"></div>
+                                        <div className="tile-back">
+                                            <span className="tile-text">{guess.isAlive}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`tile text-tile colors-tile ${guess.status.colors}`} data-fulltext={guess.colors}>
+                                    <div className="tile-inner">
+                                        <div className="tile-front"></div>
+                                        <div className="tile-back">
+                                            <span className="tile-text">{guess.colors}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`tile text-tile affiliation-tile ${guess.status.affiliation}`} data-fulltext={guess.affiliation}>
+                                    <div className="tile-inner">
+                                        <div className="tile-front"></div>
+                                        <div className="tile-back">
+                                            <span className="tile-text">{guess.affiliation}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`tile text-tile first-appearance-tile ${guess.status.firstAppearance}`} data-fulltext={guess.firstAppearance}>
+                                    <div className="tile-inner">
+                                        <div className="tile-front"></div>
+                                        <div className="tile-back">
+                                            {guess.meta?.firstAppearanceDirection === 'HIGHER' && <div className="background-arrow arrow-up"></div>}
+                                            {guess.meta?.firstAppearanceDirection === 'LOWER' && <div className="background-arrow arrow-down"></div>}
+                                            <span className="tile-text">{guess.firstAppearance}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
-
-                            <div className={`tile text-tile ${guess.status.name}`} data-fulltext={guess.name}><span className="tile-text">{guess.name}</span></div>
-                            <div className={`tile text-tile ${guess.status.gender}`} data-fulltext={guess.gender}><span className="tile-text">{guess.gender}</span></div>
-                            <div className={`tile text-tile ${guess.status.race}`} data-fulltext={guess.race}><span className="tile-text">{guess.race}</span></div>
-                            <div className={`tile text-tile ${guess.status.isAlive}`} data-fulltext={guess.isAlive}><span className="tile-text">{guess.isAlive}</span></div>
-                            <div className={`tile text-tile ${guess.status.colors}`} data-fulltext={guess.colors}><span className="tile-text">{guess.colors}</span></div>
-                            <div className={`tile text-tile ${guess.status.affiliation}`} data-fulltext={guess.affiliation}><span className="tile-text">{guess.affiliation}</span></div>
-                            <div className={`tile text-tile ${guess.status.firstAppearance}`} data-fulltext={guess.firstAppearance}><span className="tile-text">{guess.firstAppearance}</span></div>
-
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>

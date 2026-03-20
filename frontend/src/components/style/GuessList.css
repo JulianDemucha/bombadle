@@ -13,7 +13,19 @@
     font-family: 'PixelifySans', monospace;
     min-height: auto;
     margin-top: 8px;
-    padding: 0 12px;
+    padding: 0 12px 60px; /* Added bottom padding to ensure last row visibility */
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .board-container {
@@ -32,7 +44,8 @@
 
 .guess-grid {
     display: grid;
-    grid-template-columns: 64px 1.35fr 1.25fr 1.15fr 0.9fr 1.3fr 1.15fr 1.1fr;
+    /* Increased Race (4th column) from 1.15fr to 1.35fr and reduced Colors/Affiliation/FirstApp slightly */
+    grid-template-columns: 64px 1.35fr 1.25fr 1.35fr 0.9fr 1.2fr 1.1fr 1fr;
     gap: 6px;
 }
 
@@ -44,7 +57,36 @@
     position: relative;
     z-index: 1;
     align-items: stretch;
-    animation: slideDown 0.3s ease-out forwards;
+}
+
+/* Animacja dla wszystkich wierszy przy ładowaniu */
+.existing-row {
+    animation: none;
+}
+
+.new-row {
+    animation: expandRow 0.4s ease-out forwards;
+}
+
+@keyframes expandRow {
+    0% {
+        max-height: 0;
+        opacity: 0;
+        margin-bottom: -6px;
+        overflow: hidden;
+    }
+    99% {
+        max-height: 80px;
+        opacity: 1;
+        margin-bottom: 0;
+        overflow: hidden;
+    }
+    100% {
+        max-height: 80px;
+        opacity: 1;
+        margin-bottom: 0;
+        overflow: visible;
+    }
 }
 
 .guess-row:hover,
@@ -68,35 +110,140 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 5px 4px;
+    /* Removed padding to let inner elements fill the tile */
+    padding: 0;
     border-radius: 6px;
     color: var(--guess-tile-text);
     font-weight: bold;
     font-size: 0.75rem;
-    box-shadow: 0 2px 0px rgba(0,0,0,0.2);
-    background-color: #7f8c8d;
+    /* Removed background, border, and shadow from container to fix "black stain" issue.
+       Visuals are now handled by tile-front/tile-back or specific tile types. */
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
     white-space: normal;
     overflow-wrap: anywhere;
-    overflow: hidden;
+    overflow: visible; /* Changed to visible to allow 3D transform slightly outside if needed */
     text-overflow: ellipsis;
-    border: 2px solid rgba(43, 43, 43, 0.45);
     height: 58px;
     min-height: 58px;
+    perspective: 1000px;
 }
 
 .text-tile {
-    position: relative;
-    overflow: visible;
-}
-
-.tile-text {
+    position: relative; /* ensure text is above background elements */
+    z-index: 1;
     display: -webkit-box;
     width: 100%;
+    padding: 0 2px;
     overflow: hidden;
     text-overflow: ellipsis;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-height: 1.1;
+}
+
+.avatar-tile {
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    overflow: hidden;
+    background-color: #fff;
+    border: 2px solid var(--guess-accent);
+    box-shadow: 0 2px 0px rgba(0,0,0,0.2);
+}
+
+/* Kontener dla flipa - Increased duration for smoother, slower look */
+.tile-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.new-row .text-tile .tile-inner {
+    animation: flipCard 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Sekwencyjne opóźnienia dla kafelków w nowym wierszu - start delayed for expansion */
+.new-row .name-tile .tile-inner { animation-delay: 0.4s; }
+.new-row .gender-tile .tile-inner { animation-delay: 1.2s; }
+.new-row .race-tile .tile-inner { animation-delay: 2.0s; }
+.new-row .alive-tile .tile-inner { animation-delay: 2.8s; }
+.new-row .colors-tile .tile-inner { animation-delay: 3.6s; }
+.new-row .affiliation-tile .tile-inner { animation-delay: 4.4s; }
+.new-row .first-appearance-tile .tile-inner { animation-delay: 5.2s; }
+
+.tile-front, .tile-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px; /* Matched to tile border-radius */
+    box-shadow: 0 2px 0px rgba(0,0,0,0.2); /* Moved shadow here */
+    padding: 0 4px; /* Added padding here for text inside */
+    border: 2px solid rgba(43, 43, 43, 0.45); /* Added border here */
+}
+
+/* Przód kafelka (zakryty) */
+.tile-front {
+    background-color: #6a4f3f;
+    border-color: #7a5f4e;
+    z-index: 2;
+}
+
+/* Tył kafelka (odkryty z kolorem statusu) */
+.tile-back {
+    transform: rotateY(180deg);
+    z-index: 1;
+}
+
+/* Kolory dla tyłu kafelka */
+.name-tile .tile-back { background-color: #7f8c8d; }
+.gender-tile.correct .tile-back, .race-tile.correct .tile-back, .alive-tile.correct .tile-back, .colors-tile.correct .tile-back, .affiliation-tile.correct .tile-back, .first-appearance-tile.correct .tile-back { background-color: var(--guess-correct); }
+.gender-tile.wrong .tile-back, .race-tile.wrong .tile-back, .alive-tile.wrong .tile-back, .colors-tile.wrong .tile-back, .affiliation-tile.wrong .tile-back, .first-appearance-tile.wrong .tile-back { background-color: var(--guess-wrong); }
+.gender-tile.partial .tile-back, .race-tile.partial .tile-back, .alive-tile.partial .tile-back, .colors-tile.partial .tile-back, .affiliation-tile.partial .tile-back, .first-appearance-tile.partial .tile-back { background-color: var(--guess-partial); }
+
+.tile-text {
+    display: -webkit-box;
+    width: 100%;
+    padding: 0 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.1;
+}
+
+@keyframes flipCard {
+    0% {
+        transform: rotateY(0deg);
+    }
+    100% {
+        transform: rotateY(180deg);
+    }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Starsze wiersze mają już obrócone kafelki */
+.existing-row .text-tile .tile-inner {
+    transform: rotateY(180deg);
+}
+
+/* Usuwamy stare definicje flipShow/flipHide i pseudo-elementy */
+.new-row .text-tile::before,
+.existing-row .text-tile::before {
+    display: none;
+    animation: none;
 }
 
 /* Pokazuje caly tekst w dymku bez zmiany ukladu listy. */
@@ -124,19 +271,35 @@
     z-index: 100;
 }
 
-.avatar-tile {
-    aspect-ratio: 1 / 1;
-    padding: 0;
-    overflow: hidden;
-    background-color: #fff;
-    border: 2px solid var(--guess-accent);
-    box-shadow: none;
+.background-arrow {
+    position: absolute;
+    width: 75%;
+    height: 75%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.arrow-up {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.arrow-down {
+    clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
 }
 
 .avatar-tile img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Ensure functionality of color classes but force transparency on the container for 3D flip */
+.tile.correct, .tile.wrong, .tile.partial {
+    background-color: transparent !important;
 }
 
 .correct { background-color: var(--guess-correct); }
@@ -174,7 +337,7 @@
 
 @media (max-width: 520px) {
     .game-wrapper {
-        padding: 0 8px;
+        padding: 0 8px 60px;
     }
 
     .board-container {
@@ -198,9 +361,4 @@
         min-height: 46px;
         line-height: 1.1;
     }
-}
-
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
 }

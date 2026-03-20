@@ -26,7 +26,7 @@ function LoginPage() {
     });
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const {reload} = useAuth(); // Get reload function from AuthContext
+    const {reload} = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
