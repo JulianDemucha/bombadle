@@ -38,9 +38,15 @@ export function AuthProvider({children}) {
             ?.split('=')[1];
 
         axios.defaults.headers.common['X-XSRF-TOKEN'] = xsrfToken;
-        await apiFetch("/api/auth/logout", {method: "POST"});
-        setUser(null);
-        navigate("/login");
+        
+        try {
+            await apiFetch("/api/auth/logout", {method: "POST"});
+        } catch (error) {
+            console.warn("Logout request failed, proceeding to clear local state", error);
+        } finally {
+            setUser(null);
+            navigate("/login");
+        }
     }
 
     return (

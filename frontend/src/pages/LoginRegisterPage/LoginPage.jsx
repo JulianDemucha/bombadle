@@ -8,6 +8,7 @@ import NavImgButton from "../../components/NavImgButton.jsx";
 import axios from "axios";
 import {setupSilentRefresh} from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
+import {useAuth} from "../../auth/UseAuth.jsx";
 
 const handleImageError = (e) => {
     //todo make placeholders for all img / buttons
@@ -25,6 +26,7 @@ function LoginPage() {
     });
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const {reload} = useAuth(); // Get reload function from AuthContext
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -45,6 +47,7 @@ function LoginPage() {
             const res = await axios.post("/api/auth/authenticate", {email, password});
 
             if (res.status === 201 || res.status === 200) {
+                await reload(); // Reload user data to update auth state immediately
                 navigate("/");
                 setupSilentRefresh();
             }
