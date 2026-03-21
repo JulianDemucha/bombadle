@@ -23,7 +23,7 @@ const GuessList = ({ guesses = [] }) => {
 
                 <div className="guesses-stack">
                     {guesses.map((guess, index) => {
-                        const isNew = index === 0;
+                        const isNew = index === 0 && !!guess.isNewAnimation;
                         return (
                             <div key={guess.id || index} className={`guess-grid guess-row ${isNew ? 'new-row' : 'existing-row'}`}>
 

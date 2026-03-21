@@ -73,7 +73,7 @@ const CharacterSearchBar = ({ onSelectCharacterId }) => {
                                 <img
                                     src={characterCard.imageSrc || characterCard.image_src}
                                     alt={characterCard.name}
-                                    className="pixelated-icon dropdown-avatar"
+                                    className="dropdown-avatar"
                                 />
                                 <span>{characterCard.name}</span>
                             </li>

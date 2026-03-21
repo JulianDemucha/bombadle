@@ -130,11 +130,14 @@ function ClassicModePage() {
                 method: 'POST'
             });
 
-            const newRow = mapGuessAttemptToRow(
-                response.data?.guessAttempt,
-                selectedCard,
-                `${cardId}-${Date.now()}`
-            );
+            const newRow = {
+                ...mapGuessAttemptToRow(
+                    response.data?.guessAttempt,
+                    selectedCard,
+                    `${cardId}-${Date.now()}`
+                ),
+                isNewAnimation: true
+            };
             setGuesses((prev) => [newRow, ...prev]);
         } catch (error) {
             console.error('Blad wysylania guessa:', error);

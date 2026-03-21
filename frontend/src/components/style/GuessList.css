@@ -13,7 +13,7 @@
     font-family: 'PixelifySans', monospace;
     min-height: auto;
     margin-top: 8px;
-    padding: 0 12px 60px; /* Added bottom padding to ensure last row visibility */
+    padding: 0 12px 60px;
     animation: fadeInUp 0.5s ease-out forwards;
 }
 
@@ -44,8 +44,7 @@
 
 .guess-grid {
     display: grid;
-    /* Increased Race (4th column) from 1.15fr to 1.35fr and reduced Colors/Affiliation/FirstApp slightly */
-    grid-template-columns: 64px 1.35fr 1.25fr 1.35fr 0.9fr 1.2fr 1.1fr 1fr;
+    grid-template-columns: 64px 1.35fr 1.25fr 1.35fr 0.9fr 1.15fr 1.2fr 0.95fr;
     gap: 6px;
 }
 
@@ -59,7 +58,6 @@
     align-items: stretch;
 }
 
-/* Animacja dla wszystkich wierszy przy ładowaniu */
 .existing-row {
     animation: none;
 }
@@ -110,20 +108,17 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    /* Removed padding to let inner elements fill the tile */
     padding: 0;
     border-radius: 6px;
     color: var(--guess-tile-text);
     font-weight: bold;
     font-size: 0.75rem;
-    /* Removed background, border, and shadow from container to fix "black stain" issue.
-       Visuals are now handled by tile-front/tile-back or specific tile types. */
     background-color: transparent;
     border: none;
     box-shadow: none;
     white-space: normal;
     overflow-wrap: anywhere;
-    overflow: visible; /* Changed to visible to allow 3D transform slightly outside if needed */
+    overflow: visible;
     text-overflow: ellipsis;
     height: 58px;
     min-height: 58px;
@@ -131,7 +126,7 @@
 }
 
 .text-tile {
-    position: relative; /* ensure text is above background elements */
+    position: relative;
     z-index: 1;
     display: -webkit-box;
     width: 100%;
@@ -149,10 +144,10 @@
     overflow: hidden;
     background-color: #fff;
     border: 2px solid var(--guess-accent);
-    box-shadow: 0 2px 0px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 
-/* Kontener dla flipa - Increased duration for smoother, slower look */
+/* Flip container for tile reveal animation. */
 .tile-inner {
     position: relative;
     width: 100%;
@@ -166,7 +161,7 @@
     animation: flipCard 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Sekwencyjne opóźnienia dla kafelków w nowym wierszu - start delayed for expansion */
+/* Sequential delays for the newest row. */
 .new-row .name-tile .tile-inner { animation-delay: 0.4s; }
 .new-row .gender-tile .tile-inner { animation-delay: 1.2s; }
 .new-row .race-tile .tile-inner { animation-delay: 2.0s; }
@@ -184,26 +179,25 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 6px; /* Matched to tile border-radius */
-    box-shadow: 0 2px 0px rgba(0,0,0,0.2); /* Moved shadow here */
-    padding: 0 4px; /* Added padding here for text inside */
-    border: 2px solid rgba(43, 43, 43, 0.45); /* Added border here */
+    border-radius: 6px;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+    padding: 0 4px;
+    border: 2px solid rgba(43, 43, 43, 0.45);
 }
 
-/* Przód kafelka (zakryty) */
+/* Hidden face shown before flip. */
 .tile-front {
     background-color: #6a4f3f;
     border-color: #7a5f4e;
     z-index: 2;
 }
 
-/* Tył kafelka (odkryty z kolorem statusu) */
+/* Revealed face with status color. */
 .tile-back {
     transform: rotateY(180deg);
     z-index: 1;
 }
 
-/* Kolory dla tyłu kafelka */
 .name-tile .tile-back { background-color: #7f8c8d; }
 .gender-tile.correct .tile-back, .race-tile.correct .tile-back, .alive-tile.correct .tile-back, .colors-tile.correct .tile-back, .affiliation-tile.correct .tile-back, .first-appearance-tile.correct .tile-back { background-color: var(--guess-correct); }
 .gender-tile.wrong .tile-back, .race-tile.wrong .tile-back, .alive-tile.wrong .tile-back, .colors-tile.wrong .tile-back, .affiliation-tile.wrong .tile-back, .first-appearance-tile.wrong .tile-back { background-color: var(--guess-wrong); }
@@ -234,19 +228,18 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Starsze wiersze mają już obrócone kafelki */
+/* Older rows stay in revealed state. */
 .existing-row .text-tile .tile-inner {
     transform: rotateY(180deg);
 }
 
-/* Usuwamy stare definicje flipShow/flipHide i pseudo-elementy */
 .new-row .text-tile::before,
 .existing-row .text-tile::before {
     display: none;
     animation: none;
 }
 
-/* Pokazuje caly tekst w dymku bez zmiany ukladu listy. */
+/* Tooltip shows full text without affecting layout. */
 .text-tile:hover::after {
     content: attr(data-fulltext);
     position: absolute;
@@ -297,7 +290,7 @@
     object-fit: cover;
 }
 
-/* Ensure functionality of color classes but force transparency on the container for 3D flip */
+/* Keep status classes but enforce transparent wrapper for 3D flip. */
 .tile.correct, .tile.wrong, .tile.partial {
     background-color: transparent !important;
 }
