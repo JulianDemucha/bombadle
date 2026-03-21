@@ -6,7 +6,6 @@ import ImgTextBanner from "../../../components/ImgTextBanner.jsx";
 import CharacterSearchBar from "../../../components/CharacterSearchBar.jsx";
 import GuessList from "../../../components/GuessList.jsx";
 import { apiFetch } from "../../../api/api.js";
-import characterCards from "../../../data/character_cards.json";
 
 const normalizeLabel = (value) => String(value ?? '')
     .replaceAll('_', ' ')
@@ -38,7 +37,7 @@ const pickGuessListItems = (data) => {
 const mapGuessAttemptToRow = (guessAttempt, selectedCard, fallbackId) => ({
     id: fallbackId,
     name: guessAttempt?.name?.value || selectedCard?.name || 'Nieznana postac',
-    imageSrc: selectedCard?.imageSrc || '/avatar/AVATAR_DEFAULT.jpg',
+    imageSrc: selectedCard?.imageSrc || selectedCard?.image_src || '/avatar/AVATAR_DEFAULT.jpg',
     gender: normalizeLabel(guessAttempt?.gender?.value),
     race: normalizeLabel(guessAttempt?.race?.value),
     isAlive: guessAttempt?.alive?.value ? 'Tak' : 'Nie',
@@ -65,15 +64,31 @@ const mapGuessAttemptToRow = (guessAttempt, selectedCard, fallbackId) => ({
 
 function ClassicModePage() {
     const [guesses, setGuesses] = useState([]);
+    const [characterCards, setCharacterCards] = useState([]);
+
+    // Pobierz listę postaci z API
+    useEffect(() => {
+        const fetchCharacterCards = async () => {
+            try {
+                const response = await apiFetch('/api/character-card/search-index');
+                setCharacterCards(response.data || []);
+            } catch (error) {
+                console.error('Błąd pobierania listy postaci:', error);
+                setCharacterCards([]);
+            }
+        };
+
+        fetchCharacterCards();
+    }, []);
 
     const cardsById = useMemo(
         () => Object.fromEntries(characterCards.map((card) => [card.id, card])),
-        []
+        [characterCards]
     );
 
     const cardsByName = useMemo(
         () => Object.fromEntries(characterCards.map((card) => [normalizeKey(card.name), card])),
-        []
+        [characterCards]
     );
 
     useEffect(() => {

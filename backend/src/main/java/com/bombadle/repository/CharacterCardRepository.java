@@ -1,11 +1,13 @@
 package com.bombadle.repository;
 
+import com.bombadle.dto.CharacterCardSearchDto;
 import com.bombadle.entity.CharacterCard;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -15,5 +17,8 @@ public interface CharacterCardRepository extends JpaRepository<CharacterCard, Lo
 
     @EntityGraph(attributePaths = {"colors", "affiliations", "quotes"})
     Optional<CharacterCard> findById(Long id);
+
+    @Query("SELECT new com.bombadle.dto.CharacterCardSearchDto(c.id, c.name, c.imageSrc) FROM CharacterCard c")
+    List<CharacterCardSearchDto> findAllCardsForSearch();
 
 }

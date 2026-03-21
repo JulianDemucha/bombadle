@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import './style/CharacterSearchBar.css';
-import characterCards from '../data/character_cards.json';
+import { apiFetch } from '../api/api.js';
 
 const normalizeText = (value) =>
     (value || '')
@@ -11,6 +11,21 @@ const normalizeText = (value) =>
 const CharacterSearchBar = ({ onSelectCharacterId }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
+    const [characterCards, setCharacterCards] = useState([]);
+
+    useEffect(() => {
+        const fetchCharacterCards = async () => {
+            try {
+                const response = await apiFetch('/api/character-card/search-index');
+                setCharacterCards(response.data || []);
+            } catch (error) {
+                console.error('Błąd pobierania listy postaci:', error);
+                setCharacterCards([]);
+            }
+        };
+
+        fetchCharacterCards();
+    }, []);
 
     const filteredCards = useMemo(() => {
         const term = normalizeText(searchTerm.trim());
@@ -19,7 +34,7 @@ const CharacterSearchBar = ({ onSelectCharacterId }) => {
         return characterCards
             .filter((card) => normalizeText(card.name).includes(term))
             .slice(0, 10);
-    }, [searchTerm]);
+    }, [searchTerm, characterCards]);
 
     return (
         <div className="search-container">
@@ -55,7 +70,11 @@ const CharacterSearchBar = ({ onSelectCharacterId }) => {
                                     setIsOpen(false);
                                 }
                             }>
-                                <img src={characterCard.imageSrc} alt={characterCard.name} className="pixelated-icon dropdown-avatar" />
+                                <img
+                                    src={characterCard.imageSrc || characterCard.image_src}
+                                    alt={characterCard.name}
+                                    className="pixelated-icon dropdown-avatar"
+                                />
                                 <span>{characterCard.name}</span>
                             </li>
                         ))}

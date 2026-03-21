@@ -57,6 +57,9 @@ public class CharacterCard {
     @Column(name = "first_appearance_episode")
     private int firstAppearanceEpisode;
 
+    @Column
+    private String imageSrc;
+
     @OneToMany(
             mappedBy = "characterCard",
             cascade = CascadeType.ALL,
