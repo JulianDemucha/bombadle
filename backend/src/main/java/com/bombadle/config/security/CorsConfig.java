@@ -23,4 +23,3 @@ public class CorsConfig {
         };
     }
 }
-// i'm leaving this in case server and client will be on different origins on production
