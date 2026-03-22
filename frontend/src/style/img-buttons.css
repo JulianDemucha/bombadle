@@ -19,36 +19,6 @@
     position: relative;
 }
 
-/*@font-face {*/
-/*    font-family: 'PixelifySans-Regular';*/
-/*    src: url('../public/PixelifySans-Regular.woff2') format('woff2'),*/
-/*    url('../public/PixelifySans-Regular.woff') format('woff');*/
-/*    font-weight: normal;*/
-/*    font-style: normal;*/
-/*    font-display: swap;*/
-/*}*/
-
-
-/*.button-text {*/
-/*    text-align: left;*/
-/*    margin-left: 2rem;*/
-/*    font-family: 'PixelifySans-Regular', monospace;*/
-/*    font-size: 40px;*/
-/*    font-weight: bold;*/
-/*    -webkit-text-stroke: 0.01rem rgba(0, 0, 0, 0.4);*/
-/*}*/
-
-
-/*.image-button .button-text {*/
-/*    position: absolute;*/
-/*    top: 47%;*/
-/*    left: 51%;*/
-/*    transform: translate(-50%, -50%);*/
-/*    color: white;*/
-/*    opacity: 0.5;*/
-/*    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);*/
-/*    pointer-events: none;*/
-/*}*/
 
 .image-button-responsive {
     max-width: 300px;

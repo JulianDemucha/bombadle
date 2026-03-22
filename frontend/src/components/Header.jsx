@@ -5,7 +5,6 @@ import '../pages/PlayerSettingsPage/profile-button.css';
 import NavImgButton from "./NavImgButton.jsx";
 
 const handleImageError = (e) => {
-    //todo make placeholders for all img / buttons
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
 };
 

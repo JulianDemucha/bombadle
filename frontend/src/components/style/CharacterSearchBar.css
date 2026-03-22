@@ -1,7 +1,7 @@
 @font-face {
     font-family: 'PixelifySans';
     src: url('../../assets/fonts/PixelifySans-VariableFont_wght.ttf') format('truetype');
-    font-weight: normal;
+    font-weight: 100 900;
     font-style: normal;
 }
 
@@ -118,7 +118,8 @@ body {
     font-size: 1.2rem;
 }
 
-.search-dropdown-item:hover {
+.search-dropdown-item:hover,
+.search-dropdown-item.selected {
     background-color: rgba(28, 60, 42, 0.15);
 }
 

@@ -123,9 +123,35 @@ export default function PlayerSettingsPage() {
 
     const navigate = useNavigate();
 
+    const handleGoBack = () => {
+        if (window.history.length > 1) {
+            navigate(-1);
+            return;
+        }
+        navigate('/');
+    };
+
     const avatarText = avatar ?? user?.avatarImage ?? "AVATAR_DEFAULT";
     return (
         <div className="settings-panel-wrapper">
+            <div className="settings-top-bar">
+                <button
+                    type="button"
+                    className="back-arrow-button"
+                    onClick={handleGoBack}
+                    aria-label="Powrot do poprzedniej strony"
+                >
+                    <svg
+                        className="back-arrow-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path d="M15 5l-7 7 7 7" />
+                    </svg>
+                    <span className="back-arrow-text"></span>
+                </button>
+            </div>
 
             <div className="container">
                 <h2>Statystyki</h2>

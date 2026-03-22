@@ -1,3 +1,10 @@
+@font-face {
+    font-family: 'PixelifySans';
+    src: url('../assets/fonts/PixelifySans-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+}
+
 :root {
     --primary: #11251a;
     --secondary: #a05f3d;
@@ -9,15 +16,21 @@
     --shadow: 3px 3px 100px var(--login_primary);
 }
 
+
+html {
+    background-color: #9E5F40;
+    min-height: 100%;
+}
+
 body {
     margin: 0;
     padding: 0;
-    background-color: var(--login_secondary);
+    background-color: #9E5F40;
+    min-height: 100vh;
     background-image: url('../../public/img/background_img_alt.png');
     background-repeat: no-repeat;
-    background-position: top center;
+    background-position: center top;
     background-size: cover;
-    background-attachment: scroll;
+    background-attachment: fixed;
 }
-
 

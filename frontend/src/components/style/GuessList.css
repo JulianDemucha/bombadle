@@ -12,8 +12,8 @@
     justify-content: center;
     font-family: 'PixelifySans', monospace;
     min-height: auto;
-    margin-top: 8px;
-    padding: 0 12px 60px;
+    margin-top: 0;
+    padding: 0 12px;
     animation: fadeInUp 0.5s ease-out forwards;
 }
 
@@ -28,9 +28,11 @@
     }
 }
 
+/* Tooltip styling removed - now handled via JS Portal for better layout handling */
+
 .board-container {
     width: 100%;
-    max-width: 700px;
+    max-width: 900px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -40,12 +42,33 @@
     border-radius: 10px;
     padding: 12px;
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+    overflow-x: auto;
+}
+
+.board-container::-webkit-scrollbar {
+    height: 10px;
+}
+
+.board-container::-webkit-scrollbar-track {
+    background: rgba(90, 70, 58, 0.15);
+    border-radius: 4px;
+}
+
+.board-container::-webkit-scrollbar-thumb {
+    background: #5a463a;
+    border-radius: 4px;
+    border: 2px solid rgba(173, 140, 115, 0.5);
+}
+
+.board-container::-webkit-scrollbar-thumb:hover {
+    background: #3f332b;
 }
 
 .guess-grid {
     display: grid;
-    grid-template-columns: 64px 1.35fr 1.25fr 1.35fr 0.9fr 1.15fr 1.2fr 0.95fr;
+    grid-template-columns: 64px 1.1fr 1.2fr 1.1fr 0.75fr 1.2fr 1.4fr 1.0fr;
     gap: 6px;
+    min-width: 830px;
 }
 
 .board-header {
@@ -117,32 +140,29 @@
     border: none;
     box-shadow: none;
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     overflow: visible;
     text-overflow: ellipsis;
-    height: 58px;
-    min-height: 58px;
+    height: 64px;
+    min-height: 64px;
     perspective: 1000px;
 }
 
 .text-tile {
     position: relative;
     z-index: 1;
-    display: -webkit-box;
     width: 100%;
     padding: 0 2px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
     line-height: 1.1;
 }
 
 .avatar-tile {
-    aspect-ratio: 1 / 1;
+    width: 100%;
+    height: 100%;
     padding: 0;
     overflow: hidden;
-    background-color: #fff;
+    background-color: transparent;
     border: 2px solid var(--guess-accent);
     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
@@ -185,14 +205,12 @@
     border: 2px solid rgba(43, 43, 43, 0.45);
 }
 
-/* Hidden face shown before flip. */
 .tile-front {
     background-color: #6a4f3f;
     border-color: #7a5f4e;
     z-index: 2;
 }
 
-/* Revealed face with status color. */
 .tile-back {
     transform: rotateY(180deg);
     z-index: 1;
@@ -228,7 +246,6 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Older rows stay in revealed state. */
 .existing-row .text-tile .tile-inner {
     transform: rotateY(180deg);
 }
@@ -239,21 +256,18 @@
     animation: none;
 }
 
-/* Tooltip shows full text without affecting layout. */
-.text-tile:hover::after {
-    content: attr(data-fulltext);
-    position: absolute;
-    left: 50%;
-    top: calc(100% + 6px);
-    transform: translateX(-50%);
+.floating-tooltip {
+    position: fixed;
+    z-index: 99999;
     min-width: 120px;
     max-width: 260px;
     width: max-content;
     padding: 6px 8px;
     border-radius: 6px;
-    border: 2px solid var(--guess-accent);
+    border: 3px solid #2b2b2b;
     background: #f7f0e6;
     color: #2b2b2b;
+    font-family: 'PixelifySans', monospace;
     font-size: 0.72rem;
     line-height: 1.2;
     text-align: center;
@@ -261,7 +275,7 @@
     word-break: break-word;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     pointer-events: none;
-    z-index: 100;
+    transform: translate(-50%, 10px);
 }
 
 .background-arrow {
@@ -290,7 +304,6 @@
     object-fit: cover;
 }
 
-/* Keep status classes but enforce transparent wrapper for 3D flip. */
 .tile.correct, .tile.wrong, .tile.partial {
     background-color: transparent !important;
 }
@@ -307,51 +320,16 @@
     overflow: visible;
 }
 
-@media (max-width: 768px) {
-    .board-container {
-        padding: 10px;
-    }
 
-    .guess-grid {
-        gap: 5px;
-    }
-
-    .header-label {
-        font-size: 0.7rem;
-    }
-
-    .tile {
-        font-size: 0.68rem;
-        height: 52px;
-        min-height: 52px;
-        padding: 4px;
-    }
-}
 
 @media (max-width: 520px) {
     .game-wrapper {
-        padding: 0 8px 60px;
+        padding: 0 8px;
     }
 
     .board-container {
         border-width: 2px;
         border-radius: 8px;
         padding: 8px;
-    }
-
-    .guess-grid {
-        gap: 4px;
-    }
-
-    .header-label {
-        font-size: 0.62rem;
-        padding-bottom: 2px;
-    }
-
-    .tile {
-        font-size: 0.6rem;
-        height: 46px;
-        min-height: 46px;
-        line-height: 1.1;
     }
 }

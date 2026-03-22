@@ -6,7 +6,7 @@ import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
+const address = "localhost";
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -17,12 +17,12 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://localhost:8443',
+        target: 'https://'+address+':8443',
         changeOrigin: true,
         secure: false,
       },
       '/images': {
-        target: 'https://localhost:8443',
+        target: 'https://'+address+':8443',
         changeOrigin: true,
         secure: false,
       },

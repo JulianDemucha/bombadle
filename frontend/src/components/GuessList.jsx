@@ -1,7 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import './style/GuessList.css';
 
 const GuessList = ({ guesses = [] }) => {
+    const [tooltip, setTooltip] = useState({ visible: false, text: '', x: 0, y: 0 });
+
+    const handleMouseEnter = (e, text) => {
+        if (!text) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        setTooltip({
+            visible: true,
+            text,
+            x: rect.left + rect.width / 2,
+            y: rect.bottom
+        });
+    };
+
+    const handleMouseLeave = () => {
+        setTooltip(prev => ({ ...prev, visible: false }));
+    };
 
     if (!guesses || guesses.length === 0) {
         return null;
@@ -9,6 +26,15 @@ const GuessList = ({ guesses = [] }) => {
 
     return (
         <div className="game-wrapper">
+            {tooltip.visible && createPortal(
+                <div 
+                    className="floating-tooltip"
+                    style={{ left: tooltip.x, top: tooltip.y }}
+                >
+                    {tooltip.text}
+                </div>,
+                document.body
+            )}
             <div className="board-container">
                 <div className="guess-grid board-header">
                     <div className="header-label">Avatar</div>
@@ -34,7 +60,11 @@ const GuessList = ({ guesses = [] }) => {
                                     />
                                 </div>
 
-                                <div className="tile text-tile name-tile" data-fulltext={guess.name}>
+                                <div 
+                                    className="tile text-tile name-tile" 
+                                    onMouseEnter={(e) => handleMouseEnter(e, guess.name)}
+                                    onMouseLeave={handleMouseLeave}
+                                >
                                     <div className="tile-inner">
                                         <div className="tile-front"></div>
                                         <div className="tile-back">
@@ -42,7 +72,11 @@ const GuessList = ({ guesses = [] }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`tile text-tile gender-tile ${guess.status.gender}`} data-fulltext={guess.gender}>
+                                <div 
+                                    className={`tile text-tile gender-tile ${guess.status.gender}`}
+                                    onMouseEnter={(e) => handleMouseEnter(e, guess.gender)}
+                                    onMouseLeave={handleMouseLeave}
+                                >
                                     <div className="tile-inner">
                                         <div className="tile-front"></div>
                                         <div className="tile-back">
@@ -50,7 +84,11 @@ const GuessList = ({ guesses = [] }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`tile text-tile race-tile ${guess.status.race}`} data-fulltext={guess.race}>
+                                <div 
+                                    className={`tile text-tile race-tile ${guess.status.race}`}
+                                    onMouseEnter={(e) => handleMouseEnter(e, guess.race)}
+                                    onMouseLeave={handleMouseLeave}
+                                >
                                     <div className="tile-inner">
                                         <div className="tile-front"></div>
                                         <div className="tile-back">
@@ -58,7 +96,11 @@ const GuessList = ({ guesses = [] }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`tile text-tile alive-tile ${guess.status.isAlive}`} data-fulltext={guess.isAlive}>
+                                <div 
+                                    className={`tile text-tile alive-tile ${guess.status.isAlive}`}
+                                    onMouseEnter={(e) => handleMouseEnter(e, guess.isAlive)}
+                                    onMouseLeave={handleMouseLeave}
+                                >
                                     <div className="tile-inner">
                                         <div className="tile-front"></div>
                                         <div className="tile-back">
@@ -66,7 +108,11 @@ const GuessList = ({ guesses = [] }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`tile text-tile colors-tile ${guess.status.colors}`} data-fulltext={guess.colors}>
+                                <div 
+                                    className={`tile text-tile colors-tile ${guess.status.colors}`}
+                                    onMouseEnter={(e) => handleMouseEnter(e, guess.colors)}
+                                    onMouseLeave={handleMouseLeave}
+                                >
                                     <div className="tile-inner">
                                         <div className="tile-front"></div>
                                         <div className="tile-back">
@@ -74,7 +120,11 @@ const GuessList = ({ guesses = [] }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`tile text-tile affiliation-tile ${guess.status.affiliation}`} data-fulltext={guess.affiliation}>
+                                <div 
+                                    className={`tile text-tile affiliation-tile ${guess.status.affiliation}`}
+                                    onMouseEnter={(e) => handleMouseEnter(e, guess.affiliation)}
+                                    onMouseLeave={handleMouseLeave}
+                                >
                                     <div className="tile-inner">
                                         <div className="tile-front"></div>
                                         <div className="tile-back">
@@ -82,7 +132,11 @@ const GuessList = ({ guesses = [] }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`tile text-tile first-appearance-tile ${guess.status.firstAppearance}`} data-fulltext={guess.firstAppearance}>
+                                <div 
+                                    className={`tile text-tile first-appearance-tile ${guess.status.firstAppearance}`}
+                                    onMouseEnter={(e) => handleMouseEnter(e, guess.firstAppearance)}
+                                    onMouseLeave={handleMouseLeave}
+                                >
                                     <div className="tile-inner">
                                         <div className="tile-front"></div>
                                         <div className="tile-back">
