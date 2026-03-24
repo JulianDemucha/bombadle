@@ -64,7 +64,7 @@ public class SecurityConfig {
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/players/me", "/api/auth/check/**", "/api/auth/register"
-                                , "/api/auth/authenticate", "/api/card-guessing/**", "/api/character-card/search-index", "/api/daily-reset/trigger" /*dev */).permitAll()
+                                , "/api/auth/authenticate", "/api/auth/refreshToken", "/api/card-guessing/**", "/api/character-card/search-index", "/api/daily-reset/trigger", "api/leaderboard/**" /*dev */).permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider)

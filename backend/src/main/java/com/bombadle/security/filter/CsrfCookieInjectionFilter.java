@@ -27,15 +27,7 @@ public class CsrfCookieInjectionFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        boolean authenticated =
-                auth != null && auth.isAuthenticated()
-                        && !"anonymousUser".equals(auth.getPrincipal());
-
-        if (authenticated) {
             csrfCookieService.ensureCsrfCookie(request, response);
-        }
 
         filterChain.doFilter(request, response);
     }
