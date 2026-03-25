@@ -34,6 +34,64 @@ const pickGuessListItems = (data) => {
     return [];
 };
 
+const pickLeaderboardItems = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.leaderboard)) return data.leaderboard;
+    if (Array.isArray(data?.topThree)) return data.topThree;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+};
+
+const toAvatarPath = (avatarImage) => {
+    if (!avatarImage) return '/avatar/AVATAR_DEFAULT.jpg';
+    if (String(avatarImage).startsWith('/')) return avatarImage;
+    return `/avatar/${avatarImage}.jpg`;
+};
+
+const formatLeaderboardTime = (value) => {
+    if (!value) return '--:--';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '--:--';
+    return date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+};
+
+const mapLeaderboardEntryToRow = (entry, index, currentUser) => {
+    const rank = entry?.rank ?? index + 1;
+    const playerId = entry?.playerId ?? entry?.id ?? null;
+    const playerName =
+        entry?.playerLogin ||
+        entry?.login ||
+        entry?.name ||
+        entry?.username ||
+        (playerId ? `Gracz #${playerId}` : `Gracz #${rank}`);
+    const wins = entry?.wins ?? entry?.totalGuesses ?? 0;
+    const attempts = entry?.numberOfTries ?? entry?.attempts ?? '-';
+    const userId = currentUser?.id ?? currentUser?.playerId ?? null;
+    const userLogin = String(currentUser?.login ?? '').toLowerCase();
+    const isCurrentUser =
+        (playerId !== null && userId !== null && String(playerId) === String(userId)) ||
+        (Boolean(userLogin) && String(playerName).toLowerCase() === userLogin);
+
+    return {
+        rank,
+        name: playerName,
+        attempts,
+        time: formatLeaderboardTime(entry?.scoreTimeStamp ?? entry?.time),
+        wins,
+        avatar: toAvatarPath(entry?.playerAvatarImage ?? entry?.avatarImage ?? entry?.avatar),
+        playerId,
+        isCurrentUser
+    };
+};
+
+const findCurrentUserRow = (entries, currentUser) => {
+    const mappedRows = pickLeaderboardItems(entries).map((entry, index) =>
+        mapLeaderboardEntryToRow(entry, index, currentUser)
+    );
+    return mappedRows.find((row) => row.isCurrentUser) || null;
+};
+
 const mapGuessAttemptToRow = (guessAttempt, selectedCard, fallbackId) => ({
     id: fallbackId,
     name: guessAttempt?.name?.value || selectedCard?.name || 'Nieznana postac',
@@ -66,6 +124,9 @@ export {
     normalizeKey,
     extractGuessAttempt,
     pickGuessListItems,
-    mapGuessAttemptToRow
+    mapGuessAttemptToRow,
+    pickLeaderboardItems,
+    mapLeaderboardEntryToRow,
+    findCurrentUserRow
 };
 

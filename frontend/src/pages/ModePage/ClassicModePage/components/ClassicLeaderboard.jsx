@@ -1,7 +1,7 @@
 import React from 'react';
 
 function ClassicLeaderboard({
-    topThree,
+    topThree = [],
     ctaLabel,
     className = '',
     title,
@@ -25,7 +25,10 @@ function ClassicLeaderboard({
                 </div>
 
                 {topThree.map((player) => (
-                    <div key={player.rank} className="leaderboard-row">
+                    <div
+                        key={player.playerId ?? player.rank}
+                        className={`leaderboard-row${player.isCurrentUser ? ' current-user' : ''}`}
+                    >
                         <span className="text-center">{player.rank}</span>
                         <div className="leaderboard-player">
                             <img

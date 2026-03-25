@@ -18,15 +18,12 @@ function ClassicModePage() {
         isWon,
         isLeaderboardExpanded,
         isAnimatingSuccess,
+        topThree,
+        currentUserRow,
+        isCurrentUserInTopThree,
         handleSelectCharacterId,
         winSectionRef
     } = useClassicModeGame();
-
-    const topThreeToday = [
-        { rank: 1, name: 'Kacperek opa', attempts: 3, time: '08:12', wins: 42, avatar: '/avatar/AVATAR_JANUSZ.jpg' },
-        { rank: 2, name: 'Mitolajek_2137', attempts: 4, time: '09:45', wins: 15, avatar: '/avatar/AVATAR_KURVINOX.jpg' },
-        { rank: 3, name: 'Kryy1234', attempts: 5, time: '11:20', wins: 7, avatar: null }
-    ];
 
     return (
         <div className="classic-mode-page">
@@ -46,23 +43,16 @@ function ClassicModePage() {
                 <div ref={winSectionRef} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {isLeaderboardExpanded ? (
                         <ClassicLeaderboard
-                            topThree={topThreeToday}
+                            topThree={topThree}
                             ctaLabel="Zobacz pelny ranking"
                             title={`Zgadłeś w ${guesses.length} próbach!`}
-                            showSeparator
-                            currentUserRow={{
-                                rank: 124,
-                                name: 'Ty',
-                                time: '12:43',
-                                attempts: guesses.length,
-                                wins: 15,
-                                avatar: '/avatar/AVATAR_DEFAULT.jpg'
-                            }}
+                            showSeparator={!isCurrentUserInTopThree && Boolean(currentUserRow)}
+                            currentUserRow={!isCurrentUserInTopThree ? currentUserRow : null}
                             dailyCounterText="Dzisiaj zgadło już 10 osób."
                         />
                     ) : (
                         <ClassicLeaderboard
-                            topThree={topThreeToday}
+                            topThree={topThree}
                             ctaLabel="Zobacz pelny ranking"
                             className={hasGuesses ? 'leaderboard-section--after-guesses' : ''}
                             dailyCounterText="Dzisiaj zgadło już 9 osób."
