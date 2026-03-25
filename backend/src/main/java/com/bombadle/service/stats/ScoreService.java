@@ -37,13 +37,13 @@ public class ScoreService {
     }
 
     @Transactional
-    public void registerScore(Player player, int numberOfTries) {
+    public Score registerScore(Player player, int numberOfTries) {
         Score score = Score.builder()
                 .player(player)
                 .scoreTimestamp(Instant.now())
                 .numberOfTries(numberOfTries)
                 .build();
-        repo.save(score);
+        return repo.save(score);
     }
 
     public Optional<Score> getScoreById(Long id) {
@@ -54,13 +54,9 @@ public class ScoreService {
         repo.deleteById(id);
     }
 
-    //todo integration test
     @Transactional
-    public long resetAllScores() {
-        long count = repo.count();
-        repo.deleteAll();
-        repo.flush();
-        return count;
+    public void deleteAllInBatch() {
+        repo.deleteAllInBatch();
     }
 
     public boolean existsById(Long id) {

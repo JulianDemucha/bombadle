@@ -1,9 +1,10 @@
 package com.bombadle.controller;
 
 import com.bombadle.dto.LeaderboardEntryDto;
-import com.bombadle.dto.mapper.LeaderboardEntryMapper;
 import com.bombadle.service.stats.LeaderboardService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,24 +18,29 @@ import java.util.List;
 @AllArgsConstructor
 public class LeaderboardController {
     private final LeaderboardService leaderboardService;
-    private final LeaderboardEntryMapper mapper;
 
-    @GetMapping("/full")
-    List<LeaderboardEntryDto> getFullLeaderboard() {
-        return mapper.ScoresToDto(leaderboardService.getSortedLeaderboard());
+    @GetMapping
+    ResponseEntity<Page<LeaderboardEntryDto>> getLeaderboard(Pageable pageable) {
+        return ResponseEntity.ok(leaderboardService.getPagedLeaderboard(pageable));
     }
 
-    @GetMapping("/top10")
+    @GetMapping("/top3")
     List<LeaderboardEntryDto> getTop10Leaderboard() {
-        return mapper.ScoresToDto(leaderboardService.getTop10Leaderboard());
+        return leaderboardService.getTop3Leaderboard();
     }
 
-    @GetMapping("/rank/{rank}")
-    public ResponseEntity<LeaderboardEntryDto> getScoreByRank(@PathVariable int rank) {
-        return leaderboardService.getPlayerByPositionInLeaderboard(rank)
-                .map(score -> mapper.toDto(score.getTodayScore()))
-                .map(ResponseEntity::ok)           // 200 OK
-                .orElseGet(() -> ResponseEntity.notFound().build()); // 404 not found
+    // todo: repair if needed
+//    @GetMapping("/rank/{rank}")
+//    public ResponseEntity<LeaderboardEntryDto> getScoreByRank(@PathVariable int rank) {
+//        return leaderboardService.getPlayerByPositionInLeaderboard(rank)
+//                .map(score -> mapper.toDto(score.getTodayScore()))
+//                .map(ResponseEntity::ok)           // 200 OK
+//                .orElseGet(() -> ResponseEntity.notFound().build()); // 404 not found
+//    }
+
+    @GetMapping("/player/{id}")
+    public ResponseEntity<LeaderboardEntryDto> findPlayerRankById(@PathVariable Long id) {
+        return ResponseEntity.ok(leaderboardService.getRankedEntryByPlayerId(id));
     }
 
 

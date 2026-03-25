@@ -63,6 +63,5 @@ public class GuessListService {
 
     public void truncateTable() {
         guessListRepository.truncateTable();
-        guessListRepository.flush();
     }
 }

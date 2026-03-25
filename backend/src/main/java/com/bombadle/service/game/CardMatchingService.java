@@ -6,6 +6,7 @@ import com.bombadle.dto.GuessResponse;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.GuessList;
 import com.bombadle.entity.Player;
+import com.bombadle.entity.Score;
 import com.bombadle.exception.CardAlreadyGuessedException;
 import com.bombadle.service.PlayerService;
 import com.bombadle.service.stats.ScoreService;
@@ -47,8 +48,8 @@ public class CardMatchingService {
 
         if (guessAttempt.isCorrect()) {
             isCorrect = true;
-            scoreService.registerScore(player, guessList.getGuesses().size()); // repo.save(score) included
-            playerService.registerScore(player); // repo.save(guessList) included
+            Score score = scoreService.registerScore(player, guessList.getGuesses().size()); // repo.save(score) included
+            playerService.registerScore(player, score); // repo.save(guessList) included
         }
         return new GuessResponse(isCorrect, guessAttempt);
     }

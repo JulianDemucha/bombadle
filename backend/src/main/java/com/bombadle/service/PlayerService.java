@@ -1,6 +1,7 @@
 package com.bombadle.service;
 
 import com.bombadle.dto.PlayerDto;
+import com.bombadle.entity.Score;
 import com.bombadle.exception.UsernameAlreadyTakenException;
 import com.bombadle.dto.request.PlayerUpdateRequest;
 import com.bombadle.entity.Player;
@@ -41,15 +42,16 @@ public class PlayerService {
         return PlayerDto.toDto(player);
     }
 
-    public void registerScore(Player player) {
+    public void registerScore(Player player, Score score) {
         player.setHasGuessedToday(true);
         player.setTotalSuccessfulGuesses(player.getTotalSuccessfulGuesses() + 1);
+        player.setTodayScore(score);
         repo.save(player);
     }
 
     @Transactional
-    public void resetAllGuessFlags() {
-        repo.resetAllGuessFlags();
+    public void resetAllScores() {
+        repo.resetAllScores();
         repo.flush();
     }
 

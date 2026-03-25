@@ -18,8 +18,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     Boolean existsByLogin(String Login);
     Boolean existsByEmail(String email);
     int deleteByEmail(String Login);
-    @Modifying
     @Transactional
-    @Query("UPDATE Player p SET p.hasGuessedToday = false")
-    void resetAllGuessFlags();
+    @Modifying
+    @Query("UPDATE Player p SET p.hasGuessedToday = false, p.todayScore = null")
+    void resetAllScores();
 }

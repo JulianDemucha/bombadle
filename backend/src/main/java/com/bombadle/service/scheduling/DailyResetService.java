@@ -5,7 +5,6 @@ import com.bombadle.repository.CharacterCardRepository;
 import com.bombadle.service.PlayerService;
 import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.stats.ScoreService;
-import com.bombadle.service.game.CardMatchingService;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -29,11 +28,10 @@ public class DailyResetService {
     @Scheduled(cron = "0 0 7 * * *", zone = "Europe/Warsaw")
     public void pickNewCharacterCardAndResetScores() {
         log.info("7:00 - Daily reset triggered: selecting new character and resetting scores.");
-        long count;
         guessListService.truncateTable();
-        count = scoreService.resetAllScores();
-        log.info("All {} scores has been deleted", count);
-        playerService.resetAllGuessFlags();
+        playerService.resetAllScores();
+        scoreService.deleteAllInBatch();
+        log.info("All scores has been deleted");
         currentCharacterCardWrapper.set(characterCardRepository.findRandomCard());
         log.info("new Character card has been picked: {}", currentCharacterCardWrapper.get().getName());
 
