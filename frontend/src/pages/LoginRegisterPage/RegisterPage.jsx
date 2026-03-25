@@ -5,8 +5,9 @@ import '../../style/logo.css';
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import NavImgButton from "../../components/NavImgButton.jsx";
-import axios from "../../api/axios.js";
+import axios, {setupSilentRefresh} from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
+import {useAuth} from "../../auth/UseAuth.jsx";
 
 const handleImageError = (e) => {
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
@@ -90,6 +91,7 @@ function RegisterPage() {
     });
 
     const navigate = useNavigate();
+    const {reload} = useAuth();
 
     const setUsernameError = useCallback((msg) => {
         setErrors(prev => ({...prev, username: msg}));
@@ -167,10 +169,12 @@ function RegisterPage() {
 
         setLoading(true);
         try {
-            const res = await axios.post("/api/auth/register", {email, username, password});
+            const res = await axios.post("/api/auth/register", {email: email, username: username, password: password});
 
             if (res.status === 201 || res.status === 200) {
                 setSuccessMessage(res.data?.message || "Konto zostało utworzone.");
+                await reload();
+                setupSilentRefresh();
                 navigate("/");
 
             }

@@ -5,13 +5,11 @@ import '../../style/logo.css'
 import React, {useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import NavImgButton from "../../components/NavImgButton.jsx";
-import axios from "axios";
-import {setupSilentRefresh} from "../../api/axios.js";
+import axios, {setupSilentRefresh} from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../auth/UseAuth.jsx";
 
 const handleImageError = (e) => {
-    //todo make placeholders for all img / buttons
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
 };
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);

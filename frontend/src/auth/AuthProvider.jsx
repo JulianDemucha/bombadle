@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {AuthContext} from "./AuthContext";
 import {apiFetch} from "../api/api.js";
 import {useNavigate} from "react-router-dom";
@@ -8,28 +8,30 @@ export function AuthProvider({children}) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const latestLoadUserRequestRef = useRef(0);
 
-    async function loadUser() {
+    const loadUser = useCallback(async () => {
+        const requestId = latestLoadUserRequestRef.current + 1;
+        latestLoadUserRequestRef.current = requestId;
         setLoading(true);
+
         try {
             const res = await axios.get('/api/players/me');
-            setUser(res.data);
+            if (latestLoadUserRequestRef.current !== requestId) return;
+            setUser(res.data ?? null);
         } catch (err) {
-            if (err.response?.status === 401) {
-                setUser(null);
-            } else {
-                console.error('Błąd podczas ładowania użytkownika:', err);
-                setUser(null);
+            if (latestLoadUserRequestRef.current !== requestId) return;
+            setUser(null);
+        } finally {
+            if (latestLoadUserRequestRef.current === requestId) {
+                setLoading(false);
             }
-
-        }finally {
-            setLoading(false);
         }
-    }
+    }, []);
 
     useEffect(() => {
         loadUser();
-    }, []);
+    }, [loadUser]);
 
     async function logout() {
         const xsrfToken = document.cookie
@@ -41,8 +43,8 @@ export function AuthProvider({children}) {
         
         try {
             await apiFetch("/api/auth/logout", {method: "POST"});
-        } catch (error) {
-            console.warn("Logout request failed, proceeding to clear local state", error);
+        } catch {
+            // Ignore logout errors
         } finally {
             setUser(null);
             navigate("/login");

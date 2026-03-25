@@ -3,24 +3,10 @@ import axios from 'axios';
 axios.defaults.withCredentials = true;
 axios.defaults.xsrfCookieName = 'XSRF-TOKEN';
 axios.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
-axios.interceptors.response.use((response) => response, async (error) => {
-    const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
 
-        try {
-            await axios.post("/auth/refreshToken");
-            return axios(originalRequest);
-
-        } catch (refreshError) {
-            console.error("Sesja wygasła");
-            window.location.href = '/login';
-            return Promise.reject(refreshError);
-        }
-
-    }
-})
-
+let refreshPromise = null;
+let silentRefreshTimer = null;
+const REFRESH_ENDPOINT = '/api/auth/refreshToken';
 
 const getCookie = (name) => {
     const value = `; ${document.cookie}`;
@@ -28,30 +14,54 @@ const getCookie = (name) => {
     if (parts.length === 2) return parts.pop().split(';').shift();
 };
 
+const shouldIgnoreError = (config) => {
+    const url = config?.url || '';
+    return !config || 
+           url.includes(REFRESH_ENDPOINT) || 
+           url.includes('/api/auth/authenticate') || 
+           url.includes('/api/auth/register');
+};
+
+axios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        if (!error.response || shouldIgnoreError(originalRequest)) {
+            return Promise.reject(error);
+        }
+
+        if (error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                if (!refreshPromise) {
+                    refreshPromise = axios.post(REFRESH_ENDPOINT)
+                        .finally(() => { refreshPromise = null; });
+                }
+                await refreshPromise;
+                return axios(originalRequest);
+            } catch (err) {
+                return Promise.reject(err);
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export function setupSilentRefresh() {
+    clearTimeout(silentRefreshTimer);
+
     const expiresAt = getCookie('JWT-EXPIRES-AT');
     if (!expiresAt) return;
 
-    const remainingTime = parseInt(expiresAt) - Date.now();
+    const delay = Math.max(Number(expiresAt) - Date.now() - 30000, 5000);
 
-    // for refreshing x seconds before jwt expiring
-    const refreshThreshold = 30 * 1000;
-    const delay = remainingTime - refreshThreshold;
-
-    if(delay > 0){
-        setTimeout(async ()=>{
-            try{
-                await axios.post("/api/auth/refreshToken");
-                // after success, function has to be called again to set up refresh for new jwt
-                setupSilentRefresh();
-            } catch(err){
-                console.error("Session refresh failed (", err, ")");
-            }
-        }, delay);
-    } else {
-        axios.post("/api/auth/refreshToken")
-            .then(() => setupSilentRefresh())
-            .catch(() => console.error("Immediate refresh failed"));
-    }
+    silentRefreshTimer = setTimeout(() => {
+        axios.post(REFRESH_ENDPOINT)
+            .then(setupSilentRefresh)
+            .catch(() => {});
+    }, delay);
 }
+
 export default axios;

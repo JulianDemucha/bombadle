@@ -28,6 +28,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+    //todo: custom exception
     public String register(RegisterRequest request) {
         if (repo.existsByEmail(request.getEmail()) || repo.existsByLogin(request.getUsername())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -82,6 +83,7 @@ public class AuthenticationService {
             repo.save(user);
             return jwtService.generateJwtToken(user);
         }catch (AuthenticationException e) {
+            //todo: custom exception
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password", e);
         }
     }
