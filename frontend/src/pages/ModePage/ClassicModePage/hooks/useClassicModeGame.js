@@ -13,7 +13,7 @@ import {
 const WIN_ANIMATION_DELAY_MS = 5900;
 const WIN_SCROLL_DURATION_MS = 700;
 const SEARCH_INDEX_ENDPOINT = '/api/character-card/search-index';
-const GUESS_LIST_ENDPOINT = '/api/card-guessing/classic/guess-list';
+const GUESS_LIST_ENDPOINT = '/api/card-guessing/classic/guess-list/player/'; // +user.id
 const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/top3';
 const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/player';
@@ -201,7 +201,7 @@ function useClassicModeGame() {
     useEffect(() => {
         const loadGuessList = async () => {
             try {
-                const response = await apiFetch(GUESS_LIST_ENDPOINT);
+                const response = await apiFetch(GUESS_LIST_ENDPOINT+user.id);
                 const items = pickGuessListItems(response.data);
 
                 const lastGuess = items[items.length - 1];

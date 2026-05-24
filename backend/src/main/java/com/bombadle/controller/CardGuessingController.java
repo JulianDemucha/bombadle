@@ -1,12 +1,12 @@
 package com.bombadle.controller;
 
+import com.bombadle.config.PlayerPrincipal;
 import com.bombadle.dto.GuessListDto;
 import com.bombadle.dto.GuessResponse;
 import com.bombadle.service.game.CardMatchingService;
 import com.bombadle.service.game.GuessListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController()
@@ -60,13 +60,13 @@ public class CardGuessingController {
     @PostMapping("/classic/guess/{id}")
     public GuessResponse compareCard(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal PlayerPrincipal userDetails
     ) {
-        return cardMatchingService.compareCharacterCardClassic(id, userDetails);
+        return cardMatchingService.compareCharacterCardClassic(id, userDetails.getPlayerId());
     }
 
-    @GetMapping("/classic/guess-list")
-    public GuessListDto getGuessList(@AuthenticationPrincipal UserDetails userDetails) {
-        return guessListService.getGuessListByUserDetails(userDetails);
+    @GetMapping("/classic/guess-list/player/{playerId}")
+    public GuessListDto getGuessList(@PathVariable Long playerId) {
+        return guessListService.getGuessListByPlayerId(playerId);
     }
 }

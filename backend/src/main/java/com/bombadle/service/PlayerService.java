@@ -10,8 +10,6 @@ import com.bombadle.repository.PlayerRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -28,16 +26,19 @@ public class PlayerService {
         return repo.findByEmail(email);
     }
 
+    public Optional<Player> findById(long id){
+        return repo.findById(id);
+    }
+
     public List<Player> getAllPlayers() {
         return repo.findAllByOrderByIdAsc();
     }
 
-    public PlayerDto getAuthenticatedPlayer(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+    public PlayerDto getAuthenticatedPlayer(long playerId) {
 
-        Player player = repo.findByEmail(userDetails.getUsername()) // getUsername returns email
+        Player player = repo.findById(playerId)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        "User from token has NOT been found in the database: " + userDetails.getUsername() //email
+                        "User from token has NOT been found in the database: " + playerId
                 ));
         return PlayerDto.toDto(player);
     }
@@ -56,14 +57,11 @@ public class PlayerService {
     }
 
     @Transactional
-    public PlayerDto updatePlayer(PlayerUpdateRequest request, Authentication authentication) {
+    public PlayerDto updatePlayer(PlayerUpdateRequest request, long playerId) {
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-        // user details subject is email instead of username -> getUsername() returns email
         // get player and update it with new values
-        Player updatedPlayer = repo.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User from token has NOT been found: " + userDetails.getUsername()));
+        Player updatedPlayer = repo.findById(playerId)
+                .orElseThrow(() -> new UsernameNotFoundException("User from token has NOT been found: " + playerId));
 
         // IF playerUpdatableDto.login() is NOT blank or null, change users email
         if (!isNullOrIsBlank(request.login())) {
@@ -102,17 +100,12 @@ public class PlayerService {
     }
 
     @Transactional
-    public void deletePlayer(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+    public void deletePlayer(long playerId) {
 
-        // user details subject is email instead of username -> getUsername() returns email
-        String email = userDetails.getUsername();
-
-        //deleteByEmail() returns number of deleted rows in database
-        int deleted = repo.deleteByEmail(email);
+        int deleted = repo.deletePlayerById(playerId);
 
         if (deleted == 0)
-            throw new UsernameNotFoundException("User from token has NOT been found: " + email);
+            throw new UsernameNotFoundException("User from token has NOT been found: " + playerId);
     }
 
     private Boolean isNullOrIsBlank(String s) {

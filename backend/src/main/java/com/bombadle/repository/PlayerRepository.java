@@ -4,6 +4,7 @@ import com.bombadle.entity.Player;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +18,11 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     List<Player> findAllByOrderByIdAsc();
     Boolean existsByLogin(String Login);
     Boolean existsByEmail(String email);
-    int deleteByEmail(String Login);
+
+    @Modifying
+    @Query("DELETE FROM Player p WHERE p.id = :id")
+    int deletePlayerById(@Param("id") Long id);
+
     @Transactional
     @Modifying
     @Query("UPDATE Player p SET p.hasGuessedToday = false, p.todayScore = null")

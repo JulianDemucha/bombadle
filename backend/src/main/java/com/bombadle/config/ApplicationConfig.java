@@ -24,8 +24,11 @@ public class ApplicationConfig {
 
     @Bean
     public UserDetailsService userDetailsService(PlayerRepository repo) {
-        return email -> repo.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("user with email " + email + " not found"));
+        return email ->
+                new PlayerPrincipal(
+                        repo.findByEmail(email)
+                                .orElseThrow(() -> new UsernameNotFoundException("user with email " + email + " not found"))
+                );
     }
 
     @Bean

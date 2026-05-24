@@ -25,20 +25,10 @@ public class GuessListService {
         return guessListRepository.findById(playerId);
     }
 
-    public List<GuessAttempt> getGuessListByPlayerId(long playerId) {
-        return guessListRepository.findByPlayerId(playerId)
-                .map(GuessList::getGuesses)
-                .orElse(List.of());
-    }
-
-    @Cacheable(value = "guess-list", key = "#userDetails.username")
-    public GuessListDto getGuessListByUserDetails(UserDetails userDetails) {
-        if (userDetails == null) throw new RuntimeException("userDetails is null"); // todo make new custom exception
+    @Cacheable(value = "guess-list", key = "#playerId")
+    public GuessListDto getGuessListByPlayerId(long playerId) {
         return new GuessListDto(
-                guessListRepository.findByPlayerId(
-                                playerService.findByEmail(userDetails.getUsername())
-                                        .orElseThrow()
-                                        .getId()
+                guessListRepository.findByPlayerId(playerId
                         )
                         .map(GuessList::getGuesses)
                         .orElse(List.of())
