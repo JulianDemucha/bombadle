@@ -1,8 +1,8 @@
 package com.bombadle.service.stats;
 
 import com.bombadle.dto.LeaderboardEntryDto;
-import com.bombadle.entity.Player;
 import com.bombadle.entity.Score;
+import com.bombadle.exception.ScoreNotFoundException;
 import com.bombadle.repository.ScoreRepository;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -51,18 +51,16 @@ public class LeaderboardService {
     public Long getPlayerRankById(Long playerId) {
         Optional<Score> playerScoreOpt = repo.findByPlayerId(playerId);
         if (playerScoreOpt.isEmpty()) {
-            //todo: custom exception
-            throw new RuntimeException("Could not find player with id " + playerId);
+            throw new ScoreNotFoundException("Could not find score for player with id " + playerId);
         }
-            Long rank = repo.findRankByPlayerId(playerId);
-            log.info("Player with ID {} has rank {}", playerId, rank);
-            return rank;
+        Long rank = repo.findRankByPlayerId(playerId);
+        log.info("Player with ID {} has rank {}", playerId, rank);
+        return rank;
     }
 
     public LeaderboardEntryDto getRankedEntryByPlayerId(Long playerId) {
         return repo.findLeaderboardRankedEntryByPlayerId(playerId)
-                //todo: custom exception
-                .orElseThrow(() -> new RuntimeException("Could not find player with id " + playerId));
+                .orElseThrow(() -> new ScoreNotFoundException("Could not find score for player with id " + playerId));
     }
 
     public Optional<Score> getLatestScore() {

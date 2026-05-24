@@ -59,4 +59,48 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorDetails);
     }
 
+    @ExceptionHandler(ScoreNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleScoreNotFound(ScoreNotFoundException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Score Not Found",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDetails);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorDetails);
+    }
+
+    @ExceptionHandler(RegistrationConflictException.class)
+    public ResponseEntity<ErrorResponse> handleRegistrationConflict(RegistrationConflictException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Registration conflict",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorDetails);
+    }
+
+    @ExceptionHandler(RegistrationValidationException.class)
+    public ResponseEntity<ErrorResponse> handleRegistrationValidation(RegistrationValidationException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Registration validation failed",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorDetails);
+    }
+
 }

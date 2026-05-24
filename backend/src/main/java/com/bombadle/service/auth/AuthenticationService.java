@@ -7,15 +7,16 @@ import com.bombadle.enums.Role;
 import com.bombadle.repository.PlayerRepository;
 import com.bombadle.dto.request.AuthenticationRequest;
 import com.bombadle.dto.request.RegisterRequest;
+import com.bombadle.exception.InvalidCredentialsException;
+import com.bombadle.exception.RegistrationConflictException;
+import com.bombadle.exception.RegistrationValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 
@@ -28,26 +29,21 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
-    //todo: custom exception
     public String register(RegisterRequest request) {
         if (repo.existsByEmail(request.getEmail()) || repo.existsByLogin(request.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Email or username already exists");
+            throw new RegistrationConflictException("Email or username already exists");
         }
 
         if (request.getPassword().length() < 8 || request.getPassword().length() > 24) {
-            throw new ResponseStatusException((HttpStatus.CONFLICT),
-                    "Password must be between 8 and 24 characters");
+            throw new RegistrationValidationException("Password must be between 8 and 24 characters");
         }
 
         if (request.getUsername().length() < 3 || request.getUsername().length() > 16) {
-            throw new ResponseStatusException((HttpStatus.CONFLICT),
-                    "Username must be between 3 and 16 characters");
+            throw new RegistrationValidationException("Username must be between 3 and 16 characters");
         }
 
         if (!request.getEmail().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
-            throw new ResponseStatusException((HttpStatus.CONFLICT),
-                    "Invalid email format");
+            throw new RegistrationValidationException("Invalid email format");
         }
 
         var user = Player.builder()
@@ -78,13 +74,12 @@ public class AuthenticationService {
                     )
             );
             var user = repo.findByEmail(request.getEmail())
-                    .orElseThrow();
+                    .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
             user.setLastLoginAt(Instant.now());
             repo.save(user);
             return jwtService.generateJwtToken(user);
         }catch (AuthenticationException e) {
-            //todo: custom exception
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password", e);
+            throw new InvalidCredentialsException("Invalid email or password");
         }
     }
 
