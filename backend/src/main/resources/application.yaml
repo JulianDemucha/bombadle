@@ -25,16 +25,16 @@ bombadle:
     default-ttl: 3600 # 1 hour
     specs:
       character-card-compare:
-        ttl: 3600*24 # 24 hours
+        ttl: 1d
         max-size: 100 # number of cards
       top-3-leaderboard:
-        ttl: 3600*24 # 24 hours
+        ttl: 1d
         max-size: 1 # only one leaderboard
       guess-list:
-        ttl: 3600*24 # 1 hour
+        ttl: 1h
         max-size: 100 # avg number of daily users +
       search-index:
-        ttl: 3600*24 # 1 hour
+        ttl: 1h
         max-size: 1
 
 
