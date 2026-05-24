@@ -12,6 +12,7 @@ import com.bombadle.service.PlayerService;
 import com.bombadle.service.stats.ScoreService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ public class CardMatchingService {
     private final CharacterCardService characterCardService;
 
     @Transactional
+    @CacheEvict(value = "guess-list", key = "#userDetails.username")
     public GuessResponse compareCharacterCardClassic(Long guessCardId, UserDetails userDetails) {
         Player player = playerService.findByEmail(userDetails.getUsername()).orElseThrow();
         CharacterCard guess = characterCardService.findCharacterCardById(guessCardId).orElseThrow();

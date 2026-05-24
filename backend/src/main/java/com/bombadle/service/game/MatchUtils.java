@@ -6,6 +6,7 @@ import com.bombadle.dto.GuessAttempt;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.enums.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -77,6 +78,7 @@ public class MatchUtils {
     }
 
     // Name Gender Race Alive Affiliations FirstAppearanceEpisode
+    @Cacheable(value = "character-card-compare")
     public GuessAttempt compareCharacterCards(CharacterCard guess, CharacterCard targetCharacterCard) {
 
         if (targetCharacterCard.getId().equals(guess.getId())) {

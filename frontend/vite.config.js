@@ -21,6 +21,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/oauth2': {
+        target: 'https://'+address+':8443',
+        changeOrigin: true,
+        secure: false,
+      },
       '/images': {
         target: 'https://'+address+':8443',
         changeOrigin: true,

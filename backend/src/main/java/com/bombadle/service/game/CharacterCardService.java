@@ -6,6 +6,7 @@ import com.bombadle.repository.CharacterCardRepository;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class CharacterCardService {
         return repo.findById(id);
     }
 
+    @Cacheable(value="search-index")
     public List<CharacterCardSearchDto> getAllCardsForSearch() {
         return repo.findAllCardsForSearch();
     }

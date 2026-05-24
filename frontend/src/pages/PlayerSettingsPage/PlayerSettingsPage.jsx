@@ -77,16 +77,26 @@ export default function PlayerSettingsPage() {
 
     const handleDelete = async (e) => {
         e.preventDefault();
-
-        const password =
-            prompt("Wprowadź hasło, aby potwierdzić permanentne usunięcie konta Anuluj aby nie zmieniać.");
         const email = user.email;
-        try {
-            await axios.post("/api/auth/authenticate", {email, password});
-        } catch (error) {
-            console.error("Błąd uwierzytelniania:", error);
-            alert("Błędne hasło!");
-            return;
+
+        // Jeśli użytkownik logował się przez Google, nie wymagamy hasła (bo go nie ma/nie zna),
+        // tylko potwierdzenia w oknie dialogowym.
+        if (user?.authProvider === 'OAUTH2_GOOGLE') {
+            if (!window.confirm("Czy na pewno chcesz usunąć konto? Tej operacji nie można cofnąć.")) {
+                return;
+            }
+        } else {
+            const password = prompt("Wprowadź hasło, aby potwierdzić permanentne usunięcie konta. Anuluj, aby nie zmieniać.");
+            if (!password) return;
+
+            try {
+                // Weryfikacja hasła przed usunięciem dla kont lokalnych
+                await axios.post("/api/auth/authenticate", {email, password});
+            } catch (error) {
+                console.error("Błąd uwierzytelniania:", error);
+                alert("Błędne hasło!");
+                return;
+            }
         }
 
         try {

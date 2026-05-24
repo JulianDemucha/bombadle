@@ -20,35 +20,30 @@ const WinAnimation = ({ isVisible }) => {
                 });
             };
 
-            // Strzał z lewej
             fire(0.25, {
                 spread: 50,
                 startVelocity: 55,
                 origin: { x: 0, y: 1 },
                 angle: 60
             });
-            // Strzał z prawej
             fire(0.25, {
                 spread: 50,
                 startVelocity: 55,
                 origin: { x: 1, y: 1 },
                 angle: 120
             });
-            // Drugi strzał lewy
             fire(0.2, {
                 spread: 60,
                 startVelocity: 45,
                 origin: { x: 0, y: 1 },
                 angle: 45
             });
-            // Drugi strzał prawy
             fire(0.2, {
                 spread: 60,
                 startVelocity: 45,
                 origin: { x: 1, y: 1 },
                 angle: 135
             });
-            // Mały deszcz środkiem
             fire(0.1, {
                 spread: 120,
                 decay: 0.91,

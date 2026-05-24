@@ -5,7 +5,7 @@ import '../../style/logo.css'
 import React, {useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import NavImgButton from "../../components/NavImgButton.jsx";
-import axios, {setupSilentRefresh} from "../../api/axios.js";
+import axios from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../auth/UseAuth.jsx";
 
@@ -47,7 +47,6 @@ function LoginPage() {
             if (res.status === 201 || res.status === 200) {
                 await reload(); // Reload user data to update auth state immediately
                 navigate("/");
-                setupSilentRefresh();
             }
 
         } catch (err) {
@@ -67,6 +66,11 @@ function LoginPage() {
         }
 
     };
+
+    const handleGoogleLogin = () => {
+        window.location.href = 'https://localhost:8443/oauth2/authorization/google';
+    };
+
     return (<>
 
         {/*     LOGO     */}
@@ -125,7 +129,7 @@ function LoginPage() {
                 <div className="divider">LUB</div>
                 <div aria-live="polite" className="form-message">
                 </div>
-                <button type="button" className="login-with-google-btn">
+                <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
                     ZALOGUJ SIĘ PRZEZ GOOGLE
                 </button>
 
@@ -139,3 +143,4 @@ function LoginPage() {
 }
 
 export default LoginPage;
+

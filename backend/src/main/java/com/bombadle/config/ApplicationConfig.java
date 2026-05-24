@@ -1,7 +1,11 @@
 package com.bombadle.config;
 
 import com.bombadle.repository.PlayerRepository;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
+@EnableCaching
 @RequiredArgsConstructor
 public class ApplicationConfig {
 
@@ -53,10 +58,33 @@ public class ApplicationConfig {
         return config.cookie();
     }
 
+    @Bean
+    public ApplicationConfigProperties.FrontendConfig frontendConfig(ApplicationConfigProperties config) {
+        return config.frontend();
+    }
 
     @Bean
     public CurrentCharacterCardWrapper currentCharacterCard() {
         return new CurrentCharacterCardWrapper(null);
     }
 
+    @Bean
+    public CacheManager cacheManager(ApplicationConfigProperties config) {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        var cacheConfig = config.cache();
+        cacheManager.setCaffeine(
+                Caffeine.newBuilder()
+                        .expireAfterWrite(cacheConfig.defaultTtl())
+        );
+        cacheConfig.specs().forEach((cacheName, spec) -> {
+            var ttl = spec.ttl() != null ? spec.ttl() : cacheConfig.defaultTtl();
+            var builder = Caffeine.newBuilder().expireAfterWrite(ttl);
+            if (spec.maxSize() != null) {
+                builder.maximumSize(spec.maxSize());
+            }
+            cacheManager.registerCustomCache(cacheName, builder.build());
+        });
+        return cacheManager;
+
+    }
 }

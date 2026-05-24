@@ -5,7 +5,7 @@ import '../../style/logo.css';
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import NavImgButton from "../../components/NavImgButton.jsx";
-import axios, {setupSilentRefresh} from "../../api/axios.js";
+import axios from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../auth/UseAuth.jsx";
 
@@ -174,7 +174,6 @@ function RegisterPage() {
             if (res.status === 201 || res.status === 200) {
                 setSuccessMessage(res.data?.message || "Konto zostało utworzone.");
                 await reload();
-                setupSilentRefresh();
                 navigate("/");
 
             }
@@ -206,6 +205,9 @@ function RegisterPage() {
         }
     };
 
+    const handleGoogleLogin = () => {
+        window.location.href = 'https://localhost:8443/oauth2/authorization/google';
+    };
 
     return (
         <>
@@ -325,7 +327,7 @@ function RegisterPage() {
 
                     <div className="divider">LUB</div>
 
-                    <button type="button" className="login-with-google-btn">
+                    <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
                         ZALOGUJ SIĘ PRZEZ GOOGLE
                     </button>
 

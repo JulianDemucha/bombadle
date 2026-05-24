@@ -1,24 +1,19 @@
 package com.bombadle.controller;
 
-import com.bombadle.dto.GuessAttempt;
 import com.bombadle.dto.GuessListDto;
 import com.bombadle.dto.GuessResponse;
 import com.bombadle.service.game.CardMatchingService;
-import com.bombadle.service.game.CharacterCardService;
 import com.bombadle.service.game.GuessListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController()
 @RequestMapping("/api/card-guessing")
 @RequiredArgsConstructor
 public class CardGuessingController {
     private final CardMatchingService cardMatchingService;
-    private final CharacterCardService characterCardService;
     private final GuessListService guessListService;
 
 

@@ -17,6 +17,29 @@ bombadle:
     secure: ${COOKIE_SECURE:true}
     same-site: Lax
 
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:https://localhost:5173}
+
+  # CACHE CONFIGURATION
+  cache:
+    default-ttl: 3600 # 1 hour
+    specs:
+      character-card-compare:
+        ttl: 3600*24 # 24 hours
+        max-size: 100 # number of cards
+      top-3-leaderboard:
+        ttl: 3600*24 # 24 hours
+        max-size: 1 # only one leaderboard
+      guess-list:
+        ttl: 3600*24 # 1 hour
+        max-size: 100 # avg number of daily users +
+      search-index:
+        ttl: 3600*24 # 1 hour
+        max-size: 1
+
+
+
+
 server:
   port: ${SERVER_PORT}
   ssl:
@@ -53,8 +76,8 @@ spring:
       client:
         registration:
           google:
-            client-id: CLIENTID
-            client-secret: CLIENTSECRET
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             scope:
               - openid
               - profile

@@ -3,6 +3,7 @@ package com.bombadle.service.scheduling;
 import com.bombadle.config.CurrentCharacterCardWrapper;
 import com.bombadle.repository.CharacterCardRepository;
 import com.bombadle.service.PlayerService;
+import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.stats.ScoreService;
 import jakarta.annotation.PostConstruct;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -21,11 +23,13 @@ public class DailyResetService {
     private final ScoreService scoreService;
     private final GuessListService guessListService;
     private final PlayerService playerService;
+    private final CacheService cacheService;
 
 
     /* Cron:  seconds, minutes, hours, day (of the month), month, day (of the week) */
-    @PostConstruct
+    @PostConstruct //for testing
     @Scheduled(cron = "0 0 7 * * *", zone = "Europe/Warsaw")
+    @Transactional
     public void pickNewCharacterCardAndResetScores() {
         log.info("7:00 - Daily reset triggered: selecting new character and resetting scores.");
         guessListService.truncateTable();
@@ -34,6 +38,7 @@ public class DailyResetService {
         log.info("All scores has been deleted");
         currentCharacterCardWrapper.set(characterCardRepository.findRandomCard());
         log.info("new Character card has been picked: {}", currentCharacterCardWrapper.get().getName());
-
+        cacheService.reloadCardCompareCache();
+        log.info("Card comparison cache have been cleared and reloaded.");
     }
 }

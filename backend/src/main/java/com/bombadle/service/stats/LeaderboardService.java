@@ -7,6 +7,7 @@ import com.bombadle.repository.ScoreRepository;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,8 @@ public class LeaderboardService {
     private static final Logger log = LoggerFactory.getLogger(LeaderboardService.class);
     private final ScoreRepository repo;
 
+
+    @Cacheable(value = "top-3-leaderboard")
     public List<LeaderboardEntryDto> getTop3Leaderboard(){
         return repo.findTop3();
     }

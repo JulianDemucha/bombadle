@@ -10,7 +10,8 @@ import {
     pickLeaderboardItems
 } from '../utils/classicModeMappers.js';
 
-const WIN_ANIMATION_DELAY_MS = 6000;
+const WIN_ANIMATION_DELAY_MS = 5900;
+const WIN_SCROLL_DURATION_MS = 700;
 const SEARCH_INDEX_ENDPOINT = '/api/character-card/search-index';
 const GUESS_LIST_ENDPOINT = '/api/card-guessing/classic/guess-list';
 const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
@@ -61,12 +62,61 @@ function useClassicModeGame() {
     const [currentUserRow, setCurrentUserRow] = useState(null);
     const [isCurrentUserInTopThree, setIsCurrentUserInTopThree] = useState(false);
     const winSectionRef = useRef(null);
+    const scrollAnimationRef = useRef(null);
     const latestGuessesCountRef = useRef(0);
     const latestWinTimeLabelRef = useRef('--:--');
 
     useEffect(() => {
         latestGuessesCountRef.current = guesses.length;
     }, [guesses.length]);
+
+    useEffect(() => {
+        return () => {
+            if (scrollAnimationRef.current) {
+                cancelAnimationFrame(scrollAnimationRef.current);
+            }
+        };
+    }, []);
+
+    const smoothScrollToWinSection = useCallback(() => {
+        const target = winSectionRef.current;
+        if (!target) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+            target.scrollIntoView({ block: 'center' });
+            return;
+        }
+
+        const startY = window.scrollY;
+        const targetRect = target.getBoundingClientRect();
+        const targetY = startY + targetRect.top - (window.innerHeight - targetRect.height) / 2;
+        const distance = targetY - startY;
+        const startTime = performance.now();
+
+        const easeInOutCubic = (t) => (t < 0.5
+            ? 4 * t * t * t
+            : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+        const step = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / WIN_SCROLL_DURATION_MS, 1);
+            const eased = easeInOutCubic(progress);
+
+            window.scrollTo(0, startY + distance * eased);
+
+            if (progress < 1) {
+                scrollAnimationRef.current = requestAnimationFrame(step);
+            } else {
+                scrollAnimationRef.current = null;
+            }
+        };
+
+        if (scrollAnimationRef.current) {
+            cancelAnimationFrame(scrollAnimationRef.current);
+        }
+        scrollAnimationRef.current = requestAnimationFrame(step);
+    }, []);
 
     const loadLeaderboard = useCallback(async (includeCurrentUserRow) => {
         try {
@@ -214,8 +264,8 @@ function useClassicModeGame() {
                     setIsAnimatingSuccess(false);
 
                     setTimeout(() => {
-                        winSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 0);
+                        smoothScrollToWinSection();
+                    }, 150);
 
                     setTimeout(() => {
                         setIsLeaderboardExpanded(true);
@@ -225,7 +275,7 @@ function useClassicModeGame() {
         } catch (error) {
             console.error('Blad wysylania guessa:', error);
         }
-    }, [cardsById, isAnimatingSuccess, isWon]);
+    }, [cardsById, isAnimatingSuccess, isWon, smoothScrollToWinSection]);
 
     return {
         guesses,

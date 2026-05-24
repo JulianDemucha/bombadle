@@ -7,6 +7,7 @@ import com.bombadle.entity.Player;
 import com.bombadle.repository.GuessListRepository;
 import com.bombadle.service.PlayerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class GuessListService {
                 .orElse(List.of());
     }
 
+    @Cacheable(value = "guess-list", key = "#userDetails.username")
     public GuessListDto getGuessListByUserDetails(UserDetails userDetails) {
         if (userDetails == null) throw new RuntimeException("userDetails is null"); // todo make new custom exception
         return new GuessListDto(
