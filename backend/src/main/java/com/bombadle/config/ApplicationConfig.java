@@ -67,6 +67,11 @@ public class ApplicationConfig {
     }
 
     @Bean
+    public ApplicationConfigProperties.DailyResetConfig dailyResetConfig(ApplicationConfigProperties config) {
+        return config.dailyReset();
+    }
+
+    @Bean
     public CurrentCharacterCardWrapper currentCharacterCard() {
         return new CurrentCharacterCardWrapper(null);
     }

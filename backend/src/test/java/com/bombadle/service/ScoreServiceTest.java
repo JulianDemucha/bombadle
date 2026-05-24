@@ -28,29 +28,30 @@ public class ScoreServiceTest {
     ScoreService scoreService;
 
     Player getExamplePlayer() {
-        Player player = new Player();
-        player.setId((long) 1);
-        player.setLogin("test");
-        player.setPasswordHash("test");
-        player.setEmail("test@test.test");
-        player.setAuthProvider(PlayerAuthProvider.LOCAL);
-        player.setRole(Role.ROLE_USER);
-        player.setAvatarImage(AvatarImage.AVATAR_DEFAULT);
-        player.setCreatedAt(Instant.now());
-        player.setLastLoginAt(Instant.now());
-        player.setHasGuessedToday(true);
-        player.setTotalSuccessfulGuesses(1);
-        return player;
+        return Player.builder()
+                .id(1L)
+                .login("test")
+                .passwordHash("test")
+                .email("test@test.test")
+                .authProvider(PlayerAuthProvider.LOCAL)
+                .role(Role.ROLE_USER)
+                .avatarImage(AvatarImage.AVATAR_DEFAULT)
+                .createdAt(Instant.now())
+                .lastLoginAt(Instant.now())
+                .hasGuessedToday(true)
+                .totalSuccessfulGuesses(1)
+                .build();
     }
 
     @Test
     void saveScoreShouldAddScoreSuccessfully() {
         Player player = getExamplePlayer();
-        Score score = new Score();
-        score.setScoreTimestamp(Instant.now());
-        score.setId((long) 1);
-        score.setNumberOfTries(5);
-        score.setPlayer(player);
+        Score score = Score.builder()
+                .player(player)
+                .scoreTimestamp(Instant.now())
+                .numberOfTries(5)
+                .build();
+        score.setId(1L);
         player.setTodayScore(score);
 
         when(scoreRepository.save(score)).thenReturn(score);
@@ -70,8 +71,11 @@ public class ScoreServiceTest {
     @Test
     void getScoreByPlayerIdShouldReturnScoreSuccessfully() {
         Player player = getExamplePlayer();
-        Score score = new Score();
-        score.setPlayer(player);
+        Score score = Score.builder()
+                .player(player)
+                .scoreTimestamp(Instant.now())
+                .numberOfTries(1)
+                .build();
 
         when(scoreRepository.findByPlayerId(player.getId())).thenReturn(Optional.of(score));
 

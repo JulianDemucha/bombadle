@@ -5,16 +5,17 @@ import com.bombadle.exception.UsernameAlreadyTakenException;
 import com.bombadle.dto.request.PlayerUpdateRequest;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
+import com.bombadle.enums.PlayerAuthProvider;
+import com.bombadle.enums.Role;
 import com.bombadle.repository.PlayerRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,99 +28,84 @@ class PlayerServiceTest {
     @InjectMocks
     PlayerService playerService;
 
-    private Authentication mockAuthWithEmail(String email) {
-        Authentication auth = mock(Authentication.class);
-        UserDetails ud = mock(UserDetails.class);
-        when(ud.getUsername()).thenReturn(email);
-        when(auth.getPrincipal()).thenReturn(ud);
-        return auth;
-    }
-
-    private PlayerDto getExamplePlayerDto(String email) {
-        return new PlayerDto(
-                1L,
-                "test",
-                email,
-                "ROLE_USER",
-                "AVATAR_DEFAULT",
-                "2025-11-10T14:22:27.123Z",
-                "2025-11-10T14:22:27.123Z",
-                false,
-                null,
-                0,
-                "LOCAL"
-        );
+    private Player buildPlayer(long id, String email, String login) {
+        return Player.builder()
+                .id(id)
+                .login(login)
+                .email(email)
+                .passwordHash("test")
+                .role(Role.ROLE_USER)
+                .createdAt(Instant.parse("2025-11-10T14:22:27.123Z"))
+                .lastLoginAt(Instant.parse("2025-11-10T14:22:27.123Z"))
+                .avatarImage(AvatarImage.AVATAR_DEFAULT)
+                .totalSuccessfulGuesses(0)
+                .hasGuessedToday(false)
+                .authProvider(PlayerAuthProvider.LOCAL)
+                .build();
     }
 
     @Test
     void getAuthenticatedPlayerShouldReturnDtoWhenUserExists() {
+        long playerId = 1L;
         String email = "test@gmail.com";
-        Authentication auth = mockAuthWithEmail(email);
-        Player player = new Player();
-        player.setEmail("test@test.test");
-        PlayerDto dto = getExamplePlayerDto(email);
-        when(repo.findByEmail(email)).thenReturn(Optional.of(player));
-        when(PlayerDto.toDto(player)).thenReturn(dto);
+        Player player = buildPlayer(playerId, email, "test");
+        PlayerDto dto = PlayerDto.toDto(player);
+        when(repo.findById(playerId)).thenReturn(Optional.of(player));
 
-        PlayerDto returnedDto = playerService.getAuthenticatedPlayer(auth);
+        PlayerDto returnedDto = playerService.getAuthenticatedPlayer(playerId);
 
         assertEquals(dto, returnedDto);
 
-        // check if findByEmail() has been called
-        verify(repo).findByEmail(email);
+        verify(repo).findById(playerId);
     }
 
     @Test
     void getAuthenticatedPlayerShouldThrowWhenUserDoesNotExist() {
-        String email = "test@test.test";
-        Authentication auth = mockAuthWithEmail(email);
+        long playerId = 1L;
 
-        when(repo.findByEmail(email)).thenReturn(Optional.empty());
+        when(repo.findById(playerId)).thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class, () -> playerService.getAuthenticatedPlayer(auth));
-        verify(repo).findByEmail(email);
+        assertThrows(UsernameNotFoundException.class, () -> playerService.getAuthenticatedPlayer(playerId));
+        verify(repo).findById(playerId);
     }
 
     @Test
     void updatePlayerShouldReturnDtoWhenDataIsValid() {
+        long playerId = 1L;
         String email = "test@test.com";
-        Authentication auth = mockAuthWithEmail(email);
-        Player existingPlayer = Player.builder().id(1L).email("test@test.com").login("test").build();
-        existingPlayer.setEmail("test@test.com");
-
-        PlayerDto dto = getExamplePlayerDto(email);
-
-        when(repo.findByEmail(email)).thenReturn(Optional.of(existingPlayer));
-        when(PlayerDto.toDto(existingPlayer)).thenReturn(dto);
+        Player existingPlayer = buildPlayer(playerId, email, "test");
 
         PlayerUpdateRequest request = new PlayerUpdateRequest("testtest", "AVATAR_DEFAULT");
-        PlayerDto returnedDto = playerService.updatePlayer(request, auth);
 
-        assertEquals(dto, returnedDto);
+        when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
+
+        PlayerDto returnedDto = playerService.updatePlayer(request, playerId);
+        PlayerDto expectedDto = PlayerDto.toDto(existingPlayer);
+
+        assertEquals(expectedDto, returnedDto);
         assertEquals("testtest", existingPlayer.getLogin());
         assertEquals(AvatarImage.AVATAR_DEFAULT, existingPlayer.getAvatarImage());
 
-        verify(repo).findByEmail(email);
+        verify(repo).findById(playerId);
         verify(repo).save(existingPlayer);
     }
 
     @Test
     void updatePlayerShouldThrowWhenUserDoesNotExist() {
-        String email = "test@test.com";
-        Authentication auth = mockAuthWithEmail(email);
+        long playerId = 1L;
         PlayerUpdateRequest request = new PlayerUpdateRequest("testtest", "AVATAR_DEFAULT");
 
-        when(repo.findByEmail(email)).thenReturn(Optional.empty());
+        when(repo.findById(playerId)).thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class, () -> playerService.updatePlayer(request,auth));
-        verify(repo).findByEmail(email);
+        assertThrows(UsernameNotFoundException.class, () -> playerService.updatePlayer(request, playerId));
+        verify(repo).findById(playerId);
     }
 
     @Test
     void updatePlayerShouldThrowWhenLoginLengthIsInvalid() {
+        long playerId = 1L;
         String email = "test@test.com";
-        Authentication auth = mockAuthWithEmail(email);
-        Player existingPlayer = Player.builder().id(1L).email(email).login("test").build();
+        Player existingPlayer = buildPlayer(playerId, email, "test");
 
         PlayerUpdateRequest request = new PlayerUpdateRequest
                 ("te", "AVATAR_DEFAULT"); // login length = 2 <3
@@ -128,47 +114,47 @@ class PlayerServiceTest {
                 ("testtesttesttestt", "AVATAR_DEFAULT"); // login length = 17 >16
 
 
-        when(repo.findByEmail(email)).thenReturn(Optional.of(existingPlayer));
+        when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
 
 
-        assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request, auth));
-        assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request2, auth));
+        assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request, playerId));
+        assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request2, playerId));
 
-        verify(repo, times(2)).findByEmail(email);
+        verify(repo, times(2)).findById(playerId);
     }
 
     @Test
     void updatePlayerShouldThrowWhenLoginIsAlreadyTaken() {
+        long playerId = 1L;
         String email = "test@test.com";
-        Authentication auth = mockAuthWithEmail(email);
-        Player existingPlayer = Player.builder().id(1L).email(email).login("test").build();
+        Player existingPlayer = buildPlayer(playerId, email, "test");
 
         PlayerUpdateRequest request = new PlayerUpdateRequest
                 ("test1", "AVATAR_DEFAULT"); // not the same as in existingPlayer
 
-        when(repo.findByEmail(email)).thenReturn(Optional.of(existingPlayer));
+        when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
         when(repo.existsByLogin(request.login())).thenReturn(true);
 
-        assertThrows(UsernameAlreadyTakenException.class, () -> playerService.updatePlayer(request, auth));
+        assertThrows(UsernameAlreadyTakenException.class, () -> playerService.updatePlayer(request, playerId));
 
-        verify(repo).findByEmail(email);
+        verify(repo).findById(playerId);
 
     }
 
     @Test
     void updatePlayerShouldThrowWhenAvatarImageIsInvalid() {
+        long playerId = 1L;
         String email = "test@test.com";
-        Authentication auth = mockAuthWithEmail(email);
-        Player existingPlayer = Player.builder().id(1L).email(email).login("test").build();
+        Player existingPlayer = buildPlayer(playerId, email, "test");
 
         PlayerUpdateRequest request = new PlayerUpdateRequest
                 ("test", "pararara ramapampampam"); // not the same as in existingPlayer
 
-        when(repo.findByEmail(email)).thenReturn(Optional.of(existingPlayer));
+        when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
 
-        assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request, auth));
+        assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request, playerId));
 
-        verify(repo).findByEmail(email);
+        verify(repo).findById(playerId);
 
     }
 

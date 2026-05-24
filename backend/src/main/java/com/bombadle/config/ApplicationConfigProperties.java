@@ -10,7 +10,8 @@ public record ApplicationConfigProperties(
         CookieConfig cookie,
         CsrfConfig csrf,
         FrontendConfig frontend,
-        CacheConfig cache
+        CacheConfig cache,
+        DailyResetConfig dailyReset
 ) {
     public record JwtConfig(
             String secret,
@@ -44,4 +45,9 @@ public record ApplicationConfigProperties(
             Duration ttl,
             Long maxSize
     ){}
+
+    public record DailyResetConfig(
+            boolean enabled
+    ) {
+    }
 }
