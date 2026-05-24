@@ -68,4 +68,11 @@ public class CharacterCard {
     )
     private Set<Quote> quotes = new HashSet<>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "aliases",
+            joinColumns = @JoinColumn(name = "character_id")
+    )
+    @Column(name = "aliases", nullable = false)
+    Set<String> aliases = new HashSet<>();
 }
