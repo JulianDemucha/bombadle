@@ -1,4 +1,4 @@
-package com.bombadle.service;
+package com.bombadle.service.player;
 
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.entity.Score;
@@ -21,6 +21,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class PlayerService {
     private final PlayerRepository repo;
+    private final PlayerDeletionService playerDeletionService;
 
     public Optional<Player> findByEmail(String email){
         return repo.findByEmail(email);
@@ -101,11 +102,7 @@ public class PlayerService {
 
     @Transactional
     public void deletePlayer(long playerId) {
-
-        int deleted = repo.deletePlayerById(playerId);
-
-        if (deleted == 0)
-            throw new UsernameNotFoundException("User from token has NOT been found: " + playerId);
+        playerDeletionService.deletePlayerSelf(playerId);
     }
 
     private Boolean isNullOrIsBlank(String s) {

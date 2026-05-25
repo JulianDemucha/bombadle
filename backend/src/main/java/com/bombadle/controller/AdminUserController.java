@@ -2,6 +2,7 @@ package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
 import com.bombadle.service.admin.AdminUserService;
+import com.bombadle.service.player.PlayerDeletionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AdminUserController {
     private final AdminUserService adminUserService;
+    private final PlayerDeletionService playerDeletionService;
 
     @PostMapping("/{id}/block")
     public ResponseEntity<Void> blockUser(
@@ -33,5 +35,31 @@ public class AdminUserController {
         adminUserService.unblockUser(actor.getPlayerId(), id);
         return ResponseEntity.noContent().build();
     }
-}
 
+    @PostMapping("/{id}/mark-delete")
+    public ResponseEntity<Void> markForDeletion(
+            @PathVariable Long id,
+            @AuthenticationPrincipal PlayerPrincipal actor
+    ) {
+        playerDeletionService.markForDeletion(actor.getPlayerId(), id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/cancel-delete")
+    public ResponseEntity<Void> cancelDeletion(
+            @PathVariable Long id,
+            @AuthenticationPrincipal PlayerPrincipal actor
+    ) {
+        playerDeletionService.cancelDeletion(actor.getPlayerId(), id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/delete")
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable Long id,
+            @AuthenticationPrincipal PlayerPrincipal actor
+    ) {
+        playerDeletionService.deletePlayerByAdmin(actor.getPlayerId(), id);
+        return ResponseEntity.noContent().build();
+    }
+}

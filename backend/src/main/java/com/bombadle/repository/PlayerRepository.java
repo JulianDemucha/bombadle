@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Instant;
 
 @Repository
 public interface PlayerRepository extends JpaRepository<Player, Long> {
@@ -18,6 +19,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     List<Player> findAllByOrderByIdAsc();
     Boolean existsByLogin(String Login);
     Boolean existsByEmail(String email);
+    List<Player> findAllByMarkedForDeletionAtBefore(Instant cutoff);
 
     @Modifying
     @Query("DELETE FROM Player p WHERE p.id = :id")

@@ -8,7 +8,7 @@ import com.bombadle.entity.GuessList;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.Score;
 import com.bombadle.exception.CardAlreadyGuessedException;
-import com.bombadle.service.PlayerService;
+import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.stats.ScoreService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

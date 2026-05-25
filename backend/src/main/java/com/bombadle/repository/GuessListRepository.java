@@ -12,6 +12,11 @@ public interface GuessListRepository extends JpaRepository<GuessList, Long> {
 
     @Modifying
     @Transactional
+    @Query("DELETE FROM GuessList g WHERE g.player.id = :playerId")
+    int deleteByPlayerId(Long playerId);
+
+    @Modifying
+    @Transactional
     @Query(value = "TRUNCATE TABLE guess_list", nativeQuery = true)
     void truncateTable();
 }

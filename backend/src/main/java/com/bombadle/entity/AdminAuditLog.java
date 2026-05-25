@@ -21,8 +21,8 @@ public class AdminAuditLog {
     @Column(name = "actor_id", nullable = false)
     private Long actorId;
 
-    @Column(name = "change_type", nullable = false)
-    private String changeType;
+    @Column(name = "action_type", nullable = false)
+    private String actionType;
 
     @Column(name = "description")
     private String description;
@@ -30,4 +30,3 @@ public class AdminAuditLog {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 }
-

@@ -28,6 +28,9 @@ public class AdminUserService {
         Player actor = getPlayer(actorId);
         Player target = getPlayer(targetId);
         validateAdminAction(actor, target, "unblock");
+        if (target.getMarkedForDeletionAt() != null) {
+            throw new AdminOperationNotAllowedException("Cannot unblock account marked for deletion");
+        }
         target.setAccountLocked(false);
         playerRepository.save(target);
         adminAuditService.logAction(actorId, "unblock_user_" + targetId, null);
@@ -47,4 +50,3 @@ public class AdminUserService {
         }
     }
 }
-

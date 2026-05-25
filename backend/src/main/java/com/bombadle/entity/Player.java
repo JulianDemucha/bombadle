@@ -67,6 +67,9 @@ public class Player implements UserDetails {
     @Column(name = "account_locked", nullable = false)
     private Boolean accountLocked = false;
 
+    @Column(name = "marked_for_deletion_at")
+    private Instant markedForDeletionAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", nullable = false)
     private PlayerAuthProvider authProvider;

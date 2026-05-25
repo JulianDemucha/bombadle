@@ -12,14 +12,13 @@ import java.time.Instant;
 public class AdminAuditService {
     private final AdminAuditLogRepository adminAuditLogRepository;
 
-    public void logAction(Long actorId, String changeType, String description) {
+    public void logAction(Long actorId, String actionType, String description) {
         AdminAuditLog log = AdminAuditLog.builder()
                 .actorId(actorId)
-                .changeType(changeType)
+                .actionType(actionType)
                 .description(description)
                 .createdAt(Instant.now())
                 .build();
         adminAuditLogRepository.save(log);
     }
 }
-

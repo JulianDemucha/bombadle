@@ -3,7 +3,7 @@ package com.bombadle.controller;
 import com.bombadle.config.PlayerPrincipal;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.dto.request.PlayerUpdateRequest;
-import com.bombadle.service.PlayerService;
+import com.bombadle.service.player.PlayerService;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.ResponseEntity;
