@@ -1,6 +1,8 @@
 package com.bombadle.service.admin;
 
+import com.bombadle.dto.request.AdminUserUpdateRequest;
 import com.bombadle.entity.Player;
+import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.Role;
 import com.bombadle.exception.AdminOperationNotAllowedException;
 import com.bombadle.repository.PlayerRepository;
@@ -34,6 +36,77 @@ public class AdminUserService {
         target.setAccountLocked(false);
         playerRepository.save(target);
         adminAuditService.logAction(actorId, "unblock_user_" + targetId, null);
+    }
+
+    public void updateUser(long actorId, long targetId, AdminUserUpdateRequest request) {
+        Player actor = getPlayer(actorId);
+        Player target = getPlayer(targetId);
+        validateAdminAction(actor, target, "update");
+
+        StringBuilder actionType = new StringBuilder("update_user_").append(targetId);
+        boolean changed = false;
+
+        if (request.login() != null && !request.login().isBlank()) {
+            String login = request.login();
+            int length = login.length();
+            if (length < 3 || length > 16) {
+                throw new IllegalArgumentException("Username must be between 3 and 16 characters");
+            }
+            if (!login.equals(target.getLogin()) && playerRepository.existsByLogin(login)) {
+                throw new IllegalArgumentException("Username " + login + " already exists");
+            }
+            if (!login.equals(target.getLogin())) {
+                target.setLogin(login);
+                actionType.append("_change_login_to_").append(login);
+                changed = true;
+            }
+        }
+
+        if (request.avatarImage() != null && !request.avatarImage().isBlank()) {
+            AvatarImage avatar = AvatarImage.valueOf(request.avatarImage());
+            if (avatar != target.getAvatarImage()) {
+                target.setAvatarImage(avatar);
+                actionType.append("_change_avatar_to_").append(avatar);
+                changed = true;
+            }
+        }
+
+        if (Boolean.TRUE.equals(request.clearTodayScore())) {
+            boolean cleared = clearTodayScore(target);
+            if (cleared) {
+                actionType.append("_clear_today_score");
+                changed = true;
+            }
+        }
+
+        if (request.totalSuccessfulGuesses() != null) {
+            int wins = request.totalSuccessfulGuesses();
+            if (wins < 0) {
+                throw new IllegalArgumentException("totalSuccessfulGuesses must be >= 0");
+            }
+            if (wins != target.getTotalSuccessfulGuesses()) {
+                target.setTotalSuccessfulGuesses(wins);
+                actionType.append("_change_wins_to_").append(wins);
+                changed = true;
+            }
+        }
+
+
+        if (changed) {
+            playerRepository.save(target);
+            adminAuditService.logAction(actorId, actionType.toString(), null);
+        }
+    }
+
+    private boolean clearTodayScore(Player target) {
+        if (Boolean.TRUE.equals(target.getHasGuessedToday())) {
+            target.setHasGuessedToday(false);
+            target.setTodayScore(null);
+            int wins = target.getTotalSuccessfulGuesses();
+            target.setTotalSuccessfulGuesses(Math.max(0, wins - 1));
+            return true;
+        }
+        return false;
     }
 
     private Player getPlayer(long id) {

@@ -1,15 +1,13 @@
 package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
+import com.bombadle.dto.request.AdminUserUpdateRequest;
 import com.bombadle.service.admin.AdminUserService;
 import com.bombadle.service.player.PlayerDeletionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -60,6 +58,16 @@ public class AdminUserController {
             @AuthenticationPrincipal PlayerPrincipal actor
     ) {
         playerDeletionService.deletePlayerByAdmin(actor.getPlayerId(), id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> updateUser(
+            @PathVariable Long id,
+            @RequestBody AdminUserUpdateRequest request,
+            @AuthenticationPrincipal PlayerPrincipal actor
+    ) {
+        adminUserService.updateUser(actor.getPlayerId(), id, request);
         return ResponseEntity.noContent().build();
     }
 }
