@@ -3,6 +3,7 @@ package com.bombadle.config.security;
 import com.bombadle.security.filter.CsrfCookieInjectionFilter;
 import com.bombadle.security.filter.StatelessCsrfValidationFilter;
 import com.bombadle.security.filter.JwtAuthenticationFilter;
+import com.bombadle.security.filter.AccountLockedFilter;
 import com.bombadle.security.oauth2.CustomOAuth2UserService;
 import com.bombadle.security.oauth2.OAuth2SuccessHandler;
 import com.bombadle.service.auth.CsrfCookieService;
@@ -31,6 +32,7 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final AccountLockedFilter accountLockedFilter;
 
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
@@ -63,8 +65,9 @@ public class SecurityConfig {
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
                         .requestMatchers("/api/players/me", "/api/auth/check/**", "/api/auth/register"
-                                , "/api/auth/authenticate", "/api/auth/refreshToken", "/api/card-guessing/**", "/api/character-card/search-index", "/api/daily-reset/trigger", "api/leaderboard/**" /*dev */).permitAll()
+                                , "/api/auth/authenticate", "/api/auth/refreshToken", "/api/card-guessing/**", "/api/character-card/search-index", "/api/daily-reset/trigger", "/api/leaderboard/**" /*dev */).permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider)
@@ -72,7 +75,8 @@ public class SecurityConfig {
 
 
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(csrfCookieFilter, JwtAuthenticationFilter.class)
+                .addFilterAfter(accountLockedFilter, JwtAuthenticationFilter.class)
+                .addFilterAfter(csrfCookieFilter, AccountLockedFilter.class)
                 .addFilterAfter(statelessCsrfFilter, CsrfCookieInjectionFilter.class)
         ;
 

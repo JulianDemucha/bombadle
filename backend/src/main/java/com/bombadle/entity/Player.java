@@ -63,6 +63,10 @@ public class Player implements UserDetails {
     @Column(name = "has_guessed_today", nullable = false)
     private Boolean hasGuessedToday;
 
+    @Builder.Default
+    @Column(name = "account_locked", nullable = false)
+    private Boolean accountLocked = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", nullable = false)
     private PlayerAuthProvider authProvider;

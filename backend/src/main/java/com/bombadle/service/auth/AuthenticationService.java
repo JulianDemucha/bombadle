@@ -56,6 +56,7 @@ public class AuthenticationService {
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
                 .authProvider(PlayerAuthProvider.LOCAL)
                 .hasGuessedToday(false)
+                .accountLocked(false)
                 .build();
 
         repo.save(user);
