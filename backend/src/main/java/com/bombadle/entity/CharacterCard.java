@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -16,6 +17,7 @@ import java.util.Set;
 @Entity
 @Table(name = "character_card")
 @Getter
+@Setter
 public class CharacterCard {
 
     @Id
@@ -75,4 +77,8 @@ public class CharacterCard {
     )
     @Column(name = "aliases", nullable = false)
     Set<String> aliases = new HashSet<>();
+
+    public static CharacterCard create() {
+        return new CharacterCard();
+    }
 }

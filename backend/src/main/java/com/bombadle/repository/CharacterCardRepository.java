@@ -21,4 +21,6 @@ public interface CharacterCardRepository extends JpaRepository<CharacterCard, Lo
     @Query("SELECT new com.bombadle.dto.CharacterCardSearchDto(c.id, c.name, c.imageSrc) FROM CharacterCard c")
     List<CharacterCardSearchDto> findAllCardsForSearch();
 
+    boolean existsByName(String name);
+
 }

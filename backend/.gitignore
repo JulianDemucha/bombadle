@@ -6,6 +6,7 @@ target/
 /src/main/resources/keystore.p12
 
 .env
+mvn-test.log
 
 ### STS ###
 .apt_generated

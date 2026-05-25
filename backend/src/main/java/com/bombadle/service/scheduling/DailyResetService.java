@@ -7,6 +7,7 @@ import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.stats.ScoreService;
 import com.bombadle.service.player.PlayerDeletionService;
+import com.bombadle.service.admin.AdminChangeQueueService;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ public class DailyResetService {
     private final PlayerService playerService;
     private final CacheService cacheService;
     private final PlayerDeletionService playerDeletionService;
+    private final AdminChangeQueueService adminChangeQueueService;
 
 
     /* Cron:  seconds, minutes, hours, day (of the month), month, day (of the week) */
@@ -37,6 +39,7 @@ public class DailyResetService {
     @Transactional
     public void pickNewCharacterCardAndResetScores() {
         log.info("7:00 - Daily reset triggered: selecting new character and resetting scores.");
+        adminChangeQueueService.applyAll();
         guessListService.truncateTable();
         playerDeletionService.deleteMarkedForDeletion(Duration.ofHours(48));
         playerService.resetAllScores();

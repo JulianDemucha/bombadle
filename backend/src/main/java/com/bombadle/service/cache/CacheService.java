@@ -31,4 +31,23 @@ public class CacheService {
     public void reloadSearchIndexCache() {
         characterCardService.getAllCardsForSearch();
     }
+
+    public void evictCache(String cacheName) {
+        if (cacheName == null || cacheName.isBlank()) {
+            return;
+        }
+        var cache = cacheManager.getCache(cacheName);
+        if (cache != null) {
+            cache.clear();
+        }
+    }
+
+    public void evictAllCaches() {
+        cacheManager.getCacheNames().forEach(name -> {
+            var cache = cacheManager.getCache(name);
+            if (cache != null) {
+                cache.clear();
+            }
+        });
+    }
 }
