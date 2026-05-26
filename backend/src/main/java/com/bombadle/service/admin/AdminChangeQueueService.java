@@ -1,5 +1,6 @@
 package com.bombadle.service.admin;
 
+import com.bombadle.dto.AdminPendingCardChangeDto;
 import com.bombadle.dto.request.AdminCharacterCardRequest;
 import com.bombadle.entity.AdminPendingChange;
 import com.bombadle.entity.CharacterCard;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -256,16 +258,16 @@ public class AdminChangeQueueService {
         }
     }
 
-    public java.util.List<com.bombadle.dto.AdminPendingCardChangeDto> listPendingCardChanges() {
-        java.util.List<AdminPendingChange> changes = pendingChangeRepository.findAllByOrderByCreatedAtAsc();
-        java.util.List<com.bombadle.dto.AdminPendingCardChangeDto> result = new java.util.ArrayList<>();
+    public List<AdminPendingCardChangeDto> listPendingCardChanges() {
+        List<AdminPendingChange> changes = pendingChangeRepository.findAllByOrderByCreatedAtAsc();
+        List<AdminPendingCardChangeDto> result = new ArrayList<>();
         for (AdminPendingChange change : changes) {
             try {
                 String actionType = change.getActionType();
                 if (actionType.startsWith("create_card")) {
                     PendingCardCreatePayload payload = objectMapper.readValue(change.getPayload(), PendingCardCreatePayload.class);
                     String name = payload.card() != null ? payload.card().name() : null;
-                    result.add(new com.bombadle.dto.AdminPendingCardChangeDto(
+                    result.add(new AdminPendingCardChangeDto(
                             actionType,
                             "create",
                             null,
@@ -275,7 +277,7 @@ public class AdminChangeQueueService {
                 } else if (actionType.startsWith("update_card")) {
                     PendingCardUpdatePayload payload = objectMapper.readValue(change.getPayload(), PendingCardUpdatePayload.class);
                     String name = payload.card() != null ? payload.card().name() : null;
-                    result.add(new com.bombadle.dto.AdminPendingCardChangeDto(
+                    result.add(new AdminPendingCardChangeDto(
                             actionType,
                             "update",
                             payload.id(),
@@ -284,7 +286,7 @@ public class AdminChangeQueueService {
                     ));
                 } else if (actionType.startsWith("delete_card")) {
                     PendingCardDeletePayload payload = objectMapper.readValue(change.getPayload(), PendingCardDeletePayload.class);
-                    result.add(new com.bombadle.dto.AdminPendingCardChangeDto(
+                    result.add(new AdminPendingCardChangeDto(
                             actionType,
                             "delete",
                             payload.id(),
@@ -299,4 +301,3 @@ public class AdminChangeQueueService {
         return result;
     }
 }
-
