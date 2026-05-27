@@ -62,7 +62,7 @@ public class SecurityConfig {
 
     @Bean
     public AccessDeniedHandler customAccessDeniedHandler() {
-        return (request, response, accessDeniedException) -> response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        return (request, response, accessDeniedException) -> response.setStatus(HttpServletResponse.SC_FORBIDDEN);
     }
 
     @Bean
