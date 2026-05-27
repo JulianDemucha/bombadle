@@ -7,7 +7,8 @@ function ClassicLeaderboard({
     title,
     currentUserRow,
     showSeparator = false,
-    dailyCounterText = null
+    dailyCounterText = null,
+    isAnonymousAndWon = false
 }) {
     const containerClassName = `stamped-banner-container leaderboard-wrapper leaderboard-section ${className}`.trim();
 
@@ -64,6 +65,22 @@ function ClassicLeaderboard({
                 )}
             </div>
 
+            {isAnonymousAndWon && (
+                <div className="login-prompt-container">
+                    <p className="login-prompt-text">Zaloguj się, aby zapisać swój wynik i pojawić się w rankingu!</p>
+                    <button
+                        type="button"
+                        className="login-prompt-button"
+                        onClick={() => {
+                            // TODO: Open login modal
+                            console.log("Kliknięto przycisk zaloguj/zarejestruj");
+                        }}
+                    >
+                        Zaloguj się / Zarejestruj
+                    </button>
+                </div>
+            )}
+
             {dailyCounterText && <p className="daily-solved-counter">{dailyCounterText}</p>}
 
             <button type="button" className="leaderboard-cta">
@@ -74,4 +91,3 @@ function ClassicLeaderboard({
 }
 
 export default ClassicLeaderboard;
-

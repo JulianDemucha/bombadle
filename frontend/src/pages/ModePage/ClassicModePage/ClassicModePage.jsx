@@ -16,6 +16,7 @@ function ClassicModePage() {
         guesses,
         hasGuesses,
         isWon,
+        isAnonymousAndWon,
         isLeaderboardExpanded,
         isAnimatingSuccess,
         topThree,
@@ -24,6 +25,9 @@ function ClassicModePage() {
         handleSelectCharacterId,
         winSectionRef
     } = useClassicModeGame();
+
+    // Show separator if there's a current user row, they are not in top 3, and there are at least 3 players in topThree
+    const showSeparator = Boolean(currentUserRow) && !isCurrentUserInTopThree && topThree.length >= 3;
 
     return (
         <div className="classic-mode-page">
@@ -46,9 +50,10 @@ function ClassicModePage() {
                             topThree={topThree}
                             ctaLabel="Zobacz pelny ranking"
                             title={`Zgadłeś w ${guesses.length} próbach!`}
-                            showSeparator={!isCurrentUserInTopThree && Boolean(currentUserRow)}
-                            currentUserRow={!isCurrentUserInTopThree ? currentUserRow : null}
+                            showSeparator={showSeparator}
+                            currentUserRow={currentUserRow}
                             dailyCounterText="Dzisiaj zgadło już 10 osób."
+                            isAnonymousAndWon={isAnonymousAndWon}
                         />
                     ) : (
                         <ClassicLeaderboard

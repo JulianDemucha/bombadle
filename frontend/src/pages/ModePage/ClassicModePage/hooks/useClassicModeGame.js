@@ -15,6 +15,7 @@ const WIN_SCROLL_DURATION_MS = 700;
 const SEARCH_INDEX_ENDPOINT = '/api/character-card/search-index';
 const GUESS_LIST_ENDPOINT = '/api/card-guessing/classic/guess-list/player/'; // +user.id
 const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
+const ANONYMOUS_GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/anonymous-guess';
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/top3';
 const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/player';
 
@@ -38,7 +39,7 @@ const buildFallbackCurrentUserRow = (user, attempts, timeLabel) => ({
     name: user?.login || 'Ty',
     time: timeLabel || '--:--',
     attempts: attempts > 0 ? attempts : '-',
-    wins: user?.totalGuesses ?? 0,
+    wins: user?.totalGuesses ?? '?',
     avatar: user?.avatarImage ? `/avatar/${user.avatarImage}.jpg` : '/avatar/AVATAR_DEFAULT.jpg',
     isCurrentUser: true
 });
@@ -56,6 +57,7 @@ function useClassicModeGame() {
     const [guesses, setGuesses] = useState([]);
     const [characterCards, setCharacterCards] = useState([]);
     const [isWon, setIsWon] = useState(false);
+    const [isAnonymousAndWon, setIsAnonymousAndWon] = useState(false);
     const [isLeaderboardExpanded, setIsLeaderboardExpanded] = useState(false);
     const [isAnimatingSuccess, setIsAnimatingSuccess] = useState(false);
     const [topThree, setTopThree] = useState([]);
@@ -65,6 +67,16 @@ function useClassicModeGame() {
     const scrollAnimationRef = useRef(null);
     const latestGuessesCountRef = useRef(0);
     const latestWinTimeLabelRef = useRef('--:--');
+
+    const cardsById = useMemo(
+        () => Object.fromEntries(characterCards.map((card) => [card.id, card])),
+        [characterCards]
+    );
+
+    const cardsByName = useMemo(
+        () => Object.fromEntries(characterCards.map((card) => [normalizeKey(card.name), card])),
+        [characterCards]
+    );
 
     useEffect(() => {
         latestGuessesCountRef.current = guesses.length;
@@ -118,57 +130,57 @@ function useClassicModeGame() {
         scrollAnimationRef.current = requestAnimationFrame(step);
     }, []);
 
-    const loadLeaderboard = useCallback(async (includeCurrentUserRow) => {
+    const loadLeaderboard = useCallback(async () => {
         try {
             const topThreeResponse = await apiFetch(LEADERBOARD_TOP3_ENDPOINT);
             const topThreeRows = pickLeaderboardItems(topThreeResponse.data).map((entry, index) =>
                 mapLeaderboardEntryToRow(entry, index, user)
             );
+            setTopThree(topThreeRows);
 
             const isCurrentInTopThree = topThreeRows.some((row) => row.isCurrentUser);
-            setTopThree(topThreeRows);
             setIsCurrentUserInTopThree(isCurrentInTopThree);
 
-            if (!includeCurrentUserRow || isCurrentInTopThree) {
-                setCurrentUserRow(null);
-                return;
-            }
-
-            const userId = user?.id ?? user?.playerId;
-            if (!userId) {
-                setCurrentUserRow(buildFallbackCurrentUserRow(user, latestGuessesCountRef.current, latestWinTimeLabelRef.current));
-                return;
-            }
-
-            try {
-                const playerResponse = await apiFetch(`${LEADERBOARD_PLAYER_ENDPOINT_BASE}/${userId}`);
-                const fallbackRow = buildFallbackCurrentUserRow(user, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
-                const playerEntry = playerResponse.data?.item || playerResponse.data;
-
-                if (!playerEntry || typeof playerEntry !== 'object') {
-                    setCurrentUserRow(fallbackRow);
-                    return;
+            if (isWon && user && !isCurrentInTopThree) {
+                const userId = user?.id ?? user?.playerId;
+                if (userId) {
+                    try {
+                        const playerResponse = await apiFetch(`${LEADERBOARD_PLAYER_ENDPOINT_BASE}/${userId}`);
+                        const playerEntry = playerResponse.data?.item || playerResponse.data;
+                        if (playerEntry && typeof playerEntry === 'object') {
+                            const mappedRow = mapLeaderboardEntryToRow(playerEntry, 0, user);
+                            setCurrentUserRow({
+                                ...buildFallbackCurrentUserRow(user, latestGuessesCountRef.current, latestWinTimeLabelRef.current),
+                                ...mappedRow,
+                                name: mappedRow.name || user.login,
+                                rank: mappedRow.rank ?? '-',
+                                isCurrentUser: true
+                            });
+                        } else {
+                             setCurrentUserRow(buildFallbackCurrentUserRow(user, latestGuessesCountRef.current, latestWinTimeLabelRef.current));
+                        }
+                    } catch (error) {
+                        console.error('Blad pobierania danych gracza w leaderboardzie:', error);
+                        setCurrentUserRow(buildFallbackCurrentUserRow(user, latestGuessesCountRef.current, latestWinTimeLabelRef.current));
+                    }
                 }
-
-                const mappedRow = mapLeaderboardEntryToRow(playerEntry, 0, user);
-                setCurrentUserRow({
-                    ...fallbackRow,
-                    ...mappedRow,
-                    name: mappedRow.name || fallbackRow.name,
-                    rank: mappedRow.rank ?? fallbackRow.rank,
-                    isCurrentUser: true
-                });
-            } catch (error) {
-                console.error('Blad pobierania danych gracza w leaderboardzie:', error);
-                setCurrentUserRow(buildFallbackCurrentUserRow(user, latestGuessesCountRef.current, latestWinTimeLabelRef.current));
+            } else if (isWon && !user) {
+                const winTime = localStorage.getItem('anonymousWinTime');
+                latestWinTimeLabelRef.current = formatTimeLabel(winTime ? parseInt(winTime, 10) : null);
+                const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
+                fallbackRow.wins = '?';
+                setCurrentUserRow(fallbackRow);
+            } else {
+                setCurrentUserRow(null);
             }
+
         } catch (error) {
             console.error('Blad pobierania TOP3 leaderboardu:', error);
             setTopThree([]);
             setCurrentUserRow(null);
             setIsCurrentUserInTopThree(false);
         }
-    }, [user]);
+    }, [user, isWon]);
 
     const loadCharacterCards = useCallback(async () => {
         try {
@@ -185,51 +197,72 @@ function useClassicModeGame() {
     }, [loadCharacterCards]);
 
     useEffect(() => {
-        loadLeaderboard(isWon);
+        loadLeaderboard();
     }, [isWon, loadLeaderboard]);
 
-    const cardsById = useMemo(
-        () => Object.fromEntries(characterCards.map((card) => [card.id, card])),
-        [characterCards]
-    );
-
-    const cardsByName = useMemo(
-        () => Object.fromEntries(characterCards.map((card) => [normalizeKey(card.name), card])),
-        [characterCards]
-    );
-
     useEffect(() => {
-        const loadGuessList = async () => {
-            try {
-                const response = await apiFetch(GUESS_LIST_ENDPOINT+user.id);
-                const items = pickGuessListItems(response.data);
+        const loadGame = async () => {
+            if (user) {
+                // Logged-in user logic
+                try {
+                    const response = await apiFetch(GUESS_LIST_ENDPOINT + user.id);
+                    const items = pickGuessListItems(response.data);
 
-                const lastGuess = items[items.length - 1];
-                if (extractGuessAttempt(lastGuess)?.name?.match === 'MATCH') {
-                    latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
+                    const lastGuess = items[items.length - 1];
+                    if (extractGuessAttempt(lastGuess)?.name?.match === 'MATCH') {
+                        latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
+                        setIsWon(true);
+                        setIsLeaderboardExpanded(true);
+                    }
+
+                    const mappedRows = items.map((item, index) => {
+                        const guessAttempt = extractGuessAttempt(item);
+                        const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
+
+                        return mapGuessAttemptToRow(
+                            guessAttempt,
+                            selectedCard,
+                            item?.id ?? `${selectedCard?.id || 'guess'}-${index}`
+                        );
+                    });
+
+                    setGuesses(mappedRows.reverse());
+                } catch (error) {
+                    console.error('Blad pobierania guess-list:', error);
+                }
+            } else {
+                // Anonymous user logic
+                const today = new Date().toISOString().split('T')[0];
+                const lastPlayed = localStorage.getItem('lastPlayedDate');
+                const now = new Date();
+
+                if (lastPlayed !== today && now.getHours() >= 7) {
+                    localStorage.removeItem('anonymousGuessList');
+                    localStorage.removeItem('anonymousWinTime');
+                    localStorage.setItem('lastPlayedDate', today);
+                }
+                
+                const storedGuesses = JSON.parse(localStorage.getItem('anonymousGuessList') || '[]');
+                const lastGuess = storedGuesses[storedGuesses.length - 1];
+                 if (lastGuess && lastGuess.correct) {
                     setIsWon(true);
+                    setIsAnonymousAndWon(true);
                     setIsLeaderboardExpanded(true);
                 }
 
-                const mappedRows = items.map((item, index) => {
-                    const guessAttempt = extractGuessAttempt(item);
+                const mappedRows = storedGuesses.map((item, index) => {
+                    const guessAttempt = item.guessAttempt;
                     const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
-
-                    return mapGuessAttemptToRow(
-                        guessAttempt,
-                        selectedCard,
-                        item?.id ?? `${selectedCard?.id || 'guess'}-${index}`
-                    );
+                    return mapGuessAttemptToRow(guessAttempt, selectedCard, `${selectedCard?.id || 'guess'}-${index}`);
                 });
-
                 setGuesses(mappedRows.reverse());
-            } catch (error) {
-                console.error('Blad pobierania guess-list:', error);
             }
         };
 
-        loadGuessList();
-    }, [cardsById, cardsByName]);
+        if (characterCards.length > 0) {
+            loadGame();
+        }
+    }, [characterCards, user, cardsById, cardsByName]);
 
     const handleSelectCharacterId = useCallback(async (cardId) => {
         if (isWon || isAnimatingSuccess) return;
@@ -238,9 +271,12 @@ function useClassicModeGame() {
         if (!selectedCard) return;
 
         try {
-            const response = await apiFetch(`${GUESS_ENDPOINT_BASE}/${cardId}`, {
-                method: 'POST'
-            });
+            let response;
+            if (user) {
+                response = await apiFetch(`${GUESS_ENDPOINT_BASE}/${cardId}`, { method: 'POST' });
+            } else {
+                response = await apiFetch(`${ANONYMOUS_GUESS_ENDPOINT_BASE}/${cardId}`, { method: 'POST' });
+            }
 
             const guessAttempt = response.data?.guessAttempt;
             const correct = response.data?.correct || guessAttempt?.name?.match === 'MATCH';
@@ -255,8 +291,19 @@ function useClassicModeGame() {
             };
             setGuesses((prev) => [newRow, ...prev]);
 
+            if (!user) {
+                const anonymousGuesses = JSON.parse(localStorage.getItem('anonymousGuessList') || '[]');
+                anonymousGuesses.push({ ...response.data, characterCardId: cardId });
+                localStorage.setItem('anonymousGuessList', JSON.stringify(anonymousGuesses));
+            }
+
             if (correct) {
-                latestWinTimeLabelRef.current = formatTimeLabel(Date.now());
+                const winTimestamp = Date.now();
+                latestWinTimeLabelRef.current = formatTimeLabel(winTimestamp);
+                if (!user) {
+                    localStorage.setItem('anonymousWinTime', winTimestamp);
+                    setIsAnonymousAndWon(true);
+                }
                 setIsAnimatingSuccess(true);
 
                 setTimeout(() => {
@@ -275,12 +322,13 @@ function useClassicModeGame() {
         } catch (error) {
             console.error('Blad wysylania guessa:', error);
         }
-    }, [cardsById, isAnimatingSuccess, isWon, smoothScrollToWinSection]);
+    }, [cardsById, isAnimatingSuccess, isWon, smoothScrollToWinSection, user, cardsByName]);
 
     return {
         guesses,
         hasGuesses: guesses.length > 0,
         isWon,
+        isAnonymousAndWon,
         isLeaderboardExpanded,
         isAnimatingSuccess,
         topThree,
@@ -292,4 +340,3 @@ function useClassicModeGame() {
 }
 
 export default useClassicModeGame;
-

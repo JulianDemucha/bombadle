@@ -15,6 +15,6 @@ export const routes = [
     {path: '/Login', element: <UnauthenticatedRoute><LoginPage/></UnauthenticatedRoute>},
     {path: '/Register', element: <UnauthenticatedRoute><RegisterPage/></UnauthenticatedRoute>},
     {path: '/Profile/', element: <AuthenticatedRoute><PlayerSettingsPage/></AuthenticatedRoute>},
-    {path: '/Classic/', element: <AuthenticatedRoute><ClassicModePage/></AuthenticatedRoute>},
+    {path: '/Classic/', element: <ClassicModePage/>},
     {path: '/login-success', element: <Navigate to="/" replace/>}
 ]
