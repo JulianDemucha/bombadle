@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class DailyResetDemoController {
     private final DailyResetService dailyResetService;
 
-    @PostMapping("/trigger")
+    @PostMapping("/manual-trigger")
     public String triggerDailyReset() {
         dailyResetService.pickNewCharacterCardAndResetScores();
         return "Daily reset triggered successfully!";

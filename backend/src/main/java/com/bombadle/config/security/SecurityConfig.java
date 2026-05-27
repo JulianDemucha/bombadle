@@ -20,7 +20,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import java.util.List;
 
@@ -53,6 +55,15 @@ public class SecurityConfig {
         ));
     }
 
+    @Bean
+    public AuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return (request, response, authException) -> response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    }
+
+    @Bean
+    public AccessDeniedHandler customAccessDeniedHandler() {
+        return (request, response, accessDeniedException) -> response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    }
 
     @Bean
     @Order(1)
@@ -61,19 +72,18 @@ public class SecurityConfig {
                                                       StatelessCsrfValidationFilter statelessCsrfFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityMatcher("/api/**", "swagger-ui")
+                .securityMatcher("/api/**", "swagger-ui", "/images/**", "/character_card_avatars/**")
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
-                        .requestMatchers("/api/players/me", "/api/auth/check/**", "/api/auth/register"
-                                , "/api/auth/authenticate", "/api/auth/refreshToken", "/api/card-guessing/**", "/api/character-card/search-index", "/api/daily-reset/trigger", "/api/leaderboard/**" /*dev */).permitAll()
+                        .requestMatchers("/api/daily-reset/manual-trigger").hasRole("SUPERADMIN")
+                        .requestMatchers("/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate", "/api/auth/refreshToken", "/api/card-guessing/classic/anonymous-guess/**", "/api/character-card/search-index", "/api/leaderboard/**", "/images/**", "/character_card_avatars/**" /*dev */).permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider)
                 .oauth2Login(AbstractHttpConfigurer::disable)
-
-
+                .exceptionHandling(e -> e.authenticationEntryPoint(customAuthenticationEntryPoint()).accessDeniedHandler(customAccessDeniedHandler()))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(accountLockedFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(csrfCookieFilter, AccountLockedFilter.class)
