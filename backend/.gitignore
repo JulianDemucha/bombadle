@@ -3,8 +3,8 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-/src/main/resources/keystore.p12
-src/main/resources/keystore.p12
+*.p12
+node_modules/
 
 .env
 mvn-test.log
