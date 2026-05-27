@@ -5,6 +5,7 @@ import com.bombadle.entity.Score;
 import com.bombadle.repository.ScoreRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class ScoreService {
     }
 
     @Transactional
+    @CacheEvict(value = "top-3-leaderboard", allEntries = true, condition = "@scoreRepository.count() <= 3")
     public Score registerScore(Player player, int numberOfTries) {
         Score score = Score.builder()
                 .player(player)
@@ -56,11 +58,13 @@ public class ScoreService {
         return repo.findById(id);
     }
 
+    @CacheEvict(value = "top-3-leaderboard", allEntries = true)
     public void deleteScoreById(Long id) {
         repo.deleteById(id);
     }
 
     @Transactional
+    @CacheEvict(value = "top-3-leaderboard", allEntries = true)
     public void deleteAllInBatch() {
         repo.deleteAllInBatch();
     }

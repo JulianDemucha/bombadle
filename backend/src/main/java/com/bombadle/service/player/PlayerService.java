@@ -1,5 +1,6 @@
 package com.bombadle.service.player;
 
+import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.entity.Score;
 import com.bombadle.exception.UsernameAlreadyTakenException;
@@ -7,15 +8,18 @@ import com.bombadle.dto.request.PlayerUpdateRequest;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.repository.PlayerRepository;
+import com.bombadle.service.stats.LeaderboardService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -24,6 +28,8 @@ import java.util.Optional;
 public class PlayerService {
     private final PlayerRepository repo;
     private final PlayerDeletionService playerDeletionService;
+    private final LeaderboardService leaderboardService;
+    private final CacheManager cacheManager;
 
     public Optional<Player> findByEmail(String email){
         return repo.findByEmail(email);
@@ -70,6 +76,9 @@ public class PlayerService {
         Player updatedPlayer = repo.findById(playerId)
                 .orElseThrow(() -> new UsernameNotFoundException("User from token has NOT been found: " + playerId));
 
+        boolean isPlayerInTop3 = leaderboardService.getTop3Leaderboard().stream()
+                .anyMatch(entry -> entry.playerId().equals(playerId));
+
         // IF playerUpdatableDto.login() is NOT blank or null, change users email
         if (!isNullOrIsBlank(request.login())) {
             int length = request.login().length();
@@ -102,6 +111,11 @@ public class PlayerService {
         }
 
         repo.save(updatedPlayer);
+
+        if (isPlayerInTop3) {
+            log.info("Player {} is in top 3, clearing top-3-leaderboard cache", playerId);
+            Objects.requireNonNull(cacheManager.getCache("top-3-leaderboard")).clear();
+        }
 
         return PlayerDto.toDto(updatedPlayer);
     }
