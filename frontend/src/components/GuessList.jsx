@@ -1,6 +1,120 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import './style/GuessList.css';
+
+const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
+    const rowRef = useRef(null);
+    const [isAnimating, setIsAnimating] = useState(isNew);
+
+    useEffect(() => {
+        if (isNew) {
+            const timer = setTimeout(() => {
+                setIsAnimating(false);
+            }, 6000); // Total animation duration
+            return () => clearTimeout(timer);
+        }
+    }, [isNew]);
+
+    const rowClassName = `guess-grid guess-row ${isAnimating ? 'new-row' : 'existing-row'}`;
+
+    return (
+        <div ref={rowRef} className={rowClassName} key={guess.id}>
+            <div className="tile avatar-tile">
+                <img
+                    src={guess.imageSrc || (guess.image ? `/character_card_avatars/${guess.image}` : '/avatar/AVATAR_DEFAULT.jpg')}
+                    alt={guess.name}
+                />
+            </div>
+            <div 
+                className="tile text-tile name-tile" 
+                onMouseEnter={(e) => onMouseEnter(e, guess.name)}
+                onMouseLeave={onMouseLeave}
+            >
+                <div className="tile-inner">
+                    <div className="tile-front"></div>
+                    <div className="tile-back">
+                        <span className="tile-text">{guess.name}</span>
+                    </div>
+                </div>
+            </div>
+            <div 
+                className={`tile text-tile gender-tile ${guess.status.gender}`}
+                onMouseEnter={(e) => onMouseEnter(e, guess.gender)}
+                onMouseLeave={onMouseLeave}
+            >
+                <div className="tile-inner">
+                    <div className="tile-front"></div>
+                    <div className="tile-back">
+                        <span className="tile-text">{guess.gender}</span>
+                    </div>
+                </div>
+            </div>
+            <div 
+                className={`tile text-tile race-tile ${guess.status.race}`}
+                onMouseEnter={(e) => onMouseEnter(e, guess.race)}
+                onMouseLeave={onMouseLeave}
+            >
+                <div className="tile-inner">
+                    <div className="tile-front"></div>
+                    <div className="tile-back">
+                        <span className="tile-text">{guess.race}</span>
+                    </div>
+                </div>
+            </div>
+            <div 
+                className={`tile text-tile alive-tile ${guess.status.isAlive}`}
+                onMouseEnter={(e) => onMouseEnter(e, guess.isAlive)}
+                onMouseLeave={onMouseLeave}
+            >
+                <div className="tile-inner">
+                    <div className="tile-front"></div>
+                    <div className="tile-back">
+                        <span className="tile-text">{guess.isAlive}</span>
+                    </div>
+                </div>
+            </div>
+            <div 
+                className={`tile text-tile colors-tile ${guess.status.colors}`}
+                onMouseEnter={(e) => onMouseEnter(e, guess.colors)}
+                onMouseLeave={onMouseLeave}
+            >
+                <div className="tile-inner">
+                    <div className="tile-front"></div>
+                    <div className="tile-back">
+                        <span className="tile-text">{guess.colors}</span>
+                    </div>
+                </div>
+            </div>
+            <div 
+                className={`tile text-tile affiliation-tile ${guess.status.affiliation}`}
+                onMouseEnter={(e) => onMouseEnter(e, guess.affiliation)}
+                onMouseLeave={onMouseLeave}
+            >
+                <div className="tile-inner">
+                    <div className="tile-front"></div>
+                    <div className="tile-back">
+                        <span className="tile-text">{guess.affiliation}</span>
+                    </div>
+                </div>
+            </div>
+            <div 
+                className={`tile text-tile first-appearance-tile ${guess.status.firstAppearance}`}
+                onMouseEnter={(e) => onMouseEnter(e, guess.firstAppearance)}
+                onMouseLeave={onMouseLeave}
+            >
+                <div className="tile-inner">
+                    <div className="tile-front"></div>
+                    <div className="tile-back">
+                        {guess.meta?.firstAppearanceDirection === 'HIGHER' && <div className="background-arrow arrow-up"></div>}
+                        {guess.meta?.firstAppearanceDirection === 'LOWER' && <div className="background-arrow arrow-down"></div>}
+                        <span className="tile-text">{guess.firstAppearance}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 const GuessList = ({ guesses = [] }) => {
     const [tooltip, setTooltip] = useState({ visible: false, text: '', x: 0, y: 0 });
@@ -48,108 +162,15 @@ const GuessList = ({ guesses = [] }) => {
                 </div>
 
                 <div className="guesses-stack">
-                    {guesses.map((guess, index) => {
-                        const isNew = index === 0 && !!guess.isNewAnimation;
-                        return (
-                            <div key={guess.id || index} className={`guess-grid guess-row ${isNew ? 'new-row' : 'existing-row'}`}>
-
-                                <div className="tile avatar-tile">
-                                    <img
-                                        src={guess.imageSrc || (guess.image ? `/character_card_avatars/${guess.image}` : '/avatar/AVATAR_DEFAULT.jpg')}
-                                        alt={guess.name}
-                                    />
-                                </div>
-
-                                <div 
-                                    className="tile text-tile name-tile" 
-                                    onMouseEnter={(e) => handleMouseEnter(e, guess.name)}
-                                    onMouseLeave={handleMouseLeave}
-                                >
-                                    <div className="tile-inner">
-                                        <div className="tile-front"></div>
-                                        <div className="tile-back">
-                                            <span className="tile-text">{guess.name}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div 
-                                    className={`tile text-tile gender-tile ${guess.status.gender}`}
-                                    onMouseEnter={(e) => handleMouseEnter(e, guess.gender)}
-                                    onMouseLeave={handleMouseLeave}
-                                >
-                                    <div className="tile-inner">
-                                        <div className="tile-front"></div>
-                                        <div className="tile-back">
-                                            <span className="tile-text">{guess.gender}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div 
-                                    className={`tile text-tile race-tile ${guess.status.race}`}
-                                    onMouseEnter={(e) => handleMouseEnter(e, guess.race)}
-                                    onMouseLeave={handleMouseLeave}
-                                >
-                                    <div className="tile-inner">
-                                        <div className="tile-front"></div>
-                                        <div className="tile-back">
-                                            <span className="tile-text">{guess.race}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div 
-                                    className={`tile text-tile alive-tile ${guess.status.isAlive}`}
-                                    onMouseEnter={(e) => handleMouseEnter(e, guess.isAlive)}
-                                    onMouseLeave={handleMouseLeave}
-                                >
-                                    <div className="tile-inner">
-                                        <div className="tile-front"></div>
-                                        <div className="tile-back">
-                                            <span className="tile-text">{guess.isAlive}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div 
-                                    className={`tile text-tile colors-tile ${guess.status.colors}`}
-                                    onMouseEnter={(e) => handleMouseEnter(e, guess.colors)}
-                                    onMouseLeave={handleMouseLeave}
-                                >
-                                    <div className="tile-inner">
-                                        <div className="tile-front"></div>
-                                        <div className="tile-back">
-                                            <span className="tile-text">{guess.colors}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div 
-                                    className={`tile text-tile affiliation-tile ${guess.status.affiliation}`}
-                                    onMouseEnter={(e) => handleMouseEnter(e, guess.affiliation)}
-                                    onMouseLeave={handleMouseLeave}
-                                >
-                                    <div className="tile-inner">
-                                        <div className="tile-front"></div>
-                                        <div className="tile-back">
-                                            <span className="tile-text">{guess.affiliation}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div 
-                                    className={`tile text-tile first-appearance-tile ${guess.status.firstAppearance}`}
-                                    onMouseEnter={(e) => handleMouseEnter(e, guess.firstAppearance)}
-                                    onMouseLeave={handleMouseLeave}
-                                >
-                                    <div className="tile-inner">
-                                        <div className="tile-front"></div>
-                                        <div className="tile-back">
-                                            {guess.meta?.firstAppearanceDirection === 'HIGHER' && <div className="background-arrow arrow-up"></div>}
-                                            {guess.meta?.firstAppearanceDirection === 'LOWER' && <div className="background-arrow arrow-down"></div>}
-                                            <span className="tile-text">{guess.firstAppearance}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        );
-                    })}
+                    {guesses.map((guess, index) => (
+                        <GuessRow 
+                            key={guess.id || index}
+                            guess={guess}
+                            isNew={index === 0 && !!guess.isNewAnimation}
+                            onMouseEnter={handleMouseEnter}
+                            onMouseLeave={handleMouseLeave}
+                        />
+                    ))}
                 </div>
             </div>
         </div>
