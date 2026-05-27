@@ -1,9 +1,13 @@
 package com.bombadle.repository;
 
 import com.bombadle.entity.AdminAuditLog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface AdminAuditLogRepository extends JpaRepository<AdminAuditLog, Long> {
-    java.util.List<AdminAuditLog> findAllByActorIdOrderByCreatedAtDesc(Long actorId);
-    org.springframework.data.domain.Page<AdminAuditLog> findAllByActorId(Long actorId, org.springframework.data.domain.Pageable pageable);
+    List<AdminAuditLog> findAllByActorIdOrderByCreatedAtDesc(Long actorId);
+    Page<AdminAuditLog> findAllByActorId(Long actorId, Pageable pageable);
 }

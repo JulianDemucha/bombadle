@@ -69,4 +69,9 @@ public class CardGuessingController {
     public GuessListDto getGuessList(@PathVariable Long playerId) {
         return guessListService.getGuessListByPlayerId(playerId);
     }
+
+    @PostMapping("/classic/anonymous-guess/{id}")
+    public GuessResponse compareCardAnonymous(@PathVariable Long id) {
+        return cardMatchingService.compareCharacterCardClassicAnonymous(id);
+    }
 }

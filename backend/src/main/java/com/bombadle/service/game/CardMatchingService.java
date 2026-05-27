@@ -36,6 +36,13 @@ public class CardMatchingService {
         return compareCharacterCards(guess, currentCharacterCardWrapper.get(), player);
     }
 
+    @Transactional(readOnly = true)
+    public GuessResponse compareCharacterCardClassicAnonymous(Long guessCardId) {
+        CharacterCard guess = characterCardService.findCharacterCardById(guessCardId).orElseThrow();
+        GuessAttempt guessAttempt = matchUtils.compareCharacterCardClassic(guess);
+        return new GuessResponse(guessAttempt.isCorrect(), guessAttempt);
+    }
+
     @Transactional
     public GuessResponse compareCharacterCards(CharacterCard guess, CharacterCard targetCharacterCard, Player player) {
         if (player.getHasGuessedToday())
