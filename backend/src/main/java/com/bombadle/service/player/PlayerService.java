@@ -10,6 +10,8 @@ import com.bombadle.repository.PlayerRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +35,10 @@ public class PlayerService {
 
     public List<Player> getAllPlayers() {
         return repo.findAllByOrderByIdAsc();
+    }
+
+    public Page<Player> getAllPlayers(Pageable pageable) {
+        return repo.findAllByOrderByIdAsc(pageable);
     }
 
     public PlayerDto getAuthenticatedPlayer(long playerId) {

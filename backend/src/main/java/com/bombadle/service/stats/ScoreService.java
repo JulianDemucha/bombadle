@@ -5,6 +5,8 @@ import com.bombadle.entity.Score;
 import com.bombadle.repository.ScoreRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -26,6 +28,10 @@ public class ScoreService {
 
     public List<Score> getAllScores() {
         return repo.findAll();
+    }
+
+    public Page<Score> getAllScores(Pageable pageable) {
+        return repo.findAll(pageable);
     }
 
     public Optional<Score> findScoreByPlayerId(Long playerId) {

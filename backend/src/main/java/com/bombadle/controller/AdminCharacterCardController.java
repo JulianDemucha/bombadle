@@ -1,6 +1,7 @@
 package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
+import com.bombadle.dto.AdminPendingCardChangeDto;
 import com.bombadle.dto.request.AdminCharacterCardRequest;
 import com.bombadle.repository.CharacterCardRepository;
 import com.bombadle.service.admin.AdminCharacterCardService;
@@ -9,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/cards")
@@ -78,7 +81,7 @@ public class AdminCharacterCardController {
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<java.util.List<com.bombadle.dto.AdminPendingCardChangeDto>> listPendingChanges() {
+    public ResponseEntity<List<AdminPendingCardChangeDto>> listPendingChanges() {
         return ResponseEntity.ok(adminCharacterCardService.listPendingChanges());
     }
 }

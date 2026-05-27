@@ -4,6 +4,7 @@ import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.entity.Score;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -88,6 +89,9 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                     FROM Score s
                     """)
     Page<LeaderboardEntryDto> findPagedLeaderboard(Pageable pageable);
+
+    @EntityGraph(attributePaths = "player")
+    Page<Score> findAll(Pageable pageable);
 
     Optional<Score> findByPlayerId(Long playerId);
 

@@ -1,6 +1,8 @@
 package com.bombadle.repository;
 
 import com.bombadle.entity.Player;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +19,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     Optional<Player> findByLogin(String Login);
     Optional<Player> findByEmail(String email);
     List<Player> findAllByOrderByIdAsc();
+    Page<Player> findAllByOrderByIdAsc(Pageable pageable);
     Boolean existsByLogin(String Login);
     Boolean existsByEmail(String email);
     List<Player> findAllByMarkedForDeletionAtBefore(Instant cutoff);
