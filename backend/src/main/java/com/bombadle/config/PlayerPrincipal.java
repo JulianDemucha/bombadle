@@ -19,7 +19,7 @@ public class PlayerPrincipal implements UserDetails {
     public PlayerPrincipal(Player player) {
         this.id = player.getId();
         this.email = player.getEmail();
-        this.password = player.getPassword();
+        this.password = player.getPasswordHash();
         this.authorities = List.of(new SimpleGrantedAuthority(player.getRole().toString()));
         this.accountLocked = player.getAccountLocked();
     }

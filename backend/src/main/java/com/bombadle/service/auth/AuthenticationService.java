@@ -1,5 +1,6 @@
 package com.bombadle.service.auth;
 
+import com.bombadle.config.PlayerPrincipal;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.PlayerAuthProvider;
@@ -69,7 +70,7 @@ public class AuthenticationService {
 
         mergeService.handleAnonymousSessionMerge(player, anonymousSessionId, triggerMerge);
 
-        return jwtService.generateJwtToken(player);
+        return jwtService.generateJwtToken(new PlayerPrincipal(player));
     }
 
 
@@ -82,14 +83,14 @@ public class AuthenticationService {
                             request.getPassword()
                     )
             );
-            var user = repo.findByEmail(request.getEmail())
+            var player = repo.findByEmail(request.getEmail())
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
-            user.setLastLoginAt(Instant.now());
-            repo.save(user);
+            player.setLastLoginAt(Instant.now());
+            repo.save(player);
 
-             mergeService.handleAnonymousSessionMerge(user, anonymousSessionId, triggerMerge);
+             mergeService.handleAnonymousSessionMerge(player, anonymousSessionId, triggerMerge);
 
-            return jwtService.generateJwtToken(user);
+            return jwtService.generateJwtToken(new PlayerPrincipal(player));
         }catch (AuthenticationException e) {
             throw new InvalidCredentialsException("Invalid email or password");
         }

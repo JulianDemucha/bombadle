@@ -20,7 +20,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Getter
-public class Player implements UserDetails {
+public class Player{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,39 +73,4 @@ public class Player implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", nullable = false)
     private PlayerAuthProvider authProvider;
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(this.role.name()));
-    }
-
-    @Override
-    public String getPassword() {
-        return this.passwordHash;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return UserDetails.super.isAccountNonExpired();
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return UserDetails.super.isCredentialsNonExpired();
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
-    }
 }

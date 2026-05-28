@@ -1,6 +1,7 @@
 package com.bombadle.service.auth;
 
 import com.bombadle.config.ApplicationConfigProperties;
+import com.bombadle.config.PlayerPrincipal;
 import com.bombadle.dto.RefreshTokenCookieDto;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.RefreshToken;
@@ -46,7 +47,7 @@ public class RefreshTokenService {
         return RefreshTokenCookieDto.builder()
                 .refreshToken(token)
                 .expiresAt(expiresAt)
-                .jwt(jwtService.generateJwtToken(player))
+                .jwt(jwtService.generateJwtToken(new PlayerPrincipal(player)))
                 .build();
     }
 
@@ -70,7 +71,7 @@ public class RefreshTokenService {
         return RefreshTokenCookieDto.builder()
                 .refreshToken(newToken)
                 .expiresAt(expiresAt)
-                .jwt(jwtService.generateJwtToken(player))
+                .jwt(jwtService.generateJwtToken(new PlayerPrincipal(player)))
                 .build();
     }
 
@@ -109,7 +110,7 @@ public class RefreshTokenService {
 
         return RefreshTokenCookieDto.builder()
                 .refreshToken(newToken)
-                .jwt(jwtService.generateJwtToken(player))
+                .jwt(jwtService.generateJwtToken(new PlayerPrincipal(player)))
                 .build();
     }
 
