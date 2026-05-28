@@ -1,7 +1,10 @@
 package com.bombadle.service.scheduling;
 
 import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.repository.AnonymousSessionRepository;
 import com.bombadle.repository.CharacterCardRepository;
+import com.bombadle.service.game.AnonymousGuessListService;
+import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.GuessListService;
@@ -31,7 +34,8 @@ public class DailyResetService {
     private final CacheService cacheService;
     private final PlayerDeletionService playerDeletionService;
     private final AdminChangeQueueService adminChangeQueueService;
-
+    private final AnonymousSessionService anonymousSessionService;
+    private final AnonymousGuessListService anonymousGuessListService;
 
     /* Cron:  seconds, minutes, hours, day (of the month), month, day (of the week) */
     @PostConstruct //for testing
@@ -41,6 +45,8 @@ public class DailyResetService {
         log.info("7:00 - Daily reset triggered: selecting new character and resetting scores.");
         adminChangeQueueService.applyAll();
         guessListService.truncateTable();
+        anonymousSessionService.truncateTable();
+        anonymousGuessListService.truncateTable();
         playerDeletionService.deleteMarkedForDeletion(Duration.ofHours(48));
         playerService.resetAllScores();
         scoreService.deleteAllInBatch();

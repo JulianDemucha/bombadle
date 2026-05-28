@@ -122,11 +122,10 @@ function RegisterPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // reset
+
         setErrors({email: "", username: "", password: "", confirmPassword: "", general: ""});
         setSuccessMessage("");
 
-        // client-side validations
         if (!email || !username || !password) {
             setErrors(prev => ({...prev, general: "Wypełnij wymagane pola."}));
             return;
@@ -166,6 +165,13 @@ function RegisterPage() {
             return;
         }
 
+        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
+        if (anonymousGuesses && anonymousGuesses !== '[]') {
+            const confirmMerge = window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?");
+            if (confirmMerge) {
+                document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
+            }
+        }
 
         setLoading(true);
         try {
@@ -173,9 +179,13 @@ function RegisterPage() {
 
             if (res.status === 201 || res.status === 200) {
                 setSuccessMessage(res.data?.message || "Konto zostało utworzone.");
+                if (document.cookie.includes("TRIGGER_MERGE=true")) {
+                    localStorage.removeItem('anonymousGuessList');
+                    localStorage.removeItem('anonymousWinTime');
+                    localStorage.removeItem('lastPlayedDate');
+                }
                 await reload();
                 navigate("/");
-
             }
 
         } catch (err) {
@@ -196,7 +206,6 @@ function RegisterPage() {
                     setErrors(prev => ({...prev, general: data?.message || "Błąd podczas rejestracji."}));
                 }
             } else if (err?.code === "ERR_CANCELED" || err?.name === "CanceledError") {
-                // request anulowany (raczej nie wystąpi w submit)
             } else {
                 setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
             }
@@ -206,6 +215,13 @@ function RegisterPage() {
     };
 
     const handleGoogleLogin = () => {
+        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
+        if (anonymousGuesses && anonymousGuesses !== '[]') {
+            const confirmMerge = window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?");
+            if (confirmMerge) {
+                document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
+            }
+        }
         window.location.href = 'https://localhost:8443/oauth2/authorization/google';
     };
 

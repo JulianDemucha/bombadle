@@ -17,8 +17,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +31,10 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final AnonymousMergeService mergeService;
 
-    public String register(RegisterRequest request) {
+    @Transactional
+    public String register(RegisterRequest request, UUID anonymousSessionId, Boolean triggerMerge) {
         if (repo.existsByEmail(request.getEmail()) || repo.existsByLogin(request.getUsername())) {
             throw new RegistrationConflictException("Email or username already exists");
         }
@@ -46,7 +51,7 @@ public class AuthenticationService {
             throw new RegistrationValidationException("Invalid email format");
         }
 
-        var user = Player.builder()
+        var player = Player.builder()
                 .login(request.getUsername())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
@@ -59,14 +64,17 @@ public class AuthenticationService {
                 .accountLocked(false)
                 .build();
 
-        repo.save(user);
-        log.info("Registered new user: {}", user.getLogin());
+        repo.save(player);
+        log.info("Registered new user: {}", player.getLogin());
 
-        return jwtService.generateJwtToken(user);
+        mergeService.handleAnonymousSessionMerge(player, anonymousSessionId, triggerMerge);
+
+        return jwtService.generateJwtToken(player);
     }
 
 
-    public String authenticate(AuthenticationRequest request) {
+    @Transactional
+    public String authenticate(AuthenticationRequest request, UUID anonymousSessionId, Boolean triggerMerge) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -78,6 +86,9 @@ public class AuthenticationService {
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
             user.setLastLoginAt(Instant.now());
             repo.save(user);
+
+             mergeService.handleAnonymousSessionMerge(user, anonymousSessionId, triggerMerge);
+
             return jwtService.generateJwtToken(user);
         }catch (AuthenticationException e) {
             throw new InvalidCredentialsException("Invalid email or password");
@@ -91,6 +102,5 @@ public class AuthenticationService {
     public Boolean existsByUsername(String username) {
         return repo.existsByLogin(username);
     }
-
 
 }

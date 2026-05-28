@@ -46,9 +46,15 @@ public class ScoreService {
     @Transactional
     @CacheEvict(value = "top-3-leaderboard", allEntries = true, condition = "@scoreRepository.count() <= 3")
     public Score registerScore(Player player, int numberOfTries) {
+        return registerScoreWithTimestamp(player, numberOfTries, Instant.now());
+    }
+
+    @Transactional
+    @CacheEvict(value = "top-3-leaderboard", allEntries = true, condition = "@scoreRepository.count() <= 3")
+    public Score registerScoreWithTimestamp(Player player, int numberOfTries, Instant timestamp) {
         Score score = Score.builder()
                 .player(player)
-                .scoreTimestamp(Instant.now())
+                .scoreTimestamp(timestamp)
                 .numberOfTries(numberOfTries)
                 .build();
         return repo.save(score);

@@ -1,22 +1,31 @@
 package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
+import com.bombadle.dto.AnonymousSessionDto;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.dto.request.PlayerUpdateRequest;
+import com.bombadle.service.auth.CookieService;
+import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/players")
 @AllArgsConstructor
 public class PlayerController {
     private final PlayerService playerService;
+    private final AnonymousSessionService anonymousSessionService;
+    private final CookieService cookieService;
 
     @GetMapping("/all")
     public Page<PlayerDto> getAllPlayers(Pageable pageable) {
@@ -43,5 +52,26 @@ public class PlayerController {
         playerService.deletePlayer(userDetails.getPlayerId());
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/anonymous/me")
+    public ResponseEntity<AnonymousSessionDto> getAnonymousStatus(
+            @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId
+    ) {
+
+        AnonymousSessionDto anonymousSessionDto = anonymousSessionService.getAnonymousSession(anonymousSessionId);
+        if(anonymousSessionId == null || !anonymousSessionId.equals(anonymousSessionDto.id())){
+            ResponseCookie cookie = cookieService.createCookie(
+                    "ANON_SESSION_ID",
+                    anonymousSessionDto.id().toString(),
+                    60 * 60 * 24 //24h
+            );
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(anonymousSessionDto);
+        }
+
+        return ResponseEntity.ok(anonymousSessionDto);
+    }
+
 
 }

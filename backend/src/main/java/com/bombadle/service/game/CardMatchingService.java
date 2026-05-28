@@ -1,13 +1,12 @@
 package com.bombadle.service.game;
 
 import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.dto.AnonymousGuessResponse;
 import com.bombadle.dto.GuessAttempt;
 import com.bombadle.dto.GuessResponse;
-import com.bombadle.entity.CharacterCard;
-import com.bombadle.entity.GuessList;
-import com.bombadle.entity.Player;
-import com.bombadle.entity.Score;
+import com.bombadle.entity.*;
 import com.bombadle.exception.CardAlreadyGuessedException;
+import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.stats.ScoreService;
 import lombok.Getter;
@@ -15,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.swing.text.html.Option;
+import java.util.Optional;
+import java.util.UUID;
 
 @Getter
 @Service
@@ -26,6 +29,8 @@ public class CardMatchingService {
     private final GuessListService guessListService;
     private final CurrentCharacterCardWrapper currentCharacterCardWrapper;
     private final CharacterCardService characterCardService;
+    private final AnonymousSessionService anonymousSessionService;
+    private final AnonymousGuessListService anonymousGuessListService;
 
     @Transactional
     @CacheEvict(value = "guess-list", key = "#playerId")
@@ -36,11 +41,40 @@ public class CardMatchingService {
         return compareCharacterCards(guess, currentCharacterCardWrapper.get(), player);
     }
 
-    @Transactional(readOnly = true)
-    public GuessResponse compareCharacterCardClassicAnonymous(Long guessCardId) {
-        CharacterCard guess = characterCardService.findCharacterCardById(guessCardId).orElseThrow();
+    @Transactional
+    public AnonymousGuessResponse compareCharacterCardClassicAnonymous(Long guessCardId, UUID anonymousSessionId) {
+        AnonymousSession session = null;
+
+        if (anonymousSessionId != null) {
+            session = anonymousSessionService.findById(anonymousSessionId).orElse(null);
+
+            if (session != null && session.hasGuessedToday()) {
+                throw new RuntimeException(); //todo custom exception
+            }
+        }
+
+        CharacterCard guess = characterCardService.findCharacterCardById(guessCardId).orElseThrow(); //todo custom exception
+
         GuessAttempt guessAttempt = matchUtils.compareCharacterCardClassic(guess);
-        return new GuessResponse(guessAttempt.isCorrect(), guessAttempt);
+
+        if (session == null) {
+            anonymousSessionId = anonymousGuessListService.registerGuessAndGetSessionId(
+                    new AnonymousSession(new AnonymousGuessList()),
+                    guessAttempt
+            );
+        } else {
+            anonymousGuessListService.registerGuess(session, guessAttempt);
+        }
+
+        return AnonymousGuessResponse.builder()
+                .anonymousSessionId(anonymousSessionId)
+                .guessResponse(
+                        GuessResponse.builder()
+                                .correct(guessAttempt.isCorrect())
+                                .guessAttempt(guessAttempt)
+                                .build()
+                )
+                .build();
     }
 
     @Transactional
@@ -61,13 +95,6 @@ public class CardMatchingService {
         }
         return new GuessResponse(isCorrect, guessAttempt);
     }
-
-//    public GuessResponse compareCharacterCardClassic(CharacterCard guess, String clientIp) {
-//        GuessResponse guessResponse = matchUtils.compareCharacterCardClassic(guess);
-//        if (guessResponse.guessed()) {
-//            //
-//        }
-//    }
 
 
 }

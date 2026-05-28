@@ -78,7 +78,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
                         .requestMatchers("/api/daily-reset/manual-trigger").hasRole("SUPERADMIN")
-                        .requestMatchers("/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate", "/api/auth/refreshToken", "/api/card-guessing/classic/anonymous-guess/**", "/api/character-card/search-index", "/api/leaderboard/**", "/images/**", "/character_card_avatars/**" /*dev */).permitAll()
+                        .requestMatchers("/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate",
+                                "/api/auth/refreshToken", "/api/card-guessing/classic/anonymous-guess/**",
+                                "/api/character-card/search-index", "/api/leaderboard/**", "/images/**",
+                                "/api/guess-list/**",
+                                "/api/players/anonymous/me",
+                                "/character_card_avatars/**" /*dev */).permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider)

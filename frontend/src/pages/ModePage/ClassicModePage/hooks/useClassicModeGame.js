@@ -13,7 +13,8 @@ import {
 const WIN_ANIMATION_DELAY_MS = 5900;
 const WIN_SCROLL_DURATION_MS = 700;
 const SEARCH_INDEX_ENDPOINT = '/api/character-card/search-index';
-const GUESS_LIST_ENDPOINT = '/api/card-guessing/classic/guess-list/player/'; // +user.id
+const GUESS_LIST_ENDPOINT = '/api/guess-list/classic/player/'; // +user.id
+const ANONYMOUS_RECOVERY_ENDPOINT = '/api/players/anonymous/me';
 const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
 const ANONYMOUS_GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/anonymous-guess';
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/top3';
@@ -231,7 +232,7 @@ function useClassicModeGame() {
                     console.error('Blad pobierania guess-list:', error);
                 }
             } else {
-                // Anonymous user logic
+                // Not-Logged-in user logic
                 const today = new Date().toISOString().split('T')[0];
                 const lastPlayed = localStorage.getItem('lastPlayedDate');
                 const now = new Date();
@@ -241,10 +242,45 @@ function useClassicModeGame() {
                     localStorage.removeItem('anonymousWinTime');
                     localStorage.setItem('lastPlayedDate', today);
                 }
-                
-                const storedGuesses = JSON.parse(localStorage.getItem('anonymousGuessList') || '[]');
+
+                let storedGuesses = JSON.parse(localStorage.getItem('anonymousGuessList') || '[]');
+
+                if (storedGuesses.length === 0) {
+                    try {
+                        const res = await apiFetch(ANONYMOUS_RECOVERY_ENDPOINT);
+                        const sessionData = res.data;
+
+                        // POPRAWKA: .guessList.guessList zamiast .guessList.guesses
+                        if (sessionData && sessionData.guessList && sessionData.guessList.guessList) {
+                            const recoveredItems = sessionData.guessList.guessList;
+
+                            if (recoveredItems.length > 0) {
+                                storedGuesses = recoveredItems.map(item => ({
+                                    guessAttempt: item,
+                                    correct: item.correct || item.name?.match === 'MATCH'
+                                }));
+                                localStorage.setItem('anonymousGuessList', JSON.stringify(storedGuesses));
+                            }
+
+                            if (sessionData.hasGuessedToday) {
+                                setIsWon(true);
+                                setIsAnonymousAndWon(true);
+                                setIsLeaderboardExpanded(true);
+
+                                if (sessionData.scoreTimestamp) {
+                                    const winTime = new Date(sessionData.ScoreTimestamp).getTime();
+                                    localStorage.setItem('anonymousWinTime', winTime.toString());
+                                    latestWinTimeLabelRef.current = formatTimeLabel(winTime);
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Brak anonimowej sesji na serwerze lub błąd pobierania', error);
+                    }
+                }
+
                 const lastGuess = storedGuesses[storedGuesses.length - 1];
-                 if (lastGuess && lastGuess.correct) {
+                if (lastGuess && lastGuess.correct) {
                     setIsWon(true);
                     setIsAnonymousAndWon(true);
                     setIsLeaderboardExpanded(true);
@@ -255,6 +291,7 @@ function useClassicModeGame() {
                     const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
                     return mapGuessAttemptToRow(guessAttempt, selectedCard, `${selectedCard?.id || 'guess'}-${index}`);
                 });
+
                 setGuesses(mappedRows.reverse());
             }
         };

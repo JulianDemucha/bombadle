@@ -46,6 +46,10 @@ public class GuessListService {
         guessListRepository.save(guessList);
     }
 
+    public void manualSave(GuessList guessList){
+        guessListRepository.save(guessList);
+    }
+
     @Transactional
     public void registerGuess(GuessList guessList, GuessAttempt guessResponse) {
         guessList.getGuesses().add(guessResponse);

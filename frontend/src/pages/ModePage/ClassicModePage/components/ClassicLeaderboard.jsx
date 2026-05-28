@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function ClassicLeaderboard({
     topThree = [],
@@ -10,6 +11,7 @@ function ClassicLeaderboard({
     dailyCounterText = null,
     isAnonymousAndWon = false
 }) {
+    const navigate = useNavigate();
     const containerClassName = `stamped-banner-container leaderboard-wrapper leaderboard-section ${className}`.trim();
 
     return (
@@ -72,8 +74,8 @@ function ClassicLeaderboard({
                         type="button"
                         className="login-prompt-button"
                         onClick={() => {
-                            // TODO: Open login modal
-                            console.log("Kliknięto przycisk zaloguj/zarejestruj");
+                            const currentUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                            navigate(`/login?target=${currentUrl}`);
                         }}
                     >
                         Zaloguj się / Zarejestruj

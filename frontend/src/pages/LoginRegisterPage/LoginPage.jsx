@@ -39,13 +39,26 @@ function LoginPage() {
             return;
         }
 
+        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
+        if (anonymousGuesses && anonymousGuesses !== '[]') {
+            const confirmMerge = window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?");
+            if (confirmMerge) {
+                document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
+            }
+        }
+
         setLoading(true);
 
         try {
             const res = await axios.post("/api/auth/authenticate", {email, password});
 
             if (res.status === 201 || res.status === 200) {
-                await reload(); // Reload user data to update auth state immediately
+                if (document.cookie.includes("TRIGGER_MERGE=true")) {
+                    localStorage.removeItem('anonymousGuessList');
+                    localStorage.removeItem('anonymousWinTime');
+                    localStorage.removeItem('lastPlayedDate');
+                }
+                await reload();
                 navigate("/");
             }
 
@@ -55,7 +68,6 @@ function LoginPage() {
                 if (status === 401) {
                     setErrors(prev => ({...prev, general: data?.message || "Nieprawidłowy email lub hasło."}));
                 } else if (status === 409) {
-
                     setErrors(prev => ({...prev, general: data?.message || "Błąd podczas logowania."}));
                 }
             } else {
@@ -64,10 +76,16 @@ function LoginPage() {
         } finally {
             setLoading(false);
         }
-
     };
 
     const handleGoogleLogin = () => {
+        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
+        if (anonymousGuesses && anonymousGuesses !== '[]') {
+            const confirmMerge = window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?");
+            if (confirmMerge) {
+                document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
+            }
+        }
         window.location.href = 'https://localhost:8443/oauth2/authorization/google';
     };
 
