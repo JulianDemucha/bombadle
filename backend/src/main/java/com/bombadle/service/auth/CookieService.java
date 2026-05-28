@@ -1,9 +1,15 @@
 package com.bombadle.service.auth;
 
 import com.bombadle.config.ApplicationConfigProperties;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -30,5 +36,22 @@ public class CookieService {
         return createCookie(name, "", 0);
     }
 
+    public <T> Optional<T> getCookieValue(HttpServletRequest request, String cookieName, Function<String, T> converter) {
+        if (request.getCookies() == null) {
+            return Optional.empty();
+        }
+
+        return Arrays.stream(request.getCookies())
+                .filter(cookie -> cookieName.equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .map(value -> {
+                    try {
+                        return converter.apply(value);
+                    } catch (Exception e) {
+                        return null; // Lub obsłuż błąd konwersji (np. logowanie)
+                    }
+                })
+                .findFirst();
+    }
 
 }
