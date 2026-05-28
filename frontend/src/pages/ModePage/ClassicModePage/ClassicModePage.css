@@ -436,11 +436,10 @@
 }
 
 .login-prompt-button {
-    background-color: var(--secondary);
+    background-color: #6ea04b;
     color: var(--accent);
     font-family: 'PixelifySans', monospace;
-    font-size: 1.1rem;
-    font-weight: bold;
+    font-size: 1.2rem;
     padding: 10px 20px;
     border: 2px solid #5a463a;
     border-radius: 8px;
