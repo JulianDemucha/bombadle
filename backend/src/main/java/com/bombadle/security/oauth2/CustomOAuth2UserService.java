@@ -37,7 +37,7 @@ public class CustomOAuth2UserService extends OidcUserService {
                             .passwordHash("")
                             .role(Role.ROLE_USER)
                             .createdAt(Instant.now())
-                            .lastLoginAt(Instant.now())
+                            .lastActiveAt(Instant.now())
                             .hasGuessedToday(false)
                             .avatarImage(AvatarImage.AVATAR_DEFAULT)
                             .authProvider(PlayerAuthProvider.OAUTH2_GOOGLE)
@@ -45,7 +45,7 @@ public class CustomOAuth2UserService extends OidcUserService {
                     log.info(Objects.requireNonNull(oidcUser.getAttribute("name")).toString().trim());
                     return playerRepository.save(p);
                 });
-        player.setLastLoginAt(Instant.now());
+        player.setLastActiveAt(Instant.now());
 
         return new CustomOAuth2PlayerUser(oidcUser, player);
     }

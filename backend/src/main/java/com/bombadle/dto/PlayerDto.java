@@ -29,7 +29,7 @@ public record PlayerDto (
                 .role(player.getRole().toString())
                 .avatarImage(player.getAvatarImage().toString())
                 .createdAt(player.getCreatedAt().toString())
-                .lastLoginAt(player.getLastLoginAt().toString())
+                .lastLoginAt(player.getLastActiveAt().toString())
                 .hasGuessedToday(player.getHasGuessedToday())
                 .todayScore(Optional.ofNullable(player.getTodayScore())
                         .map(Score::getScoreTimestamp)

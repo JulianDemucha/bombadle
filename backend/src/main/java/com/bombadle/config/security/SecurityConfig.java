@@ -1,9 +1,6 @@
 package com.bombadle.config.security;
 
-import com.bombadle.security.filter.CsrfCookieInjectionFilter;
-import com.bombadle.security.filter.StatelessCsrfValidationFilter;
-import com.bombadle.security.filter.JwtAuthenticationFilter;
-import com.bombadle.security.filter.AccountLockedFilter;
+import com.bombadle.security.filter.*;
 import com.bombadle.security.oauth2.CustomOAuth2UserService;
 import com.bombadle.security.oauth2.OAuth2SuccessHandler;
 import com.bombadle.service.auth.CsrfCookieService;
@@ -35,6 +32,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final AccountLockedFilter accountLockedFilter;
+    private final ActivityTrackingFilter activityTrackingFilter;
 
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
@@ -90,6 +88,7 @@ public class SecurityConfig {
                 .oauth2Login(AbstractHttpConfigurer::disable)
                 .exceptionHandling(e -> e.authenticationEntryPoint(customAuthenticationEntryPoint()).accessDeniedHandler(customAccessDeniedHandler()))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(activityTrackingFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(accountLockedFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(csrfCookieFilter, AccountLockedFilter.class)
                 .addFilterAfter(statelessCsrfFilter, CsrfCookieInjectionFilter.class)

@@ -58,7 +58,7 @@ public class AuthenticationService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(Role.ROLE_USER)
                 .createdAt(Instant.now())
-                .lastLoginAt(Instant.now())
+                .lastActiveAt(Instant.now())
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
                 .authProvider(PlayerAuthProvider.LOCAL)
                 .hasGuessedToday(false)
@@ -85,7 +85,7 @@ public class AuthenticationService {
             );
             var player = repo.findByEmail(request.getEmail())
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
-            player.setLastLoginAt(Instant.now());
+            player.setLastActiveAt(Instant.now());
             repo.save(player);
 
              mergeService.handleAnonymousSessionMerge(player, anonymousSessionId, triggerMerge);

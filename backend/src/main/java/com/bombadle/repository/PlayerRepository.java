@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.time.Instant;
+import java.util.Set;
 
 @Repository
 public interface PlayerRepository extends JpaRepository<Player, Long> {
@@ -32,4 +33,10 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Modifying
     @Query("UPDATE Player p SET p.hasGuessedToday = false, p.todayScore = null")
     void resetAllScores();
+
+    @Modifying
+    @Query("UPDATE Player p SET p.lastActiveAt = :now WHERE p.id IN :ids")
+    void updateLastActiveAtBulk(@Param("ids") Set<Long> ids, @Param("now") Instant now);
+
+    int countByLastActiveAtAfter(Instant threshold);
 }

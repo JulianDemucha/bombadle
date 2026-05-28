@@ -42,8 +42,8 @@ public class Player{
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(name = "last_login_at", nullable = false)
-    private Instant lastLoginAt;
+    @Column(name = "lastActiveAt", nullable = false)
+    private Instant lastActiveAt = Instant.now();
 
     @OneToOne(
             cascade = CascadeType.ALL,

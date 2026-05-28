@@ -4,9 +4,12 @@ import com.bombadle.entity.AnonymousSession;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -15,4 +18,10 @@ public interface AnonymousSessionRepository extends JpaRepository<AnonymousSessi
     @Transactional
     @Query(value = "TRUNCATE TABLE anonymous_session CASCADE", nativeQuery = true)
     void truncateTable();
+
+    @Modifying
+    @Query("UPDATE AnonymousSession p SET p.lastActiveAt = :now WHERE p.id IN :ids")
+    void updateLastActiveAtBulk(@Param("ids") Set<UUID> ids, @Param("now") Instant now);
+
+    int countByLastActiveAtAfter(Instant threshold);
 }

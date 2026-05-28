@@ -21,6 +21,9 @@ public class AnonymousSession {
     @JoinColumn(name = "anonymous_guess_list_id")
     private AnonymousGuessList guessList;
 
+    @Column(name = "lastActiveAt", nullable = false)
+    private Instant lastActiveAt = Instant.now();
+
     private boolean hasGuessedToday = false;
 
     @Column(nullable = true)
