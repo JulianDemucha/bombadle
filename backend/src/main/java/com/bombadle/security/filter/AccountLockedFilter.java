@@ -8,22 +8,28 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @Component
 public class AccountLockedFilter extends OncePerRequestFilter {
 
-    private static final List<RequestMatcher> ALLOWED_WHEN_LOCKED = List.of(
-            new AntPathRequestMatcher("/api/auth/**"),
-            new AntPathRequestMatcher("/api/players/me", "GET"),
-            new AntPathRequestMatcher("/api/leaderboard/**")
-    );
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        boolean isAuth = PATH_MATCHER.match("/api/auth/**", path);
+        boolean isPlayersMeGet = PATH_MATCHER.match("/api/players/me", path) && "GET".equalsIgnoreCase(method);
+        boolean isLeaderboard = PATH_MATCHER.match("/api/leaderboard/**", path);
+
+        return isAuth || isPlayersMeGet || isLeaderboard;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -32,12 +38,8 @@ public class AccountLockedFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
-        if (isAllowedWhenLocked(request)) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -50,10 +52,6 @@ public class AccountLockedFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private boolean isAllowedWhenLocked(HttpServletRequest request) {
-        return ALLOWED_WHEN_LOCKED.stream().anyMatch(matcher -> matcher.matches(request));
     }
 
     private boolean isAccountLocked(Object principal) {
