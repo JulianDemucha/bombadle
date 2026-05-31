@@ -36,7 +36,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String email = extractEmail(token);
-        //getUsername returns email (Player.java : 81)
+        //getUsername returns email (ApplicationConfig.java : 26)
         return (email.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
@@ -61,7 +61,7 @@ public class JwtService {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername()) // getUsername() returns email
+                .setSubject(userDetails.getUsername()) // getUsername() returns email (ApplicationConfig.java : 26)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtConfig.expirationSeconds() * 1000L))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
