@@ -2,7 +2,7 @@ package com.bombadle.service.admin;
 
 import com.bombadle.config.ApplicationConfigProperties;
 import com.bombadle.dto.request.AdminCacheFlushRequest;
-import com.bombadle.service.admin.queue.PendingCacheFlushPayload;
+import com.bombadle.dto.queue.PendingCacheFlushPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
