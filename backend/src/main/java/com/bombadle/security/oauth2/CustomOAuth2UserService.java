@@ -4,7 +4,7 @@ import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
-import com.bombadle.repository.PlayerRepository;
+import com.bombadle.service.player.PlayerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends OidcUserService {
-    private final PlayerRepository playerRepository;
+    private final PlayerService playerService;
     private static final Logger log = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
     @Override
@@ -29,7 +29,7 @@ public class CustomOAuth2UserService extends OidcUserService {
         OidcUser oidcUser = super.loadUser(userRequest);
 
         String email = oidcUser.getAttribute("email");
-        Player player = playerRepository.findByEmail(email)
+        Player player = playerService.findByEmail(email)
                 .orElseGet(() -> {
                     Player p = Player.builder()
                             .login(Objects.requireNonNull(oidcUser.getAttribute("name")).toString().replace('\u00A0', ' ').strip())
@@ -43,9 +43,8 @@ public class CustomOAuth2UserService extends OidcUserService {
                             .authProvider(PlayerAuthProvider.OAUTH2_GOOGLE)
                             .build();
                     log.info(Objects.requireNonNull(oidcUser.getAttribute("name")).toString().trim());
-                    return playerRepository.save(p);
+                    return playerService.save(p);
                 });
-        player.setLastActiveAt(Instant.now());
 
         return new CustomOAuth2PlayerUser(oidcUser, player);
     }

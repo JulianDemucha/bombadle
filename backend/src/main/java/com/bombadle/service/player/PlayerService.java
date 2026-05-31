@@ -120,6 +120,10 @@ public class PlayerService {
         return PlayerDto.toDto(updatedPlayer);
     }
 
+    public Player save(Player player) {
+        return repo.save(player);
+    }
+
     @Transactional
     public void deletePlayer(long playerId) {
         playerDeletionService.deletePlayerSelf(playerId);
