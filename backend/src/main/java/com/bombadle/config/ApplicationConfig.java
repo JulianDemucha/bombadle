@@ -72,6 +72,11 @@ public class ApplicationConfig {
     }
 
     @Bean
+    public ApplicationConfigProperties.CacheConfig cacheConfig(ApplicationConfigProperties config) {
+        return config.cache();
+    }
+
+    @Bean
     public CurrentCharacterCardWrapper currentCharacterCard() {
         return new CurrentCharacterCardWrapper(null);
     }

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AdminCacheService {
-    private final ApplicationConfigProperties config;
+    private final ApplicationConfigProperties.CacheConfig cacheConfig;
     private final AdminAuditService adminAuditService;
     private final AdminChangeQueueService changeQueueService;
 
@@ -23,7 +23,7 @@ public class AdminCacheService {
         if (!flushAll && (cacheName == null || cacheName.isBlank())) {
             throw new IllegalArgumentException("cacheName is required unless flushAll is true");
         }
-        if (!flushAll && !config.cache().specs().containsKey(cacheName)) {
+        if (!flushAll && !cacheConfig.specs().containsKey(cacheName)) {
             throw new IllegalArgumentException("Unknown cache name: " + cacheName);
         }
 
