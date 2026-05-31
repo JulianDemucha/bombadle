@@ -22,26 +22,35 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminChangeQueueService {
 
-    private final AdminPendingChangeRepository pendingChangeRepository;
+    private final AdminPendingChangeRepository repo;
     private final AdminCharacterCardProcessor processor;
     private final CharacterCardImageService imageService;
     private final ObjectMapper objectMapper;
 
+
+    /**
+     * Enqueues a task without a deduplication key (actionKey = null).
+     * Use this method for actions that can be safely duplicated in the queue
+     * and do not require checking for existing pending tasks.
+     */
     public void enqueue(String actionType, Object payload) {
         enqueue(actionType, null, payload);
     }
 
     public void enqueue(String actionType, String actionKey, Object payload) {
+        if (payload == null) {
+            throw new IllegalArgumentException("Queue payload cannot be null for action: " + actionType);
+        }
         try {
             String json = objectMapper.writeValueAsString(payload);
             if (actionKey != null && !actionKey.isBlank()) {
-                var existing = pendingChangeRepository.findFirstByActionKey(actionKey);
+                var existing = repo.findFirstByActionKey(actionKey);
                 if (existing.isPresent()) {
                     AdminPendingChange change = existing.get();
                     change.setActionType(actionType);
                     change.setPayload(json);
                     change.setCreatedAt(Instant.now());
-                    pendingChangeRepository.save(change);
+                    repo.save(change);
                     return;
                 }
             }
@@ -51,21 +60,21 @@ public class AdminChangeQueueService {
                     .payload(json)
                     .createdAt(Instant.now())
                     .build();
-            pendingChangeRepository.save(change);
+            repo.save(change);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to serialize pending change payload", e);
         }
     }
 
     public void applyAll() {
-        List<AdminPendingChange> changes = pendingChangeRepository.findAllByOrderByCreatedAtAsc();
+        List<AdminPendingChange> changes = repo.findAllByOrderByCreatedAtAsc();
         for (AdminPendingChange change : changes) {
             try {
                 applyChange(change);
             } catch (Exception e) {
                 log.error("Failed to apply pending change {}", change.getId(), e);
             } finally {
-                pendingChangeRepository.delete(change);
+                repo.delete(change);
             }
         }
     }
@@ -98,7 +107,7 @@ public class AdminChangeQueueService {
         if (actionKey == null || actionKey.isBlank()) {
             return false;
         }
-        return pendingChangeRepository.findFirstByActionKey(actionKey).isPresent();
+        return repo.findFirstByActionKey(actionKey).isPresent();
     }
 
     public boolean hasPendingCardName(String name, Long excludeCardId) {
@@ -106,7 +115,7 @@ public class AdminChangeQueueService {
             return false;
         }
         String targetSlug = imageService.buildSlug(name);
-        List<AdminPendingChange> changes = pendingChangeRepository.findAll();
+        List<AdminPendingChange> changes = repo.findAll();
         for (AdminPendingChange change : changes) {
             try {
                 String actionType = change.getActionType();
@@ -142,7 +151,7 @@ public class AdminChangeQueueService {
         if (actionKey == null || actionKey.isBlank()) {
             return false;
         }
-        var existing = pendingChangeRepository.findFirstByActionKey(actionKey);
+        var existing = repo.findFirstByActionKey(actionKey);
         if (existing.isEmpty()) {
             return false;
         }
@@ -152,7 +161,7 @@ public class AdminChangeQueueService {
         } catch (IOException e) {
             log.warn("Failed to cleanup pending payload for change {}", change.getId(), e);
         }
-        pendingChangeRepository.delete(change);
+        repo.delete(change);
         return true;
     }
 
@@ -168,7 +177,7 @@ public class AdminChangeQueueService {
     }
 
     public List<AdminPendingCardChangeDto> listPendingCardChanges() {
-        List<AdminPendingChange> changes = pendingChangeRepository.findAllByOrderByCreatedAtAsc();
+        List<AdminPendingChange> changes = repo.findAllByOrderByCreatedAtAsc();
         List<AdminPendingCardChangeDto> result = new ArrayList<>();
         for (AdminPendingChange change : changes) {
             try {
