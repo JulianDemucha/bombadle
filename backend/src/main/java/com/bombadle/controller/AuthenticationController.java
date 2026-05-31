@@ -16,55 +16,32 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
-    private final CsrfCookieService csrfCookieService;
     private final RefreshTokenService refreshTokenService;
     private final AuthCookiesService authCookieService;
-    private final CookieService cookieService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(
             @RequestBody RegisterRequest registerRequest,
-            @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
-            @CookieValue(value = "TRIGGER_MERGE", required = false) Boolean triggerMerge,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
-        String jwt = authenticationService.register(registerRequest, anonymousSessionId, triggerMerge);
-        authCookieService.setAuthCookies(
-                jwt,
-                refreshTokenService.createRefreshToken(registerRequest.getEmail()).getRefreshToken(),
-                httpResponse
-        );
-        csrfCookieService.ensureCsrfCookie(httpRequest, httpResponse);
-        deleteAnonymousCookiesIfMerged(triggerMerge, httpResponse);
-
+        authenticationService.register(registerRequest, httpRequest, httpResponse);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(
             @RequestBody AuthenticationRequest authRequest,
-            @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
-            @CookieValue(value = "TRIGGER_MERGE", required = false) Boolean triggerMerge,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
-        String jwt = authenticationService.authenticate(authRequest, anonymousSessionId, triggerMerge);
-        authCookieService.setAuthCookies(
-                jwt,
-                refreshTokenService.createRefreshToken(authRequest.getEmail()).getRefreshToken(),
-                httpResponse
-        );
-        csrfCookieService.ensureCsrfCookie(httpRequest, httpResponse);
-        deleteAnonymousCookiesIfMerged(triggerMerge, httpResponse);
-
+        authenticationService.authenticate(authRequest, httpRequest, httpResponse);
         return ResponseEntity.ok().build();
     }
 
@@ -134,16 +111,6 @@ public class AuthenticationController {
                 .noContent()
                 .headers(clearCookiesHeaders)
                 .build();
-    }
-
-    private void deleteAnonymousCookiesIfMerged(Boolean triggerMerge, HttpServletResponse httpResponse) {
-        if (Boolean.TRUE.equals(triggerMerge)) {
-            httpResponse.addHeader(HttpHeaders.SET_COOKIE,
-                    cookieService.createDeletionCookie("TRIGGER_MERGE").toString());
-
-            httpResponse.addHeader(HttpHeaders.SET_COOKIE,
-                    cookieService.createDeletionCookie("ANON_SESSION_ID").toString());
-        }
     }
 
 }

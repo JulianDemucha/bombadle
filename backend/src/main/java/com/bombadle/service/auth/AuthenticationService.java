@@ -1,6 +1,5 @@
 package com.bombadle.service.auth;
 
-import com.bombadle.config.PlayerPrincipal;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.PlayerAuthProvider;
@@ -11,6 +10,8 @@ import com.bombadle.dto.request.RegisterRequest;
 import com.bombadle.exception.InvalidCredentialsException;
 import com.bombadle.exception.RegistrationConflictException;
 import com.bombadle.exception.RegistrationValidationException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,41 +22,38 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthenticationService {
     private final PlayerRepository repo;
-    private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final AnonymousMergeService mergeService;
+    private final PostLoginService postLoginService;
 
     @Transactional
-    public String register(RegisterRequest request, UUID anonymousSessionId, Boolean triggerMerge) {
-        if (repo.existsByEmail(request.getEmail()) || repo.existsByLogin(request.getUsername())) {
+    public void register(RegisterRequest requestData, HttpServletRequest request, HttpServletResponse response) {
+        if (repo.existsByEmail(requestData.getEmail()) || repo.existsByLogin(requestData.getUsername())) {
             throw new RegistrationConflictException("Email or username already exists");
         }
 
-        if (request.getPassword().length() < 8 || request.getPassword().length() > 24) {
+        if (requestData.getPassword().length() < 8 || requestData.getPassword().length() > 24) {
             throw new RegistrationValidationException("Password must be between 8 and 24 characters");
         }
 
-        if (request.getUsername().length() < 3 || request.getUsername().length() > 16) {
+        if (requestData.getUsername().length() < 3 || requestData.getUsername().length() > 16) {
             throw new RegistrationValidationException("Username must be between 3 and 16 characters");
         }
 
-        if (!request.getEmail().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+        if (!requestData.getEmail().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             throw new RegistrationValidationException("Invalid email format");
         }
 
         var player = Player.builder()
-                .login(request.getUsername())
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .login(requestData.getUsername())
+                .email(requestData.getEmail())
+                .passwordHash(passwordEncoder.encode(requestData.getPassword()))
                 .role(Role.ROLE_USER)
                 .createdAt(Instant.now())
                 .lastActiveAt(Instant.now())
@@ -68,29 +66,25 @@ public class AuthenticationService {
         repo.save(player);
         log.info("Registered new user: {}", player.getLogin());
 
-        mergeService.handleAnonymousSessionMerge(player, anonymousSessionId, triggerMerge);
-
-        return jwtService.generateJwtToken(new PlayerPrincipal(player));
+        postLoginService.processSuccessfulLogin(request, response, player);
     }
 
 
     @Transactional
-    public String authenticate(AuthenticationRequest request, UUID anonymousSessionId, Boolean triggerMerge) {
+    public void authenticate(AuthenticationRequest requestData, HttpServletRequest request, HttpServletResponse response) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
+                            requestData.getEmail(),
+                            requestData.getPassword()
                     )
             );
-            var player = repo.findByEmail(request.getEmail())
+            var player = repo.findByEmail(requestData.getEmail())
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
             player.setLastActiveAt(Instant.now());
             repo.save(player);
 
-             mergeService.handleAnonymousSessionMerge(player, anonymousSessionId, triggerMerge);
-
-            return jwtService.generateJwtToken(new PlayerPrincipal(player));
+            postLoginService.processSuccessfulLogin(request, response, player);
         }catch (AuthenticationException e) {
             throw new InvalidCredentialsException("Invalid email or password");
         }

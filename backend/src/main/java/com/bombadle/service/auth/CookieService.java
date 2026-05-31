@@ -3,7 +3,9 @@ package com.bombadle.service.auth;
 import com.bombadle.config.ApplicationConfigProperties;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,11 @@ public class CookieService {
         // }
 
         return builder.build();
+    }
+
+    public void deleteCookieFromResponse(HttpServletResponse response, String cookieName) {
+        ResponseCookie deletionCookie = createDeletionCookie(cookieName);
+        response.addHeader(HttpHeaders.SET_COOKIE, deletionCookie.toString());
     }
 
     public ResponseCookie createDeletionCookie(String name) {
