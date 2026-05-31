@@ -1,4 +1,4 @@
-package com.bombadle.controller;
+package com.bombadle.controller.admin;
 
 import com.bombadle.config.PlayerPrincipal;
 import com.bombadle.dto.request.AdminCacheFlushRequest;

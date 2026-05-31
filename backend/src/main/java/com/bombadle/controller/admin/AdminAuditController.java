@@ -1,4 +1,4 @@
-package com.bombadle.controller;
+package com.bombadle.controller.admin;
 
 import com.bombadle.dto.AdminAuditLogDto;
 import com.bombadle.service.admin.AdminAuditService;
