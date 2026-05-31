@@ -29,28 +29,20 @@ public class AdminAuditService {
 
     public Optional<AdminAuditLogDto> getById(Long id) {
         return adminAuditLogRepository.findById(id)
-                .map(this::toDto);
+                .map(AdminAuditLogDto::toDto);
     }
 
     public List<AdminAuditLogDto> getByActorId(Long actorId) {
         return adminAuditLogRepository.findAllByActorIdOrderByCreatedAtDesc(actorId)
                 .stream()
-                .map(this::toDto)
+                .map(AdminAuditLogDto::toDto)
                 .toList();
     }
 
     public Page<AdminAuditLogDto> getByActorId(Long actorId, Pageable pageable) {
         return adminAuditLogRepository.findAllByActorId(actorId, pageable)
-                .map(this::toDto);
+                .map(AdminAuditLogDto::toDto);
     }
 
-    private AdminAuditLogDto toDto(AdminAuditLog log) {
-        return new AdminAuditLogDto(
-                log.getId(),
-                log.getActorId(),
-                log.getActionType(),
-                log.getDescription(),
-                log.getCreatedAt()
-        );
-    }
+
 }
