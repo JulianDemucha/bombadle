@@ -37,7 +37,7 @@ public class ScoreServiceTest {
                 .role(Role.ROLE_USER)
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
                 .createdAt(Instant.now())
-                .lastLoginAt(Instant.now())
+                .lastActiveAt(Instant.now())
                 .hasGuessedToday(true)
                 .totalSuccessfulGuesses(1)
                 .build();

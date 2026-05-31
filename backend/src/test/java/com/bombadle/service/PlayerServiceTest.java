@@ -37,7 +37,7 @@ class PlayerServiceTest {
                 .passwordHash("test")
                 .role(Role.ROLE_USER)
                 .createdAt(Instant.parse("2025-11-10T14:22:27.123Z"))
-                .lastLoginAt(Instant.parse("2025-11-10T14:22:27.123Z"))
+                .lastActiveAt(Instant.parse("2025-11-10T14:22:27.123Z"))
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
                 .totalSuccessfulGuesses(0)
                 .hasGuessedToday(false)
