@@ -40,6 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+        // return if user is already authenticated
+        if(SecurityContextHolder.getContext().getAuthentication() != null){
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         Cookie[] cookies = request.getCookies();
         String jwt = null;
 
@@ -68,12 +74,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             final String email;
             email = jwtService.extractEmail(jwt);
 
-            if (email == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+            if (email == null) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // loadByUsername() needs subject not exactly username. subject has been changed to email. (Player.java : 81)
+            // loadByUsername() needs subject not exactly username. subject has been changed to email. (ApplicationConfig.java : 26)
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
 
             if (jwtService.isTokenValid(jwt, userDetails)) {
