@@ -44,7 +44,7 @@ public class ScoreServiceTest {
     }
 
     @Test
-    void saveScoreShouldAddScoreSuccessfully() {
+    void saveScore_addsScoreSuccessfully() {
         Player player = getExamplePlayer();
         Score score = Score.builder()
                 .player(player)
@@ -64,12 +64,12 @@ public class ScoreServiceTest {
     }
 
     @Test
-    void saveScoreShouldThrowExceptionWhenScoreIsNull() {
+    void saveScore_scoreIsNull_throwsIllegalArgumentException() {
         Assertions.assertThrows(IllegalArgumentException.class, () -> scoreService.saveScore(null));
     }
 
     @Test
-    void getScoreByPlayerIdShouldReturnScoreSuccessfully() {
+    void getScoreByPlayerId_returnsScoreSuccessfully() {
         Player player = getExamplePlayer();
         Score score = Score.builder()
                 .player(player)

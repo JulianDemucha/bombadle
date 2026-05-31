@@ -60,33 +60,33 @@ class AccountLockedFilterTest {
     }
 
     @Test
-    void shouldNotFilter_AuthPath_ReturnsTrue() {
+    void shouldNotFilter_authPath_returnsTrue() {
         request.setRequestURI("/api/auth/login");
         assertTrue(filter.shouldNotFilter(request));
     }
 
     @Test
-    void shouldNotFilter_PlayersMeGet_ReturnsTrue() {
+    void shouldNotFilter_playersMeGet_returnsTrue() {
         request.setRequestURI("/api/players/me");
         request.setMethod("GET");
         assertTrue(filter.shouldNotFilter(request));
     }
 
     @Test
-    void shouldNotFilter_PlayersMePost_ReturnsFalse() {
+    void shouldNotFilter_playersMePost_returnsFalse() {
         request.setRequestURI("/api/players/me");
         request.setMethod("POST");
         assertFalse(filter.shouldNotFilter(request));
     }
 
     @Test
-    void shouldNotFilter_LeaderboardPath_ReturnsTrue() {
+    void shouldNotFilter_leaderboardPath_returnsTrue() {
         request.setRequestURI("/api/leaderboard/top10");
         assertTrue(filter.shouldNotFilter(request));
     }
 
     @Test
-    void doFilterInternal_NotAuthenticated_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_notAuthenticated_continuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(null);
 
         filter.doFilterInternal(request, response, filterChain);
@@ -95,7 +95,7 @@ class AccountLockedFilterTest {
     }
 
     @Test
-    void doFilterInternal_AuthenticatedButNotLockedPrincipal_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_authenticatedButNotLockedPrincipal_continuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(playerPrincipal);
@@ -107,7 +107,7 @@ class AccountLockedFilterTest {
     }
 
     @Test
-    void doFilterInternal_AuthenticatedAndLockedPrincipal_Returns423() throws ServletException, IOException {
+    void doFilterInternal_authenticatedAndLockedPrincipal_returns423() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(playerPrincipal);
@@ -122,7 +122,7 @@ class AccountLockedFilterTest {
     }
 
     @Test
-    void doFilterInternal_AuthenticatedAndLockedOAuth2User_Returns423() throws ServletException, IOException {
+    void doFilterInternal_authenticatedAndLockedOAuth2User_returns423() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
@@ -135,7 +135,7 @@ class AccountLockedFilterTest {
     }
 
     @Test
-    void doFilterInternal_AuthenticatedAndNotLockedOAuth2User_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_authenticatedAndNotLockedOAuth2User_continuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);

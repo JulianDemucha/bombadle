@@ -53,7 +53,7 @@ public class OAuth2SuccessHandlerTest {
     }
 
     @Test
-    void onAuthenticationSuccess_OAuth2PrincipalType_Success() throws IOException {
+    void onAuthenticationSuccess_oAuth2PrincipalType_success() throws IOException {
         when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
         when(customOAuth2PlayerUser.getPlayer()).thenReturn(Player.builder().build());
         when(frontendConfig.baseUrl()).thenReturn("https://sigma.com");
@@ -63,7 +63,7 @@ public class OAuth2SuccessHandlerTest {
     }
 
     @Test
-    void onAuthenticationSuccess_OtherPrincipalType_ThrowsIllegalStateException(){
+    void onAuthenticationSuccess_otherPrincipalType_throwsIllegalStateException(){
         when(authentication.getPrincipal()).thenReturn(playerPrincipal);
         assertThrows(IllegalStateException.class,
                 () -> oAuth2SuccessHandler.onAuthenticationSuccess(

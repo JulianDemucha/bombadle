@@ -34,7 +34,7 @@ class CsrfCookieInjectionFilterTest {
     private CsrfCookieInjectionFilter filter;
 
     @Test
-    void doFilterInternal_InvokesCsrfServiceAndContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_invokesCsrfServiceAndContinuesChain() throws ServletException, IOException {
         filter.doFilterInternal(request, response, filterChain);
 
         verify(csrfCookieService).ensureCsrfCookie(request, response);

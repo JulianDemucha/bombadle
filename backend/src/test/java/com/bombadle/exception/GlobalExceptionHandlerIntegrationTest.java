@@ -54,7 +54,7 @@ class GlobalExceptionHandlerIntegrationTest {
     }
 
     @Test
-    void whenUsernameNotFound_ShouldReturn404AndJson() throws Exception {
+    void whenUsernameNotFound_returns404AndJson() throws Exception {
         mockMvc.perform(get("/test/404"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.statusCode").value(404))
@@ -63,7 +63,7 @@ class GlobalExceptionHandlerIntegrationTest {
     }
 
     @Test
-    void whenGlobalException_ShouldReturn500AndJson() throws Exception {
+    void whenGlobalException_returns500AndJson() throws Exception {
         mockMvc.perform(get("/test/500"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.statusCode").value(500))
@@ -72,7 +72,7 @@ class GlobalExceptionHandlerIntegrationTest {
     }
 
     @Test
-    void whenRegistrationConflict_ShouldReturn409AndJson() throws Exception {
+    void whenRegistrationConflict_returns409AndJson() throws Exception {
         mockMvc.perform(get("/test/409"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.statusCode").value(409))
@@ -81,7 +81,7 @@ class GlobalExceptionHandlerIntegrationTest {
     }
 
     @Test
-    void whenInvalidCredentials_ShouldReturn401AndJson() throws Exception {
+    void whenInvalidCredentials_returns401AndJson() throws Exception {
         mockMvc.perform(get("/test/401"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.statusCode").value(401))
@@ -90,7 +90,7 @@ class GlobalExceptionHandlerIntegrationTest {
     }
 
     @Test
-    void whenAccessDenied_ShouldReturn403AndJson() throws Exception {
+    void whenAccessDenied_returns403AndJson() throws Exception {
         mockMvc.perform(get("/test/403"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.statusCode").value(403))

@@ -76,7 +76,7 @@ public class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void doFilterInternal_UnauthenticatedUserWithoutJwtCookie_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_unauthenticatedUserWithoutJwtCookie_continuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(null);
         when(request.getCookies()).thenReturn(null);
         filter.doFilterInternal(request, response, filterChain);
@@ -85,7 +85,7 @@ public class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void doFilterInternal_AuthenticatedUser_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_authenticatedUser_continuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(authentication);
 
         filter.doFilterInternal(request, response, filterChain);
@@ -95,7 +95,7 @@ public class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void doFilterInternal_UnauthenticatedUserWithValidJwtCookie_AuthenticatesUserAndContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_unauthenticatedUserWithValidJwtCookie_authenticatesUserAndContinuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(null);
         when(request.getCookies()).thenReturn(cookies);
         when(jwtService.extractEmail(dummyJwt.getValue())).thenReturn(dummyEmail);
@@ -118,7 +118,7 @@ public class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void doFilterInternal_UnauthenticatedUserWithInvalidJwtCookie_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_unauthenticatedUserWithInvalidJwtCookie_continuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(null);
         when(request.getCookies()).thenReturn(cookies);
         when(jwtService.extractEmail(dummyJwt.getValue())).thenReturn(dummyEmail);
@@ -133,7 +133,7 @@ public class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void doFilterInternal_JwtServiceReturnsNullEmail_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_jwtServiceReturnsNullEmail_continuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(null);
         when(request.getCookies()).thenReturn(cookies);
         when(jwtService.extractEmail(dummyJwt.getValue())).thenReturn(null);

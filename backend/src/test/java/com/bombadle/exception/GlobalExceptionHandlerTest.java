@@ -15,7 +15,7 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    void handleUsernameNotFound_ShouldReturn404AndCorrectBody() {
+    void handleUsernameNotFound_returns404AndCorrectBody() {
         UsernameNotFoundException exception = new UsernameNotFoundException("User missing");
         ResponseEntity<ErrorResponse> response = handler.handleUsernameNotFound(exception);
 
@@ -27,7 +27,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleGlobalException_ShouldReturn500AndCorrectBody() {
+    void handleGlobalException_returns500AndCorrectBody() {
         Exception exception = new Exception("Database timeout");
         ResponseEntity<ErrorResponse> response = handler.handleGlobalException(exception);
 
@@ -39,7 +39,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleUsernameAlreadyTaken_ShouldReturn409AndCorrectBody() {
+    void handleUsernameAlreadyTaken_returns409AndCorrectBody() {
         UsernameAlreadyTakenException exception = new UsernameAlreadyTakenException("Name taken");
         ResponseEntity<ErrorResponse> response = handler.handleUsernameAlreadyTaken(exception);
 
@@ -51,7 +51,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleAuthenticationMissing_ShouldReturn401AndCorrectBody() {
+    void handleAuthenticationMissing_returns401AndCorrectBody() {
         AuthenticationCredentialsNotFoundException exception = new AuthenticationCredentialsNotFoundException("No token");
         ResponseEntity<ErrorResponse> response = handler.handleAuthenticationMissing(exception);
 
@@ -63,7 +63,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleScoreNotFound_ShouldReturn404AndCorrectBody() {
+    void handleScoreNotFound_returns404AndCorrectBody() {
         ScoreNotFoundException exception = new ScoreNotFoundException("Score 123 missing");
         ResponseEntity<ErrorResponse> response = handler.handleScoreNotFound(exception);
 
@@ -75,7 +75,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleInvalidCredentials_ShouldReturn401AndCorrectBody() {
+    void handleInvalidCredentials_returns401AndCorrectBody() {
         InvalidCredentialsException exception = new InvalidCredentialsException("Wrong password");
         ResponseEntity<ErrorResponse> response = handler.handleInvalidCredentials(exception);
 
@@ -87,7 +87,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleRegistrationConflict_ShouldReturn409AndCorrectBody() {
+    void handleRegistrationConflict_returns409AndCorrectBody() {
         RegistrationConflictException exception = new RegistrationConflictException("Email exists");
         ResponseEntity<ErrorResponse> response = handler.handleRegistrationConflict(exception);
 
@@ -99,7 +99,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleRegistrationValidation_ShouldReturn409AndCorrectBody() {
+    void handleRegistrationValidation_returns409AndCorrectBody() {
         RegistrationValidationException exception = new RegistrationValidationException("Password too short");
         ResponseEntity<ErrorResponse> response = handler.handleRegistrationValidation(exception);
 
@@ -111,7 +111,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleAdminOperationNotAllowed_ShouldReturn409AndCorrectBody() {
+    void handleAdminOperationNotAllowed_returns409AndCorrectBody() {
         AdminOperationNotAllowedException exception = new AdminOperationNotAllowedException("Action blocked");
         ResponseEntity<ErrorResponse> response = handler.handleAdminOperationNotAllowed(exception);
 
@@ -123,7 +123,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleAccessDenied_ShouldReturn403AndCorrectBody() {
+    void handleAccessDenied_returns403AndCorrectBody() {
         AccessDeniedException exception = new AccessDeniedException("Forbidden action");
         ResponseEntity<ErrorResponse> response = handler.handleAccessDenied(exception);
 

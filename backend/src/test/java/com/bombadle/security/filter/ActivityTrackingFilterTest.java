@@ -76,7 +76,7 @@ public class ActivityTrackingFilterTest {
     }
 
     @Test
-    void doFilterInternal_AuthenticatedUser_MarksPlayerActiveAndContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_authenticatedUser_marksPlayerActiveAndContinuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(playerPrincipal);
@@ -90,7 +90,7 @@ public class ActivityTrackingFilterTest {
 
 
     @Test
-    void doFilterInternal_OAuth2AuthenticatedUser_MarksPlayerAsActiveAndContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_oAuth2AuthenticatedUser_marksPlayerAsActiveAndContinuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
@@ -103,7 +103,7 @@ public class ActivityTrackingFilterTest {
     }
 
     @Test
-    void doFilterInternal_AuthenticatedUserAsSpringAnonymousUserWithAnonymousCookie_MarksAnonymousAsActiveAndContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_authenticatedUserAsSpringAnonymousUserWithAnonymousCookie_marksAnonymousAsActiveAndContinuesChain() throws ServletException, IOException {
         AnonymousAuthenticationToken anonymousAuth = new AnonymousAuthenticationToken(
                 "some-key",
                 "anonymousUser",
@@ -119,7 +119,7 @@ public class ActivityTrackingFilterTest {
     }
 
     @Test
-    void doFilterInternal_UnauthenticatedUserWithValidAnonymousCookie_MarksAnonymousActiveAndContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_unauthenticatedUserWithValidAnonymousCookie_marksAnonymousActiveAndContinuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(null);
         when(request.getCookies()).thenReturn(cookies);
 
@@ -130,7 +130,7 @@ public class ActivityTrackingFilterTest {
     }
 
     @Test
-    void doFilterInternal_UnauthenticatedUserWithOutAnonymousCookie_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_unauthenticatedUserWithOutAnonymousCookie_continuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(null);
         when(request.getCookies()).thenReturn(new Cookie[]{});
 
@@ -141,7 +141,7 @@ public class ActivityTrackingFilterTest {
     }
 
     @Test
-    void doFilterInternal_UnauthenticatedUserWithInvalidAnonymousCookie_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_unauthenticatedUserWithInvalidAnonymousCookie_continuesChain() throws ServletException, IOException {
         when(securityContext.getAuthentication()).thenReturn(null);
         when(request.getCookies()).thenReturn(new Cookie[]{invalidAnonymousCookie});
         filter.doFilterInternal(request, response, filterChain);

@@ -31,7 +31,7 @@ public class CustomOAuth2UserServiceTest {
 
 
     @Test
-    void loadUser_PlayerDoesNotExist_CreateAndSaveNewPlayer() {
+    void loadUser_playerDoesNotExist_createAndSaveNewPlayer() {
         Map<String, Object> claims = Map.of("sub", "sigmaId123", "email", "sigma@sigma.sigma", "name", "sigma");
         OidcUserRequest userRequest = createOidcUserRequest(claims);
         when(playerService.findByEmail("sigma@sigma.sigma")).thenReturn(Optional.empty());
@@ -47,7 +47,7 @@ public class CustomOAuth2UserServiceTest {
     }
 
     @Test
-    void loadUser_PlayerExists_ReturnsExistingPlayer() {
+    void loadUser_playerExists_returnsExistingPlayer() {
         Map<String, Object> claims = Map.of("sub", "sigmaId123", "email", "sigma@sigma.sigma", "name", "sigma");
         OidcUserRequest userRequest = createOidcUserRequest(claims);
         when(playerService.findByEmail("sigma@sigma.sigma")).thenReturn(Optional.of(Player.builder().build()));
@@ -59,7 +59,7 @@ public class CustomOAuth2UserServiceTest {
     }
 
     @Test
-    void loadUser_NoEmailInToken_ThrowsOAuth2AuthenticationException() {
+    void loadUser_noEmailInToken_throwsOAuth2AuthenticationException() {
         Map<String, Object> claims = Map.of("sub", "sigmaId123", "name", "sigma");
         OidcUserRequest userRequest = createOidcUserRequest(claims);
         assertThrows(OAuth2AuthenticationException.class, () -> customOAuth2UserService.loadUser(userRequest));
@@ -67,7 +67,7 @@ public class CustomOAuth2UserServiceTest {
     }
 
     @Test
-    void loadUser_NoNameInToken_ThrowsOAuth2AuthenticationException() {
+    void loadUser_noNameInToken_throwsOAuth2AuthenticationException() {
         Map<String, Object> claims = Map.of("sub", "sigmaId123", "email", "sigma@sigma.sigma");
         OidcUserRequest userRequest = createOidcUserRequest(claims);
         assertThrows(OAuth2AuthenticationException.class, () -> customOAuth2UserService.loadUser(userRequest));

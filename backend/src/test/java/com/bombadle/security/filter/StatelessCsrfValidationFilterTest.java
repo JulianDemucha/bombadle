@@ -39,7 +39,7 @@ class StatelessCsrfValidationFilterTest {
     }
 
     @Test
-    void doFilterInternal_ExcludedPath_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_excludedPath_continuesChain() throws ServletException, IOException {
         when(request.getRequestURI()).thenReturn("/api/auth/login");
 
         filter.doFilterInternal(request, response, filterChain);
@@ -49,7 +49,7 @@ class StatelessCsrfValidationFilterTest {
     }
 
     @Test
-    void doFilterInternal_UnprotectedMethod_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_unprotectedMethod_continuesChain() throws ServletException, IOException {
         when(request.getRequestURI()).thenReturn("/api/data");
         when(request.getMethod()).thenReturn("GET");
 
@@ -60,7 +60,7 @@ class StatelessCsrfValidationFilterTest {
     }
 
     @Test
-    void doFilterInternal_ProtectedMethodWithValidTokens_ContinuesChain() throws ServletException, IOException {
+    void doFilterInternal_protectedMethodWithValidTokens_continuesChain() throws ServletException, IOException {
         when(request.getRequestURI()).thenReturn("/api/data");
         when(request.getMethod()).thenReturn("POST");
         when(request.getCookies()).thenReturn(new Cookie[]{validCookie});
@@ -73,7 +73,7 @@ class StatelessCsrfValidationFilterTest {
     }
 
     @Test
-    void doFilterInternal_ProtectedMethodWithoutCookies_SendsForbidden() throws ServletException, IOException {
+    void doFilterInternal_protectedMethodWithoutCookies_sendsForbidden() throws ServletException, IOException {
         when(request.getRequestURI()).thenReturn("/api/data");
         when(request.getMethod()).thenReturn("POST");
         when(request.getCookies()).thenReturn(null);
@@ -86,7 +86,7 @@ class StatelessCsrfValidationFilterTest {
     }
 
     @Test
-    void doFilterInternal_ProtectedMethodWithMissingCookieToken_SendsForbidden() throws ServletException, IOException {
+    void doFilterInternal_protectedMethodWithMissingCookieToken_sendsForbidden() throws ServletException, IOException {
         when(request.getRequestURI()).thenReturn("/api/data");
         when(request.getMethod()).thenReturn("PUT");
         when(request.getCookies()).thenReturn(new Cookie[]{new Cookie("OTHER_COOKIE", "value")});
@@ -99,7 +99,7 @@ class StatelessCsrfValidationFilterTest {
     }
 
     @Test
-    void doFilterInternal_ProtectedMethodWithMissingHeaderToken_SendsForbidden() throws ServletException, IOException {
+    void doFilterInternal_protectedMethodWithMissingHeaderToken_sendsForbidden() throws ServletException, IOException {
         when(request.getRequestURI()).thenReturn("/api/data");
         when(request.getMethod()).thenReturn("DELETE");
         when(request.getCookies()).thenReturn(new Cookie[]{validCookie});
@@ -112,7 +112,7 @@ class StatelessCsrfValidationFilterTest {
     }
 
     @Test
-    void doFilterInternal_ProtectedMethodWithMismatchedTokens_SendsForbidden() throws ServletException, IOException {
+    void doFilterInternal_protectedMethodWithMismatchedTokens_sendsForbidden() throws ServletException, IOException {
         when(request.getRequestURI()).thenReturn("/api/data");
         when(request.getMethod()).thenReturn("PATCH");
         when(request.getCookies()).thenReturn(new Cookie[]{validCookie});

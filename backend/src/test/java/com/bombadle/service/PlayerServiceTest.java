@@ -46,7 +46,7 @@ class PlayerServiceTest {
     }
 
     @Test
-    void getAuthenticatedPlayerShouldReturnDtoWhenUserExists() {
+    void getAuthenticatedPlayer_userExists_returnsDto() {
         long playerId = 1L;
         String email = "test@gmail.com";
         Player player = buildPlayer(playerId, email, "test");
@@ -61,7 +61,7 @@ class PlayerServiceTest {
     }
 
     @Test
-    void getAuthenticatedPlayerShouldThrowWhenUserDoesNotExist() {
+    void getAuthenticatedPlayer_userDoesNotExist_throwsUsernameNotFoundException() {
         long playerId = 1L;
 
         when(repo.findById(playerId)).thenReturn(Optional.empty());
@@ -71,7 +71,7 @@ class PlayerServiceTest {
     }
 
     @Test
-    void updatePlayerShouldReturnDtoWhenDataIsValid() {
+    void updatePlayer_DataIsValid_savesPlayerAndReturnsDto() {
         long playerId = 1L;
         String email = "test@test.com";
         Player existingPlayer = buildPlayer(playerId, email, "test");
@@ -92,7 +92,7 @@ class PlayerServiceTest {
     }
 
     @Test
-    void updatePlayerShouldThrowWhenUserDoesNotExist() {
+    void updatePlayer_userDoesNotExist_throwsUsernameNotFoundException() {
         long playerId = 1L;
         PlayerUpdateRequest request = new PlayerUpdateRequest("testtest", "AVATAR_DEFAULT");
 
@@ -103,7 +103,7 @@ class PlayerServiceTest {
     }
 
     @Test
-    void updatePlayerShouldThrowWhenLoginLengthIsInvalid() {
+    void updatePlayer_loginLengthIsInvalid_throwsUsernameNotFoundException() {
         long playerId = 1L;
         String email = "test@test.com";
         Player existingPlayer = buildPlayer(playerId, email, "test");
@@ -125,7 +125,7 @@ class PlayerServiceTest {
     }
 
     @Test
-    void updatePlayerShouldThrowWhenLoginIsAlreadyTaken() {
+    void updatePlayer_loginIsAlreadyTaken_throwsUsernameAlreadyTakenException() {
         long playerId = 1L;
         String email = "test@test.com";
         Player existingPlayer = buildPlayer(playerId, email, "test");
@@ -143,7 +143,7 @@ class PlayerServiceTest {
     }
 
     @Test
-    void updatePlayerShouldThrowWhenAvatarImageIsInvalid() {
+    void updatePlayer_imageIsInvalid_throwsIllegalArgumentException() {
         long playerId = 1L;
         String email = "test@test.com";
         Player existingPlayer = buildPlayer(playerId, email, "test");
