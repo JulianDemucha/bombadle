@@ -13,17 +13,18 @@ import java.util.Locale;
 
 @Service
 public class CharacterCardImageService {
-    private static final String IMAGE_DIR = "src/main/resources/static/images/character_cards";
-    private static final String PENDING_DIR = IMAGE_DIR + "/pending";
+
+    private String imageDir = "src/main/resources/static/images/character_cards";
+    private String pendingDir = imageDir + "/pending";
 
     public String storePendingImage(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Image file is required");
         }
-        Path pendingDir = Paths.get(PENDING_DIR);
-        Files.createDirectories(pendingDir);
+        Path pendingDirPath = Paths.get(pendingDir);
+        Files.createDirectories(pendingDirPath);
         String filename = System.currentTimeMillis() + "_" + sanitizeFilename(file.getOriginalFilename());
-        Path target = pendingDir.resolve(filename);
+        Path target = pendingDirPath.resolve(filename);
         Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
         return target.toString();
     }
@@ -44,9 +45,9 @@ public class CharacterCardImageService {
         if (!Files.exists(src)) {
             throw new IllegalArgumentException("Pending image not found: " + tempPath);
         }
-        Path finalDir = Paths.get(IMAGE_DIR);
-        Files.createDirectories(finalDir);
-        Path dest = finalDir.resolve(slugify(name) + ".jpg");
+        Path finalDirPath = Paths.get(imageDir);
+        Files.createDirectories(finalDirPath);
+        Path dest = finalDirPath.resolve(slugify(name) + ".jpg");
         Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
     }
 
@@ -59,12 +60,12 @@ public class CharacterCardImageService {
     }
 
     public void renameImage(String oldName, String newName) throws IOException {
-        Path finalDir = Paths.get(IMAGE_DIR);
-        Path src = finalDir.resolve(slugify(oldName) + ".jpg");
+        Path finalDirPath = Paths.get(imageDir);
+        Path src = finalDirPath.resolve(slugify(oldName) + ".jpg");
         if (!Files.exists(src)) {
             return;
         }
-        Path dest = finalDir.resolve(slugify(newName) + ".jpg");
+        Path dest = finalDirPath.resolve(slugify(newName) + ".jpg");
         Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
     }
 
