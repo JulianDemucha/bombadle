@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 
@@ -29,22 +31,23 @@ public class CustomOAuth2UserService extends OidcUserService {
         OidcUser oidcUser = super.loadUser(userRequest);
 
         String email = oidcUser.getAttribute("email");
+        Object nameAttribute = oidcUser.getAttribute("name");
+        if (email == null) {
+            OAuth2Error error = new OAuth2Error("missing_email", "No email address found in OAuth2 profile", null);
+            throw new OAuth2AuthenticationException(error);
+        }
+
+        if (nameAttribute == null) {
+            OAuth2Error error = new OAuth2Error("missing_name", "No username found in OAuth2 profile", null);
+            throw new OAuth2AuthenticationException(error);
+        }
+
         Player player = playerService.findByEmail(email)
-                .orElseGet(() -> {
-                    Player p = Player.builder()
-                            .login(Objects.requireNonNull(oidcUser.getAttribute("name")).toString().replace('\u00A0', ' ').strip())
-                            .email(email)
-                            .passwordHash("")
-                            .role(Role.ROLE_USER)
-                            .createdAt(Instant.now())
-                            .lastActiveAt(Instant.now())
-                            .hasGuessedToday(false)
-                            .avatarImage(AvatarImage.AVATAR_DEFAULT)
-                            .authProvider(PlayerAuthProvider.OAUTH2_GOOGLE)
-                            .build();
-                    log.info(Objects.requireNonNull(oidcUser.getAttribute("name")).toString().trim());
-                    return playerService.save(p);
-                });
+                .orElseGet( () -> playerService.registerOAuth2Player(
+                        email,
+                        nameAttribute.toString()
+                        )
+                );
 
         return new CustomOAuth2PlayerUser(oidcUser, player);
     }

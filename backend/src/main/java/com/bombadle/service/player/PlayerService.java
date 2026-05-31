@@ -3,6 +3,8 @@ package com.bombadle.service.player;
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.entity.Score;
+import com.bombadle.enums.PlayerAuthProvider;
+import com.bombadle.enums.Role;
 import com.bombadle.exception.UsernameAlreadyTakenException;
 import com.bombadle.dto.request.PlayerUpdateRequest;
 import com.bombadle.entity.Player;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -125,8 +128,39 @@ public class PlayerService {
     }
 
     @Transactional
+    public Player registerOAuth2Player(String email, String rawName) {
+        String cleanName = rawName.replace('\u00A0', ' ').strip();
+        String uniqueLogin = generateUniqueLogin(cleanName);
+
+        Player newPlayer = Player.builder()
+                .login(uniqueLogin)
+                .email(email)
+                .passwordHash("")
+                .role(Role.ROLE_USER)
+                .createdAt(Instant.now())
+                .lastActiveAt(Instant.now())
+                .hasGuessedToday(false)
+                .avatarImage(AvatarImage.AVATAR_DEFAULT)
+                .authProvider(PlayerAuthProvider.OAUTH2_GOOGLE)
+                .build();
+
+        return save(newPlayer);
+    }
+
+
+    @Transactional
     public void deletePlayer(long playerId) {
         playerDeletionService.deletePlayerSelf(playerId);
+    }
+
+    private String generateUniqueLogin(String baseName) {
+        String login = baseName;
+        int counter = 1;
+        while (repo.existsByLogin(login)) {
+            login = baseName + counter;
+            counter++;
+        }
+        return login;
     }
 
     private Boolean isNullOrIsBlank(String s) {
