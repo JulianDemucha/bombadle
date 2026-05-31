@@ -1,42 +1,30 @@
 package com.bombadle.service.admin;
 
 import com.bombadle.dto.AdminPendingCardChangeDto;
-import com.bombadle.dto.request.AdminCharacterCardRequest;
 import com.bombadle.entity.AdminPendingChange;
-import com.bombadle.entity.CharacterCard;
-import com.bombadle.enums.Affiliation;
-import com.bombadle.enums.Color;
-import com.bombadle.enums.Gender;
-import com.bombadle.enums.Race;
 import com.bombadle.repository.AdminPendingChangeRepository;
-import com.bombadle.repository.CharacterCardRepository;
 import com.bombadle.dto.queue.PendingCacheFlushPayload;
 import com.bombadle.dto.queue.PendingCardCreatePayload;
 import com.bombadle.dto.queue.PendingCardDeletePayload;
 import com.bombadle.dto.queue.PendingCardUpdatePayload;
-import com.bombadle.service.cache.CacheService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminChangeQueueService {
-    private static final Logger log = LoggerFactory.getLogger(AdminChangeQueueService.class);
 
     private final AdminPendingChangeRepository pendingChangeRepository;
-    private final CharacterCardRepository characterCardRepository;
+    private final AdminCharacterCardProcessor processor;
     private final CharacterCardImageService imageService;
-    private final CacheService cacheService;
     private final ObjectMapper objectMapper;
 
     public void enqueue(String actionType, Object payload) {
@@ -84,105 +72,26 @@ public class AdminChangeQueueService {
 
     private void applyChange(AdminPendingChange change) throws IOException {
         String actionType = change.getActionType();
+
         if (actionType.startsWith("create_card")) {
             PendingCardCreatePayload payload = objectMapper.readValue(change.getPayload(), PendingCardCreatePayload.class);
-            applyCreateCard(payload);
+            processor.processCreate(payload);
             return;
         }
         if (actionType.startsWith("update_card")) {
             PendingCardUpdatePayload payload = objectMapper.readValue(change.getPayload(), PendingCardUpdatePayload.class);
-            applyUpdateCard(payload);
+            processor.processUpdate(payload);
             return;
         }
         if (actionType.startsWith("delete_card")) {
             PendingCardDeletePayload payload = objectMapper.readValue(change.getPayload(), PendingCardDeletePayload.class);
-            characterCardRepository.deleteById(payload.id());
+            processor.processDelete(payload);
             return;
         }
         if (actionType.startsWith("flush_cache")) {
             PendingCacheFlushPayload payload = objectMapper.readValue(change.getPayload(), PendingCacheFlushPayload.class);
-            applyCacheFlush(payload);
+            processor.processCacheFlush(payload);
         }
-    }
-
-    private void applyCreateCard(PendingCardCreatePayload payload) throws IOException {
-        AdminCharacterCardRequest req = payload.card();
-        if (characterCardRepository.existsByName(req.name())) {
-            throw new IllegalArgumentException("Character card name already exists: " + req.name());
-        }
-        CharacterCard card = CharacterCard.create();
-        applyCardFields(card, req);
-        card.setImageSrc(imageService.buildImageSrc(req.name()));
-        characterCardRepository.save(card);
-        imageService.applyPendingImage(payload.tempImagePath(), req.name());
-    }
-
-    private void applyUpdateCard(PendingCardUpdatePayload payload) throws IOException {
-        CharacterCard card = characterCardRepository.findById(payload.id())
-                .orElseThrow(() -> new IllegalArgumentException("Character card not found: " + payload.id()));
-        AdminCharacterCardRequest req = payload.card();
-        String previousName = payload.previousName();
-        String nextName = req.name() != null && !req.name().isBlank() ? req.name() : card.getName();
-
-        if (!nextName.equals(card.getName()) && characterCardRepository.existsByName(nextName)) {
-            throw new IllegalArgumentException("Character card name already exists: " + nextName);
-        }
-
-        applyCardFields(card, req);
-        card.setName(nextName);
-        card.setImageSrc(imageService.buildImageSrc(nextName));
-        characterCardRepository.save(card);
-
-        if (payload.tempImagePath() != null) {
-            imageService.applyPendingImage(payload.tempImagePath(), nextName);
-        } else if (previousName != null && !previousName.equals(nextName)) {
-            imageService.renameImage(previousName, nextName);
-        }
-    }
-
-    private void applyCacheFlush(PendingCacheFlushPayload payload) {
-        if (Boolean.TRUE.equals(payload.flushAll())) {
-            cacheService.evictAllCaches();
-            return;
-        }
-        if (payload.cacheName() != null && !payload.cacheName().isBlank()) {
-            cacheService.evictCache(payload.cacheName());
-        }
-    }
-
-    private void applyCardFields(CharacterCard card, AdminCharacterCardRequest req) {
-        if (req.name() != null && !req.name().isBlank()) {
-            card.setName(req.name());
-        }
-        if (req.gender() != null && !req.gender().isBlank()) {
-            card.setGender(Gender.valueOf(req.gender()));
-        }
-        if (req.race() != null && !req.race().isBlank()) {
-            card.setRace(Race.valueOf(req.race()));
-        }
-        if (req.alive() != null) {
-            card.setAlive(req.alive());
-        }
-        if (req.colors() != null) {
-            card.setColors(parseEnumSet(req.colors(), Color.class));
-        }
-        if (req.affiliations() != null) {
-            card.setAffiliations(parseEnumSet(req.affiliations(), Affiliation.class));
-        }
-        if (req.firstAppearanceEpisode() != null) {
-            card.setFirstAppearanceEpisode(req.firstAppearanceEpisode());
-        }
-        if (req.aliases() != null) {
-            card.setAliases(new HashSet<>(req.aliases()));
-        }
-    }
-
-    private <T extends Enum<T>> Set<T> parseEnumSet(Set<String> values, Class<T> type) {
-        Set<T> parsed = new HashSet<>();
-        for (String value : values) {
-            parsed.add(Enum.valueOf(type, value));
-        }
-        return parsed;
     }
 
     public boolean hasPendingActionKey(String actionKey) {
