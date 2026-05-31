@@ -1,6 +1,7 @@
 package com.bombadle.security.filter;
 
 import com.bombadle.config.PlayerPrincipal;
+import com.bombadle.entity.Player;
 import com.bombadle.security.oauth2.CustomOAuth2PlayerUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,7 +9,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,7 +41,7 @@ class AccountLockedFilterTest {
     @Mock
     private PlayerPrincipal playerPrincipal;
 
-    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    @Mock
     private CustomOAuth2PlayerUser customOAuth2PlayerUser;
 
     private MockHttpServletRequest request;
@@ -126,7 +126,7 @@ class AccountLockedFilterTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
-        when(customOAuth2PlayerUser.getPlayer().getAccountLocked()).thenReturn(true);
+        when(customOAuth2PlayerUser.getPlayer()).thenReturn(Player.builder().accountLocked(true).build());
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -139,7 +139,7 @@ class AccountLockedFilterTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
-        when(customOAuth2PlayerUser.getPlayer().getAccountLocked()).thenReturn(false);
+        when(customOAuth2PlayerUser.getPlayer()).thenReturn(Player.builder().accountLocked(false).build());
 
         filter.doFilterInternal(request, response, filterChain);
 
