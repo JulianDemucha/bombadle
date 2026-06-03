@@ -1,0 +1,1 @@
+CREATE INDEX idx_score_timestamp ON score (score_time_stamp);
