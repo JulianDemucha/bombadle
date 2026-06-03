@@ -8,10 +8,7 @@ import com.bombadle.dto.request.AuthenticationRequest;
 import com.bombadle.dto.request.RegisterRequest;
 import com.bombadle.exception.InvalidCredentialsException;
 import com.bombadle.exception.RegistrationConflictException;
-import com.bombadle.exception.RegistrationValidationException;
 import com.bombadle.service.player.PlayerService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,24 +27,11 @@ public class AuthenticationService {
     private final PlayerService playerService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final PostLoginService postLoginService;
 
     @Transactional
     public Player register(RegisterRequest requestData) {
         if (playerService.existsByEmail(requestData.getEmail()) || playerService.existsByLogin(requestData.getUsername())) {
             throw new RegistrationConflictException("Email or username already exists");
-        }
-
-        if (requestData.getPassword().length() < 8 || requestData.getPassword().length() > 24) {
-            throw new RegistrationValidationException("Password must be between 8 and 24 characters");
-        }
-
-        if (requestData.getUsername().length() < 3 || requestData.getUsername().length() > 16) {
-            throw new RegistrationValidationException("Username must be between 3 and 16 characters");
-        }
-
-        if (!requestData.getEmail().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
-            throw new RegistrationValidationException("Invalid email format");
         }
 
         var player = Player.builder()
@@ -62,7 +46,6 @@ public class AuthenticationService {
                 .hasGuessedToday(false)
                 .accountLocked(false)
                 .build();
-
 
         log.info("Registered new user: {}", player.getLogin());
         return playerService.save(player);
