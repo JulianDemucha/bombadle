@@ -51,14 +51,14 @@ public class CookieService {
         return Arrays.stream(request.getCookies())
                 .filter(cookie -> cookieName.equals(cookie.getName()))
                 .map(Cookie::getValue)
+                .findFirst()
                 .map(value -> {
                     try {
                         return converter.apply(value);
                     } catch (Exception e) {
-                        return null; // Lub obsłuż błąd konwersji (np. logowanie)
+                        return null;
                     }
-                })
-                .findFirst();
+                });
     }
 
 }
