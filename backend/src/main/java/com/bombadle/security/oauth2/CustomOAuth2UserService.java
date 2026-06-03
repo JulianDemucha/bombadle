@@ -1,9 +1,6 @@
 package com.bombadle.security.oauth2;
 
 import com.bombadle.entity.Player;
-import com.bombadle.enums.AvatarImage;
-import com.bombadle.enums.PlayerAuthProvider;
-import com.bombadle.enums.Role;
 import com.bombadle.service.player.PlayerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +12,6 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -42,9 +36,9 @@ public class CustomOAuth2UserService extends OidcUserService {
             throw new OAuth2AuthenticationException(error);
         }
 
-        Player player = playerService.findByEmail(email)
+        Player player = playerService.findByEmail(email.toLowerCase())
                 .orElseGet( () -> playerService.registerOAuth2Player(
-                        email,
+                        email.toLowerCase(),
                         nameAttribute.toString()
                         )
                 );

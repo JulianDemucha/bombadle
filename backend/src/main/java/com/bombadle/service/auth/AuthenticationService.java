@@ -30,13 +30,17 @@ public class AuthenticationService {
 
     @Transactional
     public Player register(RegisterRequest requestData) {
-        if (playerService.existsByEmail(requestData.getEmail()) || playerService.existsByLogin(requestData.getUsername())) {
+        String normalizedEmail = requestData.getEmail().toLowerCase();
+        String normalizedUsername = requestData.getUsername().toLowerCase();
+        
+        if (playerService.existsByEmail(normalizedEmail) || playerService.existsByLogin(normalizedUsername)) {
             throw new RegistrationConflictException("Email or username already exists");
         }
 
         var player = Player.builder()
-                .login(requestData.getUsername())
-                .email(requestData.getEmail())
+                .displayName(requestData.getUsername())
+                .login(normalizedUsername)
+                .email(normalizedEmail)
                 .passwordHash(passwordEncoder.encode(requestData.getPassword()))
                 .role(Role.ROLE_USER)
                 .createdAt(Instant.now())
@@ -55,13 +59,14 @@ public class AuthenticationService {
     @Transactional
     public Player authenticate(AuthenticationRequest requestData) {
         try {
+            String normalizedEmail = requestData.getEmail().toLowerCase();
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            requestData.getEmail(),
+                            normalizedEmail,
                             requestData.getPassword()
                     )
             );
-            var player = playerService.findByEmail(requestData.getEmail())
+            var player = playerService.findByEmail(normalizedEmail)
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
             player.setLastActiveAt(Instant.now());
             return playerService.save(player);

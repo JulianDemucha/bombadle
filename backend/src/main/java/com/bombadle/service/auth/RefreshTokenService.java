@@ -29,7 +29,7 @@ public class RefreshTokenService {
         String token = UUID.randomUUID().toString();
         String hashedToken = DigestUtils.sha256Hex(token);
         Instant expiresAt = Instant.now().plusSeconds(jwtConfig.refreshExpirationSeconds()); //1h
-        Player player = playerService.findByEmail(email).orElseThrow(
+        Player player = playerService.findByEmail(email.toLowerCase()).orElseThrow(
                 () -> new UsernameNotFoundException("User not found: " + email)
         );
 

@@ -9,7 +9,7 @@ import java.util.Optional;
 @Builder
 public record PlayerDto (
     Long id,
-    String login,
+    String displayName,
     String email,
     String role,
     String avatarImage,
@@ -24,7 +24,7 @@ public record PlayerDto (
     public static PlayerDto toDto(Player player) {
         return PlayerDto.builder()
                 .id(player.getId())
-                .login(player.getLogin())
+                .displayName(player.getDisplayName())
                 .email(player.getEmail())
                 .role(player.getRole().toString())
                 .avatarImage(player.getAvatarImage().toString())

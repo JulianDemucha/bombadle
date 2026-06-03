@@ -37,7 +37,7 @@ const pickGuessTimestamp = (entry) =>
 
 const buildFallbackCurrentUserRow = (user, attempts, timeLabel) => ({
     rank: '-',
-    name: user?.login || 'Ty',
+    name: user?.displayName || user?.login || 'Ty',
     time: timeLabel || '--:--',
     attempts: attempts > 0 ? attempts : '-',
     wins: user?.totalGuesses ?? '?',

@@ -26,7 +26,7 @@ public class ApplicationConfig {
     public UserDetailsService userDetailsService(PlayerRepository repo) {
         return email ->
                 new PlayerPrincipal(
-                        repo.findByEmail(email)
+                        repo.findByEmail(email.toLowerCase())
                                 .orElseThrow(() -> new UsernameNotFoundException("user with email " + email + " not found"))
                 );
     }

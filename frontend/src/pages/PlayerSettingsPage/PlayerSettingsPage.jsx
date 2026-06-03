@@ -10,10 +10,9 @@ import AvatarPicker from "./AvatarPicker.jsx";
 
 export default function PlayerSettingsPage() {
 
-    const [login, setLogin] = useState("");
+    const [displayName, setDisplayName] = useState("");
     const [avatar, setAvatar] = useState(null);
     const [saving, setSaving] = useState(false);
-    // const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
     const context = useAuth();
     const user = context.user;
@@ -22,7 +21,7 @@ export default function PlayerSettingsPage() {
 
     useEffect(() => {
         if (user) {
-            setLogin(user.login ?? "");
+            setDisplayName(user.displayName ?? user.login ?? "");
             setAvatar(user.avatarImage ?? null);
         }
     }, [user]);
@@ -36,10 +35,7 @@ export default function PlayerSettingsPage() {
         setSaving(true);
         try {
             const body = {
-                // if login didnt change -> null -> backend wont change the value if null is given
-                login: (login === (user.login ?? "")) ? null : (login.trim() === "" ? null : login.trim()),
-
-                // if avatarLogin didnt change -> null
+                login: (displayName === (user.displayName ?? user.login ?? "")) ? null : (displayName.trim() === "" ? null : displayName.trim()),
                 avatarImage: (avatar === (user.avatarImage ?? null)) ? null : (avatar ?? null)
             };
 
@@ -61,7 +57,6 @@ export default function PlayerSettingsPage() {
                     (res.data?.message || JSON.stringify(res.data));
                 alert("Aktualizacja nie powiodła się: " + (serverMsg || `status ${res.status}`));
             } else {
-                // alert("Zapisano zmiany pomyślnie.");
                 await reload();
 
 
@@ -79,8 +74,6 @@ export default function PlayerSettingsPage() {
         e.preventDefault();
         const email = user.email;
 
-        // Jeśli użytkownik logował się przez Google, nie wymagamy hasła (bo go nie ma/nie zna),
-        // tylko potwierdzenia w oknie dialogowym.
         if (user?.authProvider === 'OAUTH2_GOOGLE') {
             if (!window.confirm("Czy na pewno chcesz usunąć konto? Tej operacji nie można cofnąć.")) {
                 return;
@@ -90,7 +83,6 @@ export default function PlayerSettingsPage() {
             if (!password) return;
 
             try {
-                // Weryfikacja hasła przed usunięciem dla kont lokalnych
                 await axios.post("/api/auth/authenticate", {email, password});
             } catch (error) {
                 console.error("Błąd uwierzytelniania:", error);
@@ -184,11 +176,10 @@ export default function PlayerSettingsPage() {
                          src={`./avatar/${avatarText}.jpg`}
                          alt="User Avatar"/>
                     <div className="profile-info">
-                        <h2>{login}</h2>
+                        <h2>{displayName}</h2>
                         <p>{user.email}</p>
                         <AvatarPicker onAvatarSelect={handleAvatarSelected}/>
                         {/*<div style={{fontSize: 12, marginTop: 6}}>*/}
-                        {/*    {avatar ? `Wybrano: ${avatar}` : (user?.avatarImage ? `Aktualny avatar: ${user.avatarImage}` : "Brak avatara")}*/}
                         {/*</div>*/}
                     </div>
                 </div>
@@ -198,9 +189,9 @@ export default function PlayerSettingsPage() {
                     <div className="form-section">
                         <h3>Dane osobowe</h3>
                         <div className="form-group">
-                            <label htmlFor="name">Imię i nazwisko</label>
-                            <input type="text" name="name" id="name" value={login}
-                                   onChange={(e) => setLogin(e.target.value)}
+                            <label htmlFor="name">Nazwa użytkownika</label>
+                            <input type="text" name="name" id="name" value={displayName}
+                                   onChange={(e) => setDisplayName(e.target.value)}
                                    minLength={3}
                                    maxLength={16}
                             />

@@ -29,6 +29,9 @@ public class Player{
     @Column(unique = true, nullable = false)
     private String login;
 
+    @Column(name = "display_name", length = 16)
+    private String displayName;
+
     @Column(unique = true, nullable = false)
     private String email;
 

@@ -9,14 +9,18 @@ import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
 import com.bombadle.repository.PlayerRepository;
 import com.bombadle.service.player.PlayerService;
+import com.bombadle.service.player.PlayerDeletionService;
+import com.bombadle.service.stats.LeaderboardService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,14 +30,25 @@ import static org.mockito.Mockito.*;
 class PlayerServiceTest {
     @Mock
     PlayerRepository repo;
+
+    @Mock
+    PlayerDeletionService playerDeletionService;
+
+    @Mock
+    LeaderboardService leaderboardService;
+
+    @Mock
+    CacheManager cacheManager;
+
     @InjectMocks
     PlayerService playerService;
 
     private Player buildPlayer(long id, String email, String login) {
         return Player.builder()
                 .id(id)
-                .login(login)
-                .email(email)
+                .login(login.toLowerCase())
+                .displayName(login)
+                .email(email.toLowerCase())
                 .passwordHash("test")
                 .role(Role.ROLE_USER)
                 .createdAt(Instant.parse("2025-11-10T14:22:27.123Z"))
@@ -76,15 +91,18 @@ class PlayerServiceTest {
         String email = "test@test.com";
         Player existingPlayer = buildPlayer(playerId, email, "test");
 
-        PlayerUpdateRequest request = new PlayerUpdateRequest("testtest", "AVATAR_DEFAULT");
+        PlayerUpdateRequest request = new PlayerUpdateRequest("TestTest", "AVATAR_DEFAULT");
 
         when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
+        when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
+        when(repo.existsByLogin("testtest")).thenReturn(false);
 
         PlayerDto returnedDto = playerService.updatePlayer(request, playerId);
         PlayerDto expectedDto = PlayerDto.toDto(existingPlayer);
 
         assertEquals(expectedDto, returnedDto);
         assertEquals("testtest", existingPlayer.getLogin());
+        assertEquals("TestTest", existingPlayer.getDisplayName());
         assertEquals(AvatarImage.AVATAR_DEFAULT, existingPlayer.getAvatarImage());
 
         verify(repo).findById(playerId);
@@ -116,6 +134,7 @@ class PlayerServiceTest {
 
 
         when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
+        when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
 
 
         assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request, playerId));
@@ -131,10 +150,11 @@ class PlayerServiceTest {
         Player existingPlayer = buildPlayer(playerId, email, "test");
 
         PlayerUpdateRequest request = new PlayerUpdateRequest
-                ("test1", "AVATAR_DEFAULT"); // not the same as in existingPlayer
+                ("Test1", "AVATAR_DEFAULT"); // not the same as in existingPlayer
 
         when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
-        when(repo.existsByLogin(request.login())).thenReturn(true);
+        when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
+        when(repo.existsByLogin("test1")).thenReturn(true);
 
         assertThrows(UsernameAlreadyTakenException.class, () -> playerService.updatePlayer(request, playerId));
 
@@ -149,9 +169,10 @@ class PlayerServiceTest {
         Player existingPlayer = buildPlayer(playerId, email, "test");
 
         PlayerUpdateRequest request = new PlayerUpdateRequest
-                ("test", "pararara ramapampampam"); // not the same as in existingPlayer
+                ("test", "pararara ramapampampam"); // not a valid avatar
 
         when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
+        when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
 
         assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request, playerId));
 

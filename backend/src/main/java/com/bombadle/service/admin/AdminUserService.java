@@ -52,11 +52,13 @@ public class AdminUserService {
             if (length < 3 || length > 16) {
                 throw new IllegalArgumentException("Username must be between 3 and 16 characters");
             }
-            if (!login.equals(target.getLogin()) && playerRepository.existsByLogin(login)) {
+            String normalizedLogin = login.toLowerCase();
+            if (!normalizedLogin.equals(target.getLogin()) && playerRepository.existsByLogin(normalizedLogin)) {
                 throw new IllegalArgumentException("Username " + login + " already exists");
             }
-            if (!login.equals(target.getLogin())) {
-                target.setLogin(login);
+            if (!normalizedLogin.equals(target.getLogin())) {
+                target.setDisplayName(login);
+                target.setLogin(normalizedLogin);
                 actionType.append("_change_login_to_").append(login);
                 changed = true;
             }

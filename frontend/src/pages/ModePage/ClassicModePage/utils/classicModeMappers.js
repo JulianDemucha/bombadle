@@ -60,6 +60,8 @@ const mapLeaderboardEntryToRow = (entry, index, currentUser) => {
     const rank = entry?.rank ?? index + 1;
     const playerId = entry?.playerId ?? entry?.id ?? null;
     const playerName =
+        entry?.playerDisplayName ||
+        entry?.displayName ||
         entry?.playerLogin ||
         entry?.login ||
         entry?.name ||
@@ -68,10 +70,10 @@ const mapLeaderboardEntryToRow = (entry, index, currentUser) => {
     const wins = entry?.wins ?? entry?.totalGuesses ?? 0;
     const attempts = entry?.numberOfTries ?? entry?.attempts ?? '-';
     const userId = currentUser?.id ?? currentUser?.playerId ?? null;
-    const userLogin = String(currentUser?.login ?? '').toLowerCase();
+    const userDisplayName = String(currentUser?.displayName ?? currentUser?.login ?? '').toLowerCase();
     const isCurrentUser =
         (playerId !== null && userId !== null && String(playerId) === String(userId)) ||
-        (Boolean(userLogin) && String(playerName).toLowerCase() === userLogin);
+        (Boolean(userDisplayName) && String(playerName).toLowerCase() === userDisplayName);
 
     return {
         rank,

@@ -26,7 +26,7 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
             SELECT new com.bombadle.dto.LeaderboardEntryDto(
                 p.id,
                 ROW_NUMBER() OVER(ORDER BY s.scoreTimestamp ASC),
-                p.login,
+                p.displayName,
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
@@ -47,7 +47,7 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                     FROM Score s2
                     WHERE s2.scoreTimestamp < s.scoreTimestamp
                 ),
-                p.login,
+                p.displayName,
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
@@ -74,7 +74,7 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
             SELECT new com.bombadle.dto.LeaderboardEntryDto(
                 p.id,
                 ROW_NUMBER() OVER(ORDER BY s.scoreTimestamp ASC),
-                p.login,
+                p.displayName,
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,

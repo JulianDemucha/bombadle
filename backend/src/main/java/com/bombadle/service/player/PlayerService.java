@@ -1,6 +1,5 @@
 package com.bombadle.service.player;
 
-import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.entity.Score;
 import com.bombadle.enums.PlayerAuthProvider;
@@ -35,7 +34,13 @@ public class PlayerService {
     private final CacheManager cacheManager;
 
     public Optional<Player> findByEmail(String email){
-        return repo.findByEmail(email);
+        if (email == null) return Optional.empty();
+        return repo.findByEmail(email.toLowerCase());
+    }
+
+    public Optional<Player> findByLoginNormalized(String login) {
+        if (login == null) return Optional.empty();
+        return repo.findByLogin(login.toLowerCase());
     }
 
     public Optional<Player> findById(long id){
@@ -82,24 +87,26 @@ public class PlayerService {
         boolean isPlayerInTop3 = leaderboardService.getTop3Leaderboard().stream()
                 .anyMatch(entry -> entry.playerId().equals(playerId));
 
-        // IF playerUpdatableDto.login() is NOT blank or null, change users email
+        // IF playerUpdatableDto.login() is NOT blank or null, change users login
         if (!isNullOrIsBlank(request.login())) {
             int length = request.login().length();
             if (length < 3 || length > 16)
                 throw new IllegalArgumentException("Username must be between 3 and 16 characters");
 
+            String normalizedLogin = request.login().toLowerCase();
 
-            if (!updatedPlayer.getLogin().equals(request.login())) {
+            if (!updatedPlayer.getLogin().equals(normalizedLogin)) {
                 /*
                     if provided login doesn't equal current login, check whether
                     the user with provided login already exists in the database
                 */
-                if (repo.existsByLogin(request.login()))
+                if (repo.existsByLogin(normalizedLogin))
                     throw new UsernameAlreadyTakenException("Username " + request.login() + " already exists");
 
             }
 
-            updatedPlayer.setLogin(request.login());
+            updatedPlayer.setDisplayName(request.login());
+            updatedPlayer.setLogin(normalizedLogin);
         }
 
         if (!isNullOrIsBlank(request.avatarImage())) {
@@ -133,8 +140,9 @@ public class PlayerService {
         String uniqueLogin = generateUniqueLogin(cleanName);
 
         Player newPlayer = Player.builder()
+                .displayName(cleanName)
                 .login(uniqueLogin)
-                .email(email)
+                .email(email.toLowerCase())
                 .passwordHash("")
                 .role(Role.ROLE_USER)
                 .createdAt(Instant.now())
@@ -154,21 +162,23 @@ public class PlayerService {
     }
 
     private String generateUniqueLogin(String baseName) {
-        String login = baseName;
+        String login = baseName.toLowerCase();
         int counter = 1;
         while (repo.existsByLogin(login)) {
-            login = baseName + counter;
+            login = baseName.toLowerCase() + counter;
             counter++;
         }
         return login;
     }
 
     public Boolean existsByLogin(String login) {
-        return repo.existsByLogin(login);
+        if (login == null) return false;
+        return repo.existsByLogin(login.toLowerCase());
     }
 
     public Boolean existsByEmail(String email) {
-        return repo.existsByEmail(email);
+        if (email == null) return false;
+        return repo.existsByEmail(email.toLowerCase());
     }
 
     private Boolean isNullOrIsBlank(String s) {
