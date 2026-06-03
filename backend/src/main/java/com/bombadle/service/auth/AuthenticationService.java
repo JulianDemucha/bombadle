@@ -4,12 +4,12 @@ import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
-import com.bombadle.repository.PlayerRepository;
 import com.bombadle.dto.request.AuthenticationRequest;
 import com.bombadle.dto.request.RegisterRequest;
 import com.bombadle.exception.InvalidCredentialsException;
 import com.bombadle.exception.RegistrationConflictException;
 import com.bombadle.exception.RegistrationValidationException;
+import com.bombadle.service.player.PlayerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,14 +27,14 @@ import java.time.Instant;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthenticationService {
-    private final PlayerRepository repo;
+    private final PlayerService playerService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final PostLoginService postLoginService;
 
     @Transactional
     public void register(RegisterRequest requestData, HttpServletRequest request, HttpServletResponse response) {
-        if (repo.existsByEmail(requestData.getEmail()) || repo.existsByLogin(requestData.getUsername())) {
+        if (playerService.existsByEmail(requestData.getEmail()) || playerService.existsByLogin(requestData.getUsername())) {
             throw new RegistrationConflictException("Email or username already exists");
         }
 
@@ -63,7 +63,7 @@ public class AuthenticationService {
                 .accountLocked(false)
                 .build();
 
-        repo.save(player);
+        playerService.save(player);
         log.info("Registered new user: {}", player.getLogin());
 
         postLoginService.processSuccessfulLogin(request, response, player);
@@ -79,10 +79,10 @@ public class AuthenticationService {
                             requestData.getPassword()
                     )
             );
-            var player = repo.findByEmail(requestData.getEmail())
+            var player = playerService.findByEmail(requestData.getEmail())
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
             player.setLastActiveAt(Instant.now());
-            repo.save(player);
+            playerService.save(player);
 
             postLoginService.processSuccessfulLogin(request, response, player);
         }catch (AuthenticationException e) {
@@ -91,11 +91,11 @@ public class AuthenticationService {
     }
 
     public Boolean existsByEmail(String email) {
-        return repo.existsByEmail(email);
+        return playerService.existsByEmail(email);
     }
 
     public Boolean existsByUsername(String username) {
-        return repo.existsByLogin(username);
+        return playerService.existsByLogin(username);
     }
 
 }

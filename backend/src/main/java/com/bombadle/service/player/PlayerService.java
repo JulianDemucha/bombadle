@@ -163,6 +163,14 @@ public class PlayerService {
         return login;
     }
 
+    public Boolean existsByLogin(String login) {
+        return repo.existsByLogin(login);
+    }
+
+    public Boolean existsByEmail(String email) {
+        return repo.existsByEmail(email);
+    }
+
     private Boolean isNullOrIsBlank(String s) {
         if (s == null) {
             return true;
