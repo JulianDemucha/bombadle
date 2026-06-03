@@ -27,7 +27,7 @@ public class AnonymousMergeService {
 
     @Transactional
     public void handleAnonymousSessionMerge(Player player, UUID anonymousSessionId, Boolean triggerMerge) {
-        if (anonymousSessionId == null ||  isNullOrFalse(triggerMerge)) {
+        if (anonymousSessionId == null ||  isNullOrFalse(triggerMerge) || player.getHasGuessedToday()) {
             return;
         }
 
@@ -39,10 +39,15 @@ public class AnonymousMergeService {
 
         AnonymousSession session = sessionOpt.get();
 
-        if (player.getHasGuessedToday() || !session.hasGuessedToday()) {
+        if (session.getGuessList() == null || session.getGuessList().getGuesses() == null) {
             return;
         }
 
+        // consider refactoring the code so guess lists without scores can be merged
+        if (!session.hasGuessedToday()) {
+            return;
+
+        }
         // save score with original timestamp from the anonymous session
         Score score = scoreService.registerScoreWithTimestamp(player, session.getGuessList().getGuesses().size(), session.getScoreTimestamp());
 

@@ -2,6 +2,8 @@ package com.bombadle.entity;
 
 import com.bombadle.dto.GuessAttempt;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -12,7 +14,9 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class AnonymousGuessList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
