@@ -33,7 +33,7 @@ public class AuthenticationService {
     private final PostLoginService postLoginService;
 
     @Transactional
-    public void register(RegisterRequest requestData, HttpServletRequest request, HttpServletResponse response) {
+    public Player register(RegisterRequest requestData) {
         if (playerService.existsByEmail(requestData.getEmail()) || playerService.existsByLogin(requestData.getUsername())) {
             throw new RegistrationConflictException("Email or username already exists");
         }
@@ -63,15 +63,14 @@ public class AuthenticationService {
                 .accountLocked(false)
                 .build();
 
-        playerService.save(player);
-        log.info("Registered new user: {}", player.getLogin());
 
-        postLoginService.processSuccessfulLogin(request, response, player);
+        log.info("Registered new user: {}", player.getLogin());
+        return playerService.save(player);
     }
 
 
     @Transactional
-    public void authenticate(AuthenticationRequest requestData, HttpServletRequest request, HttpServletResponse response) {
+    public Player authenticate(AuthenticationRequest requestData) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -82,9 +81,7 @@ public class AuthenticationService {
             var player = playerService.findByEmail(requestData.getEmail())
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
             player.setLastActiveAt(Instant.now());
-            playerService.save(player);
-
-            postLoginService.processSuccessfulLogin(request, response, player);
+            return playerService.save(player);
         }catch (AuthenticationException e) {
             throw new InvalidCredentialsException("Invalid email or password");
         }

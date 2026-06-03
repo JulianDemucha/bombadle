@@ -1,6 +1,7 @@
 package com.bombadle.controller;
 
 import com.bombadle.dto.RefreshTokenCookieDto;
+import com.bombadle.entity.Player;
 import com.bombadle.service.auth.*;
 import com.bombadle.dto.request.AuthenticationRequest;
 import com.bombadle.dto.request.RegisterRequest;
@@ -24,6 +25,7 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final RefreshTokenService refreshTokenService;
     private final AuthCookiesService authCookieService;
+    private final PostLoginService postLoginService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(
@@ -31,7 +33,8 @@ public class AuthenticationController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
-        authenticationService.register(registerRequest, httpRequest, httpResponse);
+        Player player = authenticationService.register(registerRequest);
+        postLoginService.processSuccessfulLogin(httpRequest, httpResponse, player);
         return ResponseEntity.ok().build();
     }
 
@@ -41,7 +44,8 @@ public class AuthenticationController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
-        authenticationService.authenticate(authRequest, httpRequest, httpResponse);
+        Player player = authenticationService.authenticate(authRequest);
+        postLoginService.processSuccessfulLogin(httpRequest, httpResponse, player);
         return ResponseEntity.ok().build();
     }
 
