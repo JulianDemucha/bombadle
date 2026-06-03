@@ -1,8 +1,10 @@
 package com.bombadle.service.stats;
 
+import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.Score;
 import com.bombadle.repository.ScoreRepository;
+import com.bombadle.service.cache.CacheService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -19,6 +21,8 @@ import java.util.Optional;
 public class ScoreService {
 
     private final ScoreRepository repo;
+    private final LeaderboardService leaderboardService;
+    private final CacheService cacheService;
 
     public Score saveScore(Score score) {
         if (score == null)
@@ -46,18 +50,36 @@ public class ScoreService {
     @Transactional
     @CacheEvict(value = "top-3-leaderboard", allEntries = true, condition = "@scoreRepository.count() <= 3")
     public Score registerScore(Player player, int numberOfTries) {
-        return registerScoreWithTimestamp(player, numberOfTries, Instant.now());
+        Score score = Score.builder()
+                .player(player)
+                .scoreTimestamp(Instant.now())
+                .numberOfTries(numberOfTries)
+                .build();
+
+        return repo.save(score);
     }
 
     @Transactional
-    @CacheEvict(value = "top-3-leaderboard", allEntries = true, condition = "@scoreRepository.count() <= 3")
     public Score registerScoreWithTimestamp(Player player, int numberOfTries, Instant timestamp) {
         Score score = Score.builder()
                 .player(player)
                 .scoreTimestamp(timestamp)
                 .numberOfTries(numberOfTries)
                 .build();
-        return repo.save(score);
+
+        Score savedScore = repo.save(score);
+
+        evictTop3CacheIfNeeded(timestamp);
+
+        return savedScore;
+    }
+
+    private void evictTop3CacheIfNeeded(Instant newTimestamp) {
+        List<LeaderboardEntryDto> currentTop3 = leaderboardService.getTop3Leaderboard();
+
+        if (currentTop3.size() < 3 || !newTimestamp.isAfter(currentTop3.get(2).scoreTimeStamp())) {
+            cacheService.evictCache("top-3-leaderboard");
+        }
     }
 
     public Optional<Score> getScoreById(Long id) {
