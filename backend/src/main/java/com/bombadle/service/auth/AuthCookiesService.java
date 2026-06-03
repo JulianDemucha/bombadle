@@ -7,6 +7,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class AuthCookiesService {
@@ -15,6 +17,7 @@ public class AuthCookiesService {
     private final String[] cookieNames = {"jwt", "refreshToken", "JWT-EXPIRES-AT", "XSRF-TOKEN"};
 
     public ResponseCookie createJwtCookie(String jwt) {
+        Objects.requireNonNull(jwt, "JWT token must not be null when creating a cookie");
         return cookieService.createCookie("jwt", jwt, jwtConfig.expirationSeconds());
     }
 
@@ -29,6 +32,7 @@ public class AuthCookiesService {
     }
 
     public ResponseCookie createRefreshCookie(String refreshToken) {
+        Objects.requireNonNull(refreshToken, "Refresh token must not be null when creating a cookie");
         return cookieService.createCookie("refreshToken", refreshToken, jwtConfig.refreshExpirationSeconds());
     }
 
