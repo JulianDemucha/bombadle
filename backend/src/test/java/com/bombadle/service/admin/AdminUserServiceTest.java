@@ -6,6 +6,7 @@ import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.Role;
 import com.bombadle.exception.AdminOperationNotAllowedException;
 import com.bombadle.repository.PlayerRepository;
+import com.bombadle.service.cache.CacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,9 @@ class AdminUserServiceTest {
 
     @Mock
     private AdminAuditService adminAuditService;
+
+    @Mock
+    private CacheService cacheService;
 
     private Player adminActor;
     private Player superAdminActor;

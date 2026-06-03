@@ -86,6 +86,7 @@ public class PlayerService {
 
         boolean isPlayerInTop3 = leaderboardService.getTop3Leaderboard().stream()
                 .anyMatch(entry -> entry.playerId().equals(playerId));
+        boolean profileChanged = false;
 
         // IF playerUpdatableDto.login() is NOT blank or null, change users login
         if (!isNullOrIsBlank(request.login())) {
@@ -107,13 +108,16 @@ public class PlayerService {
 
             updatedPlayer.setDisplayName(request.login());
             updatedPlayer.setLogin(normalizedLogin);
+            profileChanged = true;
         }
 
         if (!isNullOrIsBlank(request.avatarImage())) {
             try {
                 AvatarImage newAvatar = AvatarImage.valueOf(request.avatarImage());
-
-                updatedPlayer.setAvatarImage(newAvatar);
+                if (newAvatar != updatedPlayer.getAvatarImage()) {
+                    updatedPlayer.setAvatarImage(newAvatar);
+                    profileChanged = true;
+                }
 
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Avatar image '" + request.avatarImage() + "' not supported");
@@ -122,7 +126,17 @@ public class PlayerService {
 
         repo.save(updatedPlayer);
 
-        if (isPlayerInTop3) {
+        if (profileChanged) {
+            log.info("Player {} updated profile, clearing classic and top-3 leaderboard caches", playerId);
+            var classicCache = cacheManager.getCache("classic-leaderboard");
+            if (classicCache != null) {
+                classicCache.clear();
+            }
+            var top3Cache = cacheManager.getCache("top-3-leaderboard");
+            if (top3Cache != null) {
+                top3Cache.clear();
+            }
+        } else if (isPlayerInTop3) {
             log.info("Player {} is in top 3, clearing top-3-leaderboard cache", playerId);
             Objects.requireNonNull(cacheManager.getCache("top-3-leaderboard")).clear();
         }

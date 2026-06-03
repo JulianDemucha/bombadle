@@ -42,6 +42,20 @@ public class CacheService {
         }
     }
 
+    public void clear(String cacheName) {
+        evictCache(cacheName);
+    }
+
+    public void evictCacheEntry(String cacheName, Object key) {
+        if (cacheName == null || cacheName.isBlank()) {
+            return;
+        }
+        var cache = cacheManager.getCache(cacheName);
+        if (cache != null) {
+            cache.evict(key);
+        }
+    }
+
     public void evictAllCaches() {
         cacheManager.getCacheNames().forEach(name -> {
             var cache = cacheManager.getCache(name);

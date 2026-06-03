@@ -4,8 +4,8 @@ import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.service.stats.LeaderboardService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +20,8 @@ public class LeaderboardController {
     private final LeaderboardService leaderboardService;
 
     @GetMapping
-    ResponseEntity<Page<LeaderboardEntryDto>> getLeaderboard(Pageable pageable) {
-        return ResponseEntity.ok(leaderboardService.getPagedLeaderboard(pageable));
+    ResponseEntity<Page<LeaderboardEntryDto>> getLeaderboard(@RequestParam(defaultValue = "0") int page) {
+        return ResponseEntity.ok(leaderboardService.getPagedLeaderboard(page));
     }
 
     @GetMapping("/top3")

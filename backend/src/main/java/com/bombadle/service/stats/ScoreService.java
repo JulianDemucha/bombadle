@@ -56,11 +56,16 @@ public class ScoreService {
                 .numberOfTries(numberOfTries)
                 .build();
 
-        return repo.save(score);
+        Score savedScore = repo.save(score);
+        evictClassicLeaderboardLastPage();
+        return savedScore;
     }
 
     @Transactional
     public Score registerScoreWithTimestamp(Player player, int numberOfTries, Instant timestamp) {
+        Optional<Instant> latestTimestamp = repo.findLatestScoreTimestamp();
+        boolean isHistoricalInsert = latestTimestamp.isPresent() && timestamp.isBefore(latestTimestamp.get());
+
         Score score = Score.builder()
                 .player(player)
                 .scoreTimestamp(timestamp)
@@ -68,10 +73,20 @@ public class ScoreService {
                 .build();
 
         Score savedScore = repo.save(score);
-
+        if (isHistoricalInsert) {
+            cacheService.clear("classic-leaderboard");
+        } else {
+            evictClassicLeaderboardLastPage();
+        }
         evictTop3CacheIfNeeded(timestamp);
 
         return savedScore;
+    }
+
+    private void evictClassicLeaderboardLastPage() {
+        long count = repo.count();
+        int lastPage = count > 0 ? (int) ((count - 1) / 10) : 0;
+        cacheService.evictCacheEntry("classic-leaderboard", lastPage);
     }
 
     private void evictTop3CacheIfNeeded(Instant newTimestamp) {

@@ -6,6 +6,7 @@ import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.Role;
 import com.bombadle.exception.AdminOperationNotAllowedException;
 import com.bombadle.repository.PlayerRepository;
+import com.bombadle.service.cache.CacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 public class AdminUserService {
     private final PlayerRepository playerRepository;
     private final AdminAuditService adminAuditService;
+    private final CacheService cacheService;
 
     public void blockUser(long actorId, long targetId) {
         Player actor = getPlayer(actorId);
@@ -45,6 +47,7 @@ public class AdminUserService {
 
         StringBuilder actionType = new StringBuilder("update_user_").append(targetId);
         boolean changed = false;
+        boolean profileChanged = false;
 
         if (request.login() != null && !request.login().isBlank()) {
             String login = request.login();
@@ -61,6 +64,7 @@ public class AdminUserService {
                 target.setLogin(normalizedLogin);
                 actionType.append("_change_login_to_").append(login);
                 changed = true;
+                profileChanged = true;
             }
         }
 
@@ -70,6 +74,7 @@ public class AdminUserService {
                 target.setAvatarImage(avatar);
                 actionType.append("_change_avatar_to_").append(avatar);
                 changed = true;
+                profileChanged = true;
             }
         }
 
@@ -97,6 +102,10 @@ public class AdminUserService {
         if (changed) {
             playerRepository.save(target);
             adminAuditService.logAction(actorId, actionType.toString(), null);
+            if (profileChanged) {
+                cacheService.clear("classic-leaderboard");
+                cacheService.clear("top-3-leaderboard");
+            }
         }
     }
 

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Instant;
 
 @Repository
 public interface ScoreRepository extends JpaRepository<Score, Long> {
@@ -21,6 +22,9 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
     List<Score> findTop10ByOrderByScoreTimestampAsc();
 
     Optional<Score> findTopByOrderByScoreTimestampDesc();
+
+    @Query("SELECT MAX(s.scoreTimestamp) FROM Score s")
+    Optional<Instant> findLatestScoreTimestamp();
 
     @Query("""
             SELECT new com.bombadle.dto.LeaderboardEntryDto(
