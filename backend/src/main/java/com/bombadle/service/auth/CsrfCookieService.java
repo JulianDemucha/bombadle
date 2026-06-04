@@ -16,7 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CsrfCookieService {
 
-    private final ApplicationConfigProperties properties;
+    private final ApplicationConfigProperties.CsrfConfig csrfConfig;
 
     public void ensureCsrfCookie(HttpServletRequest request, HttpServletResponse response) {
         if (hasXsrfCookie(request)) return;
@@ -24,8 +24,6 @@ public class CsrfCookieService {
     }
 
     private void addCsrfCookie(HttpServletResponse response) {
-        var csrfConfig = properties.csrf();
-
         String token = UUID.randomUUID().toString();
         ResponseCookie cookie = ResponseCookie.from("XSRF-TOKEN", token)
                 .httpOnly(false)

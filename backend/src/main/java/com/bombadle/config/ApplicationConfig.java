@@ -51,6 +51,8 @@ public class ApplicationConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // PROPERTIES CONFIGS
+
     @Bean
     public ApplicationConfigProperties.JwtConfig jwtConfig(ApplicationConfigProperties config) {
         return config.jwt();
@@ -75,6 +77,12 @@ public class ApplicationConfig {
     public ApplicationConfigProperties.CacheConfig cacheConfig(ApplicationConfigProperties config) {
         return config.cache();
     }
+
+    @Bean
+    public ApplicationConfigProperties.CsrfConfig csrfConfig(ApplicationConfigProperties config) {
+        return config.csrf();
+    }
+
 
     @Bean
     public CurrentCharacterCardWrapper currentCharacterCard() {
