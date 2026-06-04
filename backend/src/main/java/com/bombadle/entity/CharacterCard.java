@@ -5,10 +5,7 @@ import com.bombadle.enums.Color;
 import com.bombadle.enums.Gender;
 import com.bombadle.enums.Race;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,6 +15,8 @@ import java.util.Set;
 @Table(name = "character_card")
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class CharacterCard {
 
     @Id
