@@ -1,11 +1,11 @@
 package com.bombadle.exception;
 
-public class CardAlreadyGuessedException extends RuntimeException {
-    public CardAlreadyGuessedException(String message) {
-        super(message);
-    }
-    public CardAlreadyGuessedException() {
-        super("You have already guessed today's card. Please wait until 7pm to play again.");
-    }
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
+@ResponseStatus(HttpStatus.CONFLICT)
+public class CardAlreadyGuessedException extends RuntimeException {
+    public CardAlreadyGuessedException() {
+        super("Card already guessed today");
+    }
 }

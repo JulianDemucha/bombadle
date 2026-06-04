@@ -5,7 +5,9 @@ import com.bombadle.dto.AnonymousGuessResponse;
 import com.bombadle.dto.GuessAttempt;
 import com.bombadle.dto.GuessResponse;
 import com.bombadle.entity.*;
+import com.bombadle.exception.AnonymousSessionAlreadyGuessedException;
 import com.bombadle.exception.CardAlreadyGuessedException;
+import com.bombadle.exception.CharacterCardNotFoundException;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.stats.ScoreService;
@@ -15,8 +17,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
-import java.util.Optional;
 import java.util.UUID;
 
 @Getter
@@ -36,7 +36,7 @@ public class CardMatchingService {
     @CacheEvict(value = "guess-list", key = "#playerId")
     public GuessResponse compareCharacterCardClassic(Long guessCardId, long playerId) {
         Player player = playerService.findById(playerId).orElseThrow();
-        CharacterCard guess = characterCardService.findCharacterCardById(guessCardId).orElseThrow();
+        CharacterCard guess = characterCardService.findCharacterCardById(guessCardId).orElseThrow(() -> new CharacterCardNotFoundException(guessCardId));
 
         return compareCharacterCards(guess, currentCharacterCardWrapper.get(), player);
     }
@@ -49,11 +49,12 @@ public class CardMatchingService {
             session = anonymousSessionService.findById(anonymousSessionId).orElse(null);
 
             if (session != null && session.hasGuessedToday()) {
-                throw new RuntimeException(); //todo custom exception
+                throw new AnonymousSessionAlreadyGuessedException();
             }
         }
 
-        CharacterCard guess = characterCardService.findCharacterCardById(guessCardId).orElseThrow(); //todo custom exception
+        CharacterCard guess = characterCardService.findCharacterCardById(guessCardId)
+                .orElseThrow(() -> new CharacterCardNotFoundException(guessCardId));
 
         GuessAttempt guessAttempt = matchUtils.compareCharacterCardClassic(guess);
 

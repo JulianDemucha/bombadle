@@ -45,6 +45,21 @@ class GlobalExceptionHandlerIntegrationTest {
         public void throwForbidden() {
             throw new AccessDeniedException("Forbidden action");
         }
+
+        @GetMapping("/test/card-already-guessed")
+        public void throwCardAlreadyGuessed() {
+            throw new CardAlreadyGuessedException();
+        }
+
+        @GetMapping("/test/anonymous-session-already-guessed")
+        public void throwAnonymousSessionAlreadyGuessed() {
+            throw new AnonymousSessionAlreadyGuessedException();
+        }
+
+        @GetMapping("/test/character-card-not-found")
+        public void throwCharacterCardNotFound() {
+            throw new CharacterCardNotFoundException(99L);
+        }
     }
 
     @BeforeEach
@@ -59,14 +74,22 @@ class GlobalExceptionHandlerIntegrationTest {
 
         @Test
         void whenUsernameNotFound_returns404AndJson() throws Exception {
-            // Arrange (Setup is handled in @BeforeEach)
-
             // Act & Assert
             mockMvc.perform(get("/test/404"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.statusCode").value(404))
                     .andExpect(jsonPath("$.error").value("User Not Found"))
                     .andExpect(jsonPath("$.message").value("User missing"));
+        }
+
+        @Test
+        void whenCharacterCardNotFound_returns404AndJson() throws Exception {
+            // Act & Assert
+            mockMvc.perform(get("/test/character-card-not-found"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.statusCode").value(404))
+                    .andExpect(jsonPath("$.error").value("Character Card Not Found"))
+                    .andExpect(jsonPath("$.message").value("Character card with id 99 not found"));
         }
 
         @Test
@@ -77,6 +100,26 @@ class GlobalExceptionHandlerIntegrationTest {
                     .andExpect(jsonPath("$.statusCode").value(409))
                     .andExpect(jsonPath("$.error").value("Registration conflict"))
                     .andExpect(jsonPath("$.message").value("Email exists"));
+        }
+
+        @Test
+        void whenCardAlreadyGuessed_returns409AndJson() throws Exception {
+            // Act & Assert
+            mockMvc.perform(get("/test/card-already-guessed"))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.statusCode").value(409))
+                    .andExpect(jsonPath("$.error").value("Card Already Guessed"))
+                    .andExpect(jsonPath("$.message").value("Card already guessed today"));
+        }
+
+        @Test
+        void whenAnonymousSessionAlreadyGuessed_returns409AndJson() throws Exception {
+            // Act & Assert
+            mockMvc.perform(get("/test/anonymous-session-already-guessed"))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.statusCode").value(409))
+                    .andExpect(jsonPath("$.error").value("Anonymous Session Already Guessed"))
+                    .andExpect(jsonPath("$.message").value("This anonymous session has already been used to guess the card"));
         }
 
         @Test

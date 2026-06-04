@@ -49,6 +49,22 @@ class GlobalExceptionHandlerTest {
             assertEquals("Score Not Found", response.getBody().error());
             assertEquals("Score 123 missing", response.getBody().message());
         }
+
+        @Test
+        void handleCharacterCardNotFound_returns404AndCorrectBody() {
+            // Arrange
+            CharacterCardNotFoundException exception = new CharacterCardNotFoundException(99L);
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleCharacterCardNotFound(exception);
+
+            // Assert
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(404, response.getBody().statusCode());
+            assertEquals("Character Card Not Found", response.getBody().error());
+            assertEquals("Character card with id 99 not found", response.getBody().message());
+        }
     }
 
     @Nested
@@ -116,6 +132,38 @@ class GlobalExceptionHandlerTest {
             assertEquals(409, response.getBody().statusCode());
             assertEquals("Admin operation not allowed", response.getBody().error());
             assertEquals("Action blocked", response.getBody().message());
+        }
+
+        @Test
+        void handleCardAlreadyGuessed_returns409AndCorrectBody() {
+            // Arrange
+            CardAlreadyGuessedException exception = new CardAlreadyGuessedException();
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleCardAlreadyGuessed(exception);
+
+            // Assert
+            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(409, response.getBody().statusCode());
+            assertEquals("Card Already Guessed", response.getBody().error());
+            assertEquals("Card already guessed today", response.getBody().message());
+        }
+
+        @Test
+        void handleAnonymousSessionAlreadyGuessed_returns409AndCorrectBody() {
+            // Arrange
+            AnonymousSessionAlreadyGuessedException exception = new AnonymousSessionAlreadyGuessedException();
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleAnonymousSessionAlreadyGuessed(exception);
+
+            // Assert
+            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(409, response.getBody().statusCode());
+            assertEquals("Anonymous Session Already Guessed", response.getBody().error());
+            assertEquals("This anonymous session has already been used to guess the card", response.getBody().message());
         }
     }
 

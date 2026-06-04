@@ -126,4 +126,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorDetails);
     }
 
+    @ExceptionHandler(CardAlreadyGuessedException.class)
+    public ResponseEntity<ErrorResponse> handleCardAlreadyGuessed(CardAlreadyGuessedException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Card Already Guessed",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorDetails);
+    }
+
+    @ExceptionHandler(AnonymousSessionAlreadyGuessedException.class)
+    public ResponseEntity<ErrorResponse> handleAnonymousSessionAlreadyGuessed(AnonymousSessionAlreadyGuessedException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Anonymous Session Already Guessed",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorDetails);
+    }
+
+    @ExceptionHandler(CharacterCardNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCharacterCardNotFound(CharacterCardNotFoundException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Character Card Not Found",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDetails);
+    }
+
 }
