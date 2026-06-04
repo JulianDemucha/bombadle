@@ -15,8 +15,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CharacterCardServiceTest {
@@ -76,5 +75,19 @@ class CharacterCardServiceTest {
             assertEquals(expectedList, result);
             assertEquals(1, result.size());
         }
+    }
+
+    @Test
+    void findRandomCard_called_delegatesToRepository() {
+        // Arrange
+        CharacterCard card = mock(CharacterCard.class);
+        when(repo.findRandomCard()).thenReturn(card);
+
+        // Act
+        CharacterCard result = characterCardService.findRandomCard();
+
+        // Assert
+        assertEquals(card, result);
+        verify(repo).findRandomCard();
     }
 }

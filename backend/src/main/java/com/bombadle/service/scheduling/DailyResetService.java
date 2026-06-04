@@ -1,9 +1,8 @@
 package com.bombadle.service.scheduling;
 
 import com.bombadle.config.CurrentCharacterCardWrapper;
-import com.bombadle.repository.AnonymousSessionRepository;
-import com.bombadle.repository.CharacterCardRepository;
 import com.bombadle.service.game.AnonymousGuessListService;
+import com.bombadle.service.game.CharacterCardService;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.cache.CacheService;
@@ -26,7 +25,7 @@ import java.time.Duration;
 @ConditionalOnProperty(name = "bombadle.daily-reset.enabled", havingValue = "true", matchIfMissing = true)
 public class DailyResetService {
     private static final Logger log = LoggerFactory.getLogger(DailyResetService.class);
-    private final CharacterCardRepository characterCardRepository;
+    private final CharacterCardService characterCardService;
     private final CurrentCharacterCardWrapper currentCharacterCardWrapper;
     private final ScoreService scoreService;
     private final GuessListService guessListService;
@@ -51,7 +50,7 @@ public class DailyResetService {
         playerService.resetAllScores();
         scoreService.deleteAllInBatch();
         log.info("All scores has been deleted");
-        currentCharacterCardWrapper.set(characterCardRepository.findRandomCard());
+        currentCharacterCardWrapper.set(characterCardService.findRandomCard());
         log.info("new Character card has been picked: {}", currentCharacterCardWrapper.get().getName());
         cacheService.reloadCardCompareCache();
         log.info("Card comparison cache have been cleared and reloaded.");

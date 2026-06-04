@@ -27,4 +27,8 @@ public class CharacterCardService {
         return repo.findAllCardsForSearch();
     }
 
+    public CharacterCard findRandomCard() {
+        return repo.findRandomCard();
+    }
+
 }
