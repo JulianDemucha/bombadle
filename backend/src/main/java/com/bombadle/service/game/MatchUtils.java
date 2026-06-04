@@ -148,7 +148,6 @@ public class MatchUtils {
     }
 
     public MatchType checkFirstAppearanceEpisode(Integer firstAppearanceEpisode, Integer targetFirstAppearanceEpisode) {
-        CharacterCard currentCharacterCard = currentCharacterCardWrapper.get();
         return switch (firstAppearanceEpisode) {
             case Integer fae when
                     (fae.equals(targetFirstAppearanceEpisode)) -> MatchType.MATCH;
