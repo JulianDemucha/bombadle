@@ -2,6 +2,7 @@ package com.bombadle.service.auth;
 
 import com.bombadle.config.ApplicationConfigProperties;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -26,18 +27,14 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date(System.currentTimeMillis()));
-    }
-
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String email = extractEmail(token);
-        //getUsername returns email (ApplicationConfig.java : 26)
-        return (email.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        try {
+            final String email = extractEmail(token);
+            //getUsername returns email (ApplicationConfig.java : 26)
+            return email.equals(userDetails.getUsername());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -54,7 +51,7 @@ public class JwtService {
                 .getBody();
     }
 
-    public String generateToken(
+    private String generateToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails
     ) {
