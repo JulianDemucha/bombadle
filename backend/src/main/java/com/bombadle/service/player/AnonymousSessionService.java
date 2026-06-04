@@ -24,7 +24,7 @@ public class AnonymousSessionService {
             anonymousSession = new AnonymousSession(new AnonymousGuessList());
         } else {
             Optional<AnonymousSession> anonymousSessionOpt = repo.findById(anonymousSessionId);
-            anonymousSession = anonymousSessionOpt.orElseGet(AnonymousSession::new);
+            anonymousSession = anonymousSessionOpt.orElseGet(() -> new AnonymousSession(new AnonymousGuessList()));
         }
 
         return AnonymousSessionDto.toDto(
