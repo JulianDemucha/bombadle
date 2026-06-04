@@ -11,6 +11,7 @@ import com.bombadle.repository.PlayerRepository;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.player.PlayerDeletionService;
 import com.bombadle.service.stats.LeaderboardService;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,20 +29,21 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PlayerServiceTest {
-    @Mock
-    PlayerRepository repo;
 
     @Mock
-    PlayerDeletionService playerDeletionService;
+    private PlayerRepository repo;
 
     @Mock
-    LeaderboardService leaderboardService;
+    private PlayerDeletionService playerDeletionService;
 
     @Mock
-    CacheManager cacheManager;
+    private LeaderboardService leaderboardService;
+
+    @Mock
+    private CacheManager cacheManager;
 
     @InjectMocks
-    PlayerService playerService;
+    private PlayerService playerService;
 
     private Player buildPlayer(long id, String email, String login) {
         return Player.builder()
@@ -60,125 +62,134 @@ class PlayerServiceTest {
                 .build();
     }
 
-    @Test
-    void getAuthenticatedPlayer_userExists_returnsDto() {
-        long playerId = 1L;
-        String email = "test@gmail.com";
-        Player player = buildPlayer(playerId, email, "test");
-        PlayerDto dto = PlayerDto.toDto(player);
-        when(repo.findById(playerId)).thenReturn(Optional.of(player));
+    @Nested
+    class GetAuthenticatedPlayerTests {
 
-        PlayerDto returnedDto = playerService.getAuthenticatedPlayer(playerId);
+        @Test
+        void getAuthenticatedPlayer_userExists_returnsDto() {
+            // Arrange
+            long playerId = 1L;
+            String email = "test@gmail.com";
+            Player player = buildPlayer(playerId, email, "test");
+            PlayerDto dto = PlayerDto.toDto(player);
 
-        assertEquals(dto, returnedDto);
+            when(repo.findById(playerId)).thenReturn(Optional.of(player));
 
-        verify(repo).findById(playerId);
+            // Act
+            PlayerDto returnedDto = playerService.getAuthenticatedPlayer(playerId);
+
+            // Assert
+            assertEquals(dto, returnedDto);
+            verify(repo).findById(playerId);
+        }
+
+        @Test
+        void getAuthenticatedPlayer_userDoesNotExist_throwsUsernameNotFoundException() {
+            // Arrange
+            long playerId = 1L;
+            when(repo.findById(playerId)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(UsernameNotFoundException.class, () -> playerService.getAuthenticatedPlayer(playerId));
+            verify(repo).findById(playerId);
+        }
     }
 
-    @Test
-    void getAuthenticatedPlayer_userDoesNotExist_throwsUsernameNotFoundException() {
-        long playerId = 1L;
+    @Nested
+    class UpdatePlayerTests {
 
-        when(repo.findById(playerId)).thenReturn(Optional.empty());
+        @Test
+        void updatePlayer_DataIsValid_savesPlayerAndReturnsDto() {
+            // Arrange
+            long playerId = 1L;
+            String email = "test@test.com";
+            Player existingPlayer = buildPlayer(playerId, email, "test");
 
-        assertThrows(UsernameNotFoundException.class, () -> playerService.getAuthenticatedPlayer(playerId));
-        verify(repo).findById(playerId);
+            PlayerUpdateRequest request = new PlayerUpdateRequest("TestTest", "AVATAR_DEFAULT");
+
+            when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
+            when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
+            when(repo.existsByLogin("testtest")).thenReturn(false);
+
+            // Act
+            PlayerDto returnedDto = playerService.updatePlayer(request, playerId);
+
+            // Assert
+            PlayerDto expectedDto = PlayerDto.toDto(existingPlayer);
+            assertEquals(expectedDto, returnedDto);
+            assertEquals("testtest", existingPlayer.getLogin());
+            assertEquals("TestTest", existingPlayer.getDisplayName());
+            assertEquals(AvatarImage.AVATAR_DEFAULT, existingPlayer.getAvatarImage());
+
+            verify(repo).findById(playerId);
+            verify(repo).save(existingPlayer);
+        }
+
+        @Test
+        void updatePlayer_userDoesNotExist_throwsUsernameNotFoundException() {
+            // Arrange
+            long playerId = 1L;
+            PlayerUpdateRequest request = new PlayerUpdateRequest("testtest", "AVATAR_DEFAULT");
+            when(repo.findById(playerId)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(UsernameNotFoundException.class, () -> playerService.updatePlayer(request, playerId));
+            verify(repo).findById(playerId);
+        }
+
+        @Test
+        void updatePlayer_loginLengthIsInvalid_throwsIllegalArgumentException() {
+            // Arrange
+            long playerId = 1L;
+            String email = "test@test.com";
+            Player existingPlayer = buildPlayer(playerId, email, "test");
+
+            PlayerUpdateRequest requestTooShort = new PlayerUpdateRequest("te", "AVATAR_DEFAULT");
+            PlayerUpdateRequest requestTooLong = new PlayerUpdateRequest("testtesttesttestt", "AVATAR_DEFAULT");
+
+            when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
+            when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
+
+            // Act & Assert
+            assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(requestTooShort, playerId));
+            assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(requestTooLong, playerId));
+
+            verify(repo, times(2)).findById(playerId);
+        }
+
+        @Test
+        void updatePlayer_loginIsAlreadyTaken_throwsUsernameAlreadyTakenException() {
+            // Arrange
+            long playerId = 1L;
+            String email = "test@test.com";
+            Player existingPlayer = buildPlayer(playerId, email, "test");
+
+            PlayerUpdateRequest request = new PlayerUpdateRequest("Test1", "AVATAR_DEFAULT");
+
+            when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
+            when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
+            when(repo.existsByLogin("test1")).thenReturn(true);
+
+            // Act & Assert
+            assertThrows(UsernameAlreadyTakenException.class, () -> playerService.updatePlayer(request, playerId));
+            verify(repo).findById(playerId);
+        }
+
+        @Test
+        void updatePlayer_imageIsInvalid_throwsIllegalArgumentException() {
+            // Arrange
+            long playerId = 1L;
+            String email = "test@test.com";
+            Player existingPlayer = buildPlayer(playerId, email, "test");
+
+            PlayerUpdateRequest request = new PlayerUpdateRequest("test", "pararara ramapampampam");
+
+            when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
+            when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
+
+            // Act & Assert
+            assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request, playerId));
+            verify(repo).findById(playerId);
+        }
     }
-
-    @Test
-    void updatePlayer_DataIsValid_savesPlayerAndReturnsDto() {
-        long playerId = 1L;
-        String email = "test@test.com";
-        Player existingPlayer = buildPlayer(playerId, email, "test");
-
-        PlayerUpdateRequest request = new PlayerUpdateRequest("TestTest", "AVATAR_DEFAULT");
-
-        when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
-        when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
-        when(repo.existsByLogin("testtest")).thenReturn(false);
-
-        PlayerDto returnedDto = playerService.updatePlayer(request, playerId);
-        PlayerDto expectedDto = PlayerDto.toDto(existingPlayer);
-
-        assertEquals(expectedDto, returnedDto);
-        assertEquals("testtest", existingPlayer.getLogin());
-        assertEquals("TestTest", existingPlayer.getDisplayName());
-        assertEquals(AvatarImage.AVATAR_DEFAULT, existingPlayer.getAvatarImage());
-
-        verify(repo).findById(playerId);
-        verify(repo).save(existingPlayer);
-    }
-
-    @Test
-    void updatePlayer_userDoesNotExist_throwsUsernameNotFoundException() {
-        long playerId = 1L;
-        PlayerUpdateRequest request = new PlayerUpdateRequest("testtest", "AVATAR_DEFAULT");
-
-        when(repo.findById(playerId)).thenReturn(Optional.empty());
-
-        assertThrows(UsernameNotFoundException.class, () -> playerService.updatePlayer(request, playerId));
-        verify(repo).findById(playerId);
-    }
-
-    @Test
-    void updatePlayer_loginLengthIsInvalid_throwsUsernameNotFoundException() {
-        long playerId = 1L;
-        String email = "test@test.com";
-        Player existingPlayer = buildPlayer(playerId, email, "test");
-
-        PlayerUpdateRequest request = new PlayerUpdateRequest
-                ("te", "AVATAR_DEFAULT"); // login length = 2 <3
-
-        PlayerUpdateRequest request2 = new PlayerUpdateRequest
-                ("testtesttesttestt", "AVATAR_DEFAULT"); // login length = 17 >16
-
-
-        when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
-        when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
-
-
-        assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request, playerId));
-        assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request2, playerId));
-
-        verify(repo, times(2)).findById(playerId);
-    }
-
-    @Test
-    void updatePlayer_loginIsAlreadyTaken_throwsUsernameAlreadyTakenException() {
-        long playerId = 1L;
-        String email = "test@test.com";
-        Player existingPlayer = buildPlayer(playerId, email, "test");
-
-        PlayerUpdateRequest request = new PlayerUpdateRequest
-                ("Test1", "AVATAR_DEFAULT"); // not the same as in existingPlayer
-
-        when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
-        when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
-        when(repo.existsByLogin("test1")).thenReturn(true);
-
-        assertThrows(UsernameAlreadyTakenException.class, () -> playerService.updatePlayer(request, playerId));
-
-        verify(repo).findById(playerId);
-
-    }
-
-    @Test
-    void updatePlayer_imageIsInvalid_throwsIllegalArgumentException() {
-        long playerId = 1L;
-        String email = "test@test.com";
-        Player existingPlayer = buildPlayer(playerId, email, "test");
-
-        PlayerUpdateRequest request = new PlayerUpdateRequest
-                ("test", "pararara ramapampampam"); // not a valid avatar
-
-        when(repo.findById(playerId)).thenReturn(Optional.of(existingPlayer));
-        when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of());
-
-        assertThrows(IllegalArgumentException.class, () -> playerService.updatePlayer(request, playerId));
-
-        verify(repo).findById(playerId);
-
-    }
-
-
 }

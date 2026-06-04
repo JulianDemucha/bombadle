@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,10 +23,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
-
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -33,7 +32,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class JwtAuthenticationFilterTest {
-
 
     @InjectMocks
     private JwtAuthenticationFilter filter;
@@ -75,90 +73,115 @@ public class JwtAuthenticationFilterTest {
         SecurityContextHolder.clearContext();
     }
 
-    @Test
-    void doFilterInternal_unauthenticatedUserWithoutJwtCookie_continuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        when(request.getCookies()).thenReturn(null);
-        filter.doFilterInternal(request, response, filterChain);
-        verifyNoInteractions(jwtService);
-        verify(filterChain).doFilter(request, response);
+    @Nested
+    class AuthenticatedContextTests {
+
+        @Test
+        void doFilterInternal_authenticatedUser_continuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Assert
+            verifyNoInteractions(jwtService);
+            verify(filterChain).doFilter(request, response);
+        }
     }
 
-    @Test
-    void doFilterInternal_authenticatedUser_continuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
+    @Nested
+    class UnauthenticatedContextTests {
 
-        filter.doFilterInternal(request, response, filterChain);
+        @Test
+        void doFilterInternal_unauthenticatedUserWithoutJwtCookie_continuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(null);
+            when(request.getCookies()).thenReturn(null);
 
-        verifyNoInteractions(jwtService);
-        verify(filterChain).doFilter(request, response);
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Assert
+            verifyNoInteractions(jwtService);
+            verify(filterChain).doFilter(request, response);
+        }
+
+        @Test
+        void doFilterInternal_unauthenticatedUserWithValidJwtCookie_authenticatesUserAndContinuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(null);
+            when(request.getCookies()).thenReturn(cookies);
+            when(jwtService.extractEmail(dummyJwt.getValue())).thenReturn(dummyEmail);
+            when(userDetailsService.loadUserByUsername(dummyEmail)).thenReturn(playerPrincipal);
+            when(jwtService.isTokenValid(dummyJwt.getValue(), playerPrincipal)).thenReturn(true);
+
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Assert
+            ArgumentCaptor<UsernamePasswordAuthenticationToken> captor =
+                    ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
+            verify(securityContext).setAuthentication(captor.capture());
+
+            UsernamePasswordAuthenticationToken capturedAuth = captor.getValue();
+            assertEquals(playerPrincipal, capturedAuth.getPrincipal());
+            assertNull(capturedAuth.getCredentials());
+
+            verify(filterChain).doFilter(request, response);
+        }
+
+        @Test
+        void doFilterInternal_unauthenticatedUserWithInvalidJwtCookie_continuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(null);
+            when(request.getCookies()).thenReturn(cookies);
+            when(jwtService.extractEmail(dummyJwt.getValue())).thenReturn(dummyEmail);
+            when(userDetailsService.loadUserByUsername(dummyEmail)).thenReturn(playerPrincipal);
+            when(jwtService.isTokenValid(dummyJwt.getValue(), playerPrincipal)).thenReturn(false);
+
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Assert
+            verify(securityContext, never()).setAuthentication(any());
+            verify(filterChain).doFilter(request, response);
+        }
     }
 
-    @Test
-    void doFilterInternal_unauthenticatedUserWithValidJwtCookie_authenticatesUserAndContinuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        when(request.getCookies()).thenReturn(cookies);
-        when(jwtService.extractEmail(dummyJwt.getValue())).thenReturn(dummyEmail);
-        when(userDetailsService.loadUserByUsername(dummyEmail)).thenReturn(playerPrincipal);
-        when(jwtService.isTokenValid(dummyJwt.getValue(), playerPrincipal)).thenReturn(true);
+    @Nested
+    class JwtExceptionsAndNullsTests {
 
-        filter.doFilterInternal(request, response, filterChain);
+        @Test
+        void doFilterInternal_jwtServiceReturnsNullEmail_continuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(null);
+            when(request.getCookies()).thenReturn(cookies);
+            when(jwtService.extractEmail(dummyJwt.getValue())).thenReturn(null);
 
-        ArgumentCaptor<UsernamePasswordAuthenticationToken> captor =
-                ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
 
-        verify(securityContext).setAuthentication(captor.capture());
+            // Assert
+            verify(securityContext, never()).setAuthentication(any());
+            verify(filterChain).doFilter(request, response);
+        }
 
-        UsernamePasswordAuthenticationToken capturedAuth = captor.getValue();
+        @Test
+        void doFilterInternal_JwtThrowsException_CatchesExceptionAndContinuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(null);
+            when(request.getCookies()).thenReturn(cookies);
+            when(jwtService.extractEmail(dummyJwt.getValue())).thenThrow(
+                    new ExpiredJwtException(null, null, "Wygasł")
+            );
 
-        assertEquals(playerPrincipal, capturedAuth.getPrincipal());
-        assertNull(capturedAuth.getCredentials());
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
 
-        verify(filterChain).doFilter(request, response);
+            // Assert
+            verify(securityContext, never()).setAuthentication(any());
+            verify(filterChain).doFilter(request, response);
+        }
     }
-
-    @Test
-    void doFilterInternal_unauthenticatedUserWithInvalidJwtCookie_continuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        when(request.getCookies()).thenReturn(cookies);
-        when(jwtService.extractEmail(dummyJwt.getValue())).thenReturn(dummyEmail);
-        when(userDetailsService.loadUserByUsername(dummyEmail)).thenReturn(playerPrincipal);
-        when(jwtService.isTokenValid(dummyJwt.getValue(), playerPrincipal)).thenReturn(false); //!!
-
-        filter.doFilterInternal(request, response, filterChain);
-
-
-        verify(securityContext, never()).setAuthentication(any());
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    void doFilterInternal_jwtServiceReturnsNullEmail_continuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        when(request.getCookies()).thenReturn(cookies);
-        when(jwtService.extractEmail(dummyJwt.getValue())).thenReturn(null);
-
-        filter.doFilterInternal(request, response, filterChain);
-
-
-        verify(securityContext, never()).setAuthentication(any());
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    void doFilterInternal_JwtThrowsException_CatchesExceptionAndContinuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        when(request.getCookies()).thenReturn(cookies);
-
-        when(jwtService.extractEmail(dummyJwt.getValue())).thenThrow(
-                new ExpiredJwtException(null, null, "Wygasł")
-        );
-
-        filter.doFilterInternal(request, response, filterChain);
-
-        // Weryfikacja
-        verify(securityContext, never()).setAuthentication(any());
-        verify(filterChain).doFilter(request, response);
-    }
-
 }

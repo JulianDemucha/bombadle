@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
@@ -56,11 +57,8 @@ public class ActivityTrackingFilterTest {
     private HttpServletResponse response;
 
     private final UUID anonymousSessionId = UUID.randomUUID();
-
     private final Cookie anonymousCookie = new Cookie("ANON_SESSION_ID", anonymousSessionId.toString());
-
     private final Cookie[] cookies = new Cookie[]{anonymousCookie};
-
     private final Cookie invalidAnonymousCookie = new Cookie("ANON_SESSION_ID", "costam");
 
     @BeforeEach
@@ -75,81 +73,104 @@ public class ActivityTrackingFilterTest {
         SecurityContextHolder.clearContext();
     }
 
-    @Test
-    void doFilterInternal_authenticatedUser_marksPlayerActiveAndContinuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(playerPrincipal);
-        when(playerPrincipal.getPlayerId()).thenReturn(1L);
+    @Nested
+    class AuthenticatedUserTests {
 
-        filter.doFilterInternal(request, response, filterChain);
+        @Test
+        void doFilterInternal_authenticatedUser_marksPlayerActiveAndContinuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.isAuthenticated()).thenReturn(true);
+            when(authentication.getPrincipal()).thenReturn(playerPrincipal);
+            when(playerPrincipal.getPlayerId()).thenReturn(1L);
 
-        verify(activityTrackingService).markPlayerActive(1L);
-        verify(filterChain).doFilter(request, response);
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Assert
+            verify(activityTrackingService).markPlayerActive(1L);
+            verify(filterChain).doFilter(request, response);
+        }
+
+        @Test
+        void doFilterInternal_oAuth2AuthenticatedUser_marksPlayerAsActiveAndContinuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.isAuthenticated()).thenReturn(true);
+            when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
+            when(customOAuth2PlayerUser.getPlayer().getId()).thenReturn(1L);
+
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Assert
+            verify(activityTrackingService).markPlayerActive(customOAuth2PlayerUser.getPlayer().getId());
+            verify(filterChain).doFilter(request, response);
+        }
     }
 
+    @Nested
+    class AnonymousAndUnauthenticatedTests {
 
-    @Test
-    void doFilterInternal_oAuth2AuthenticatedUser_marksPlayerAsActiveAndContinuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
-        when(customOAuth2PlayerUser.getPlayer().getId()).thenReturn(1L);
+        @Test
+        void doFilterInternal_authenticatedUserAsSpringAnonymousUserWithAnonymousCookie_marksAnonymousAsActiveAndContinuesChain() throws ServletException, IOException {
+            // Arrange
+            AnonymousAuthenticationToken anonymousAuth = new AnonymousAuthenticationToken(
+                    "some-key",
+                    "anonymousUser",
+                    AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")
+            );
+            when(securityContext.getAuthentication()).thenReturn(anonymousAuth);
+            when(request.getCookies()).thenReturn(cookies);
 
-        filter.doFilterInternal(request, response, filterChain);
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
 
-        verify(activityTrackingService).markPlayerActive(customOAuth2PlayerUser.getPlayer().getId());
-        verify(filterChain).doFilter(request, response);
+            // Assert
+            verify(activityTrackingService).markAnonymousActive(anonymousSessionId);
+            verify(filterChain).doFilter(request, response);
+        }
+
+        @Test
+        void doFilterInternal_unauthenticatedUserWithValidAnonymousCookie_marksAnonymousActiveAndContinuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(null);
+            when(request.getCookies()).thenReturn(cookies);
+
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Assert
+            verify(activityTrackingService).markAnonymousActive(anonymousSessionId);
+            verify(filterChain).doFilter(request, response);
+        }
+
+        @Test
+        void doFilterInternal_unauthenticatedUserWithOutAnonymousCookie_continuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(null);
+            when(request.getCookies()).thenReturn(new Cookie[]{});
+
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Assert
+            verifyNoInteractions(activityTrackingService);
+            verify(filterChain).doFilter(request, response);
+        }
+
+        @Test
+        void doFilterInternal_unauthenticatedUserWithInvalidAnonymousCookie_continuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(null);
+            when(request.getCookies()).thenReturn(new Cookie[]{invalidAnonymousCookie});
+
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Assert
+            verifyNoInteractions(activityTrackingService);
+            verify(filterChain).doFilter(request, response);
+        }
     }
-
-    @Test
-    void doFilterInternal_authenticatedUserAsSpringAnonymousUserWithAnonymousCookie_marksAnonymousAsActiveAndContinuesChain() throws ServletException, IOException {
-        AnonymousAuthenticationToken anonymousAuth = new AnonymousAuthenticationToken(
-                "some-key",
-                "anonymousUser",
-                AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")
-        );
-        when(securityContext.getAuthentication()).thenReturn(anonymousAuth);
-        when(request.getCookies()).thenReturn(cookies);
-
-        filter.doFilterInternal(request, response, filterChain);
-
-        verify(activityTrackingService).markAnonymousActive(anonymousSessionId);
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    void doFilterInternal_unauthenticatedUserWithValidAnonymousCookie_marksAnonymousActiveAndContinuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        when(request.getCookies()).thenReturn(cookies);
-
-        filter.doFilterInternal(request, response, filterChain);
-
-        verify(activityTrackingService).markAnonymousActive(anonymousSessionId);
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    void doFilterInternal_unauthenticatedUserWithOutAnonymousCookie_continuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        when(request.getCookies()).thenReturn(new Cookie[]{});
-
-        filter.doFilterInternal(request, response, filterChain);
-
-        verifyNoInteractions(activityTrackingService);
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    void doFilterInternal_unauthenticatedUserWithInvalidAnonymousCookie_continuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        when(request.getCookies()).thenReturn(new Cookie[]{invalidAnonymousCookie});
-        filter.doFilterInternal(request, response, filterChain);
-
-        verifyNoInteractions(activityTrackingService);
-        verify(filterChain).doFilter(request, response);
-    }
-
-
-
 }

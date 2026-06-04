@@ -1,5 +1,6 @@
 package com.bombadle.exception;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,123 +15,179 @@ class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
-    @Test
-    void handleUsernameNotFound_returns404AndCorrectBody() {
-        UsernameNotFoundException exception = new UsernameNotFoundException("User missing");
-        ResponseEntity<ErrorResponse> response = handler.handleUsernameNotFound(exception);
+    @Nested
+    class NotFoundExceptions {
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(404, response.getBody().statusCode());
-        assertEquals("User Not Found", response.getBody().error());
-        assertEquals("User missing", response.getBody().message());
+        @Test
+        void handleUsernameNotFound_returns404AndCorrectBody() {
+            // Arrange
+            UsernameNotFoundException exception = new UsernameNotFoundException("User missing");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleUsernameNotFound(exception);
+
+            // Assert
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(404, response.getBody().statusCode());
+            assertEquals("User Not Found", response.getBody().error());
+            assertEquals("User missing", response.getBody().message());
+        }
+
+        @Test
+        void handleScoreNotFound_returns404AndCorrectBody() {
+            // Arrange
+            ScoreNotFoundException exception = new ScoreNotFoundException("Score 123 missing");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleScoreNotFound(exception);
+
+            // Assert
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(404, response.getBody().statusCode());
+            assertEquals("Score Not Found", response.getBody().error());
+            assertEquals("Score 123 missing", response.getBody().message());
+        }
     }
 
-    @Test
-    void handleGlobalException_returns500AndCorrectBody() {
-        Exception exception = new Exception("Database timeout");
-        ResponseEntity<ErrorResponse> response = handler.handleGlobalException(exception);
+    @Nested
+    class ConflictExceptions {
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(500, response.getBody().statusCode());
-        assertEquals("Internal Server Error", response.getBody().error());
-        assertEquals("Unexpected errorDatabase timeout", response.getBody().message());
+        @Test
+        void handleUsernameAlreadyTaken_returns409AndCorrectBody() {
+            // Arrange
+            UsernameAlreadyTakenException exception = new UsernameAlreadyTakenException("Name taken");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleUsernameAlreadyTaken(exception);
+
+            // Assert
+            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(409, response.getBody().statusCode());
+            assertEquals("Username already exists in the database", response.getBody().error());
+            assertEquals("Name taken", response.getBody().message());
+        }
+
+        @Test
+        void handleRegistrationConflict_returns409AndCorrectBody() {
+            // Arrange
+            RegistrationConflictException exception = new RegistrationConflictException("Email exists");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleRegistrationConflict(exception);
+
+            // Assert
+            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(409, response.getBody().statusCode());
+            assertEquals("Registration conflict", response.getBody().error());
+            assertEquals("Email exists", response.getBody().message());
+        }
+
+        @Test
+        void handleRegistrationValidation_returns409AndCorrectBody() {
+            // Arrange
+            RegistrationValidationException exception = new RegistrationValidationException("Password too short");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleRegistrationValidation(exception);
+
+            // Assert
+            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(409, response.getBody().statusCode());
+            assertEquals("Registration validation failed", response.getBody().error());
+            assertEquals("Password too short", response.getBody().message());
+        }
+
+        @Test
+        void handleAdminOperationNotAllowed_returns409AndCorrectBody() {
+            // Arrange
+            AdminOperationNotAllowedException exception = new AdminOperationNotAllowedException("Action blocked");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleAdminOperationNotAllowed(exception);
+
+            // Assert
+            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(409, response.getBody().statusCode());
+            assertEquals("Admin operation not allowed", response.getBody().error());
+            assertEquals("Action blocked", response.getBody().message());
+        }
     }
 
-    @Test
-    void handleUsernameAlreadyTaken_returns409AndCorrectBody() {
-        UsernameAlreadyTakenException exception = new UsernameAlreadyTakenException("Name taken");
-        ResponseEntity<ErrorResponse> response = handler.handleUsernameAlreadyTaken(exception);
+    @Nested
+    class SecurityExceptions {
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(409, response.getBody().statusCode());
-        assertEquals("Username already exists in the database", response.getBody().error());
-        assertEquals("Name taken", response.getBody().message());
+        @Test
+        void handleAuthenticationMissing_returns401AndCorrectBody() {
+            // Arrange
+            AuthenticationCredentialsNotFoundException exception = new AuthenticationCredentialsNotFoundException("No token");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleAuthenticationMissing(exception);
+
+            // Assert
+            assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(401, response.getBody().statusCode());
+            assertEquals("Unauthorized", response.getBody().error());
+            assertEquals("No token", response.getBody().message());
+        }
+
+        @Test
+        void handleInvalidCredentials_returns401AndCorrectBody() {
+            // Arrange
+            InvalidCredentialsException exception = new InvalidCredentialsException("Wrong password");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleInvalidCredentials(exception);
+
+            // Assert
+            assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(401, response.getBody().statusCode());
+            assertEquals("Unauthorized", response.getBody().error());
+            assertEquals("Wrong password", response.getBody().message());
+        }
+
+        @Test
+        void handleAccessDenied_returns403AndCorrectBody() {
+            // Arrange
+            AccessDeniedException exception = new AccessDeniedException("Forbidden action");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleAccessDenied(exception);
+
+            // Assert
+            assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(403, response.getBody().statusCode());
+            assertEquals("Forbidden", response.getBody().error());
+            assertEquals("Forbidden action", response.getBody().message());
+        }
     }
 
-    @Test
-    void handleAuthenticationMissing_returns401AndCorrectBody() {
-        AuthenticationCredentialsNotFoundException exception = new AuthenticationCredentialsNotFoundException("No token");
-        ResponseEntity<ErrorResponse> response = handler.handleAuthenticationMissing(exception);
+    @Nested
+    class ServerExceptions {
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(401, response.getBody().statusCode());
-        assertEquals("Unauthorized", response.getBody().error());
-        assertEquals("No token", response.getBody().message());
-    }
+        @Test
+        void handleGlobalException_returns500AndCorrectBody() {
+            // Arrange
+            Exception exception = new Exception("Database timeout");
 
-    @Test
-    void handleScoreNotFound_returns404AndCorrectBody() {
-        ScoreNotFoundException exception = new ScoreNotFoundException("Score 123 missing");
-        ResponseEntity<ErrorResponse> response = handler.handleScoreNotFound(exception);
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleGlobalException(exception);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(404, response.getBody().statusCode());
-        assertEquals("Score Not Found", response.getBody().error());
-        assertEquals("Score 123 missing", response.getBody().message());
-    }
-
-    @Test
-    void handleInvalidCredentials_returns401AndCorrectBody() {
-        InvalidCredentialsException exception = new InvalidCredentialsException("Wrong password");
-        ResponseEntity<ErrorResponse> response = handler.handleInvalidCredentials(exception);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(401, response.getBody().statusCode());
-        assertEquals("Unauthorized", response.getBody().error());
-        assertEquals("Wrong password", response.getBody().message());
-    }
-
-    @Test
-    void handleRegistrationConflict_returns409AndCorrectBody() {
-        RegistrationConflictException exception = new RegistrationConflictException("Email exists");
-        ResponseEntity<ErrorResponse> response = handler.handleRegistrationConflict(exception);
-
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(409, response.getBody().statusCode());
-        assertEquals("Registration conflict", response.getBody().error());
-        assertEquals("Email exists", response.getBody().message());
-    }
-
-    @Test
-    void handleRegistrationValidation_returns409AndCorrectBody() {
-        RegistrationValidationException exception = new RegistrationValidationException("Password too short");
-        ResponseEntity<ErrorResponse> response = handler.handleRegistrationValidation(exception);
-
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(409, response.getBody().statusCode());
-        assertEquals("Registration validation failed", response.getBody().error());
-        assertEquals("Password too short", response.getBody().message());
-    }
-
-    @Test
-    void handleAdminOperationNotAllowed_returns409AndCorrectBody() {
-        AdminOperationNotAllowedException exception = new AdminOperationNotAllowedException("Action blocked");
-        ResponseEntity<ErrorResponse> response = handler.handleAdminOperationNotAllowed(exception);
-
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(409, response.getBody().statusCode());
-        assertEquals("Admin operation not allowed", response.getBody().error());
-        assertEquals("Action blocked", response.getBody().message());
-    }
-
-    @Test
-    void handleAccessDenied_returns403AndCorrectBody() {
-        AccessDeniedException exception = new AccessDeniedException("Forbidden action");
-        ResponseEntity<ErrorResponse> response = handler.handleAccessDenied(exception);
-
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(403, response.getBody().statusCode());
-        assertEquals("Forbidden", response.getBody().error());
-        assertEquals("Forbidden action", response.getBody().message());
+            // Assert
+            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(500, response.getBody().statusCode());
+            assertEquals("Internal Server Error", response.getBody().error());
+            assertEquals("Unexpected errorDatabase timeout", response.getBody().message());
+        }
     }
 }

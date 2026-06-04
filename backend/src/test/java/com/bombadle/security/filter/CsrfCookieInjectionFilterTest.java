@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,12 +34,17 @@ class CsrfCookieInjectionFilterTest {
     @InjectMocks
     private CsrfCookieInjectionFilter filter;
 
-    @Test
-    void doFilterInternal_invokesCsrfServiceAndContinuesChain() throws ServletException, IOException {
-        filter.doFilterInternal(request, response, filterChain);
+    @Nested
+    class DoFilterInternalTests {
 
-        verify(csrfCookieService).ensureCsrfCookie(request, response);
+        @Test
+        void doFilterInternal_invokesCsrfServiceAndContinuesChain() throws ServletException, IOException {
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
 
-        verify(filterChain).doFilter(request, response);
+            // Assert
+            verify(csrfCookieService).ensureCsrfCookie(request, response);
+            verify(filterChain).doFilter(request, response);
+        }
     }
 }

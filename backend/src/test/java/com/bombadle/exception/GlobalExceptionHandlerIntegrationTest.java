@@ -1,6 +1,7 @@
 package com.bombadle.exception;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -53,48 +54,63 @@ class GlobalExceptionHandlerIntegrationTest {
                 .build();
     }
 
-    @Test
-    void whenUsernameNotFound_returns404AndJson() throws Exception {
-        mockMvc.perform(get("/test/404"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.statusCode").value(404))
-                .andExpect(jsonPath("$.error").value("User Not Found"))
-                .andExpect(jsonPath("$.message").value("User missing"));
+    @Nested
+    class ClientErrorTests {
+
+        @Test
+        void whenUsernameNotFound_returns404AndJson() throws Exception {
+            // Arrange (Setup is handled in @BeforeEach)
+
+            // Act & Assert
+            mockMvc.perform(get("/test/404"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.statusCode").value(404))
+                    .andExpect(jsonPath("$.error").value("User Not Found"))
+                    .andExpect(jsonPath("$.message").value("User missing"));
+        }
+
+        @Test
+        void whenRegistrationConflict_returns409AndJson() throws Exception {
+            // Act & Assert
+            mockMvc.perform(get("/test/409"))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.statusCode").value(409))
+                    .andExpect(jsonPath("$.error").value("Registration conflict"))
+                    .andExpect(jsonPath("$.message").value("Email exists"));
+        }
+
+        @Test
+        void whenInvalidCredentials_returns401AndJson() throws Exception {
+            // Act & Assert
+            mockMvc.perform(get("/test/401"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.statusCode").value(401))
+                    .andExpect(jsonPath("$.error").value("Unauthorized"))
+                    .andExpect(jsonPath("$.message").value("Wrong password"));
+        }
+
+        @Test
+        void whenAccessDenied_returns403AndJson() throws Exception {
+            // Act & Assert
+            mockMvc.perform(get("/test/403"))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.statusCode").value(403))
+                    .andExpect(jsonPath("$.error").value("Forbidden"))
+                    .andExpect(jsonPath("$.message").value("Forbidden action"));
+        }
     }
 
-    @Test
-    void whenGlobalException_returns500AndJson() throws Exception {
-        mockMvc.perform(get("/test/500"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.statusCode").value(500))
-                .andExpect(jsonPath("$.error").value("Internal Server Error"))
-                .andExpect(jsonPath("$.message").value("Unexpected errorDatabase timeout"));
-    }
+    @Nested
+    class ServerErrorTests {
 
-    @Test
-    void whenRegistrationConflict_returns409AndJson() throws Exception {
-        mockMvc.perform(get("/test/409"))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.statusCode").value(409))
-                .andExpect(jsonPath("$.error").value("Registration conflict"))
-                .andExpect(jsonPath("$.message").value("Email exists"));
-    }
-
-    @Test
-    void whenInvalidCredentials_returns401AndJson() throws Exception {
-        mockMvc.perform(get("/test/401"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.statusCode").value(401))
-                .andExpect(jsonPath("$.error").value("Unauthorized"))
-                .andExpect(jsonPath("$.message").value("Wrong password"));
-    }
-
-    @Test
-    void whenAccessDenied_returns403AndJson() throws Exception {
-        mockMvc.perform(get("/test/403"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.statusCode").value(403))
-                .andExpect(jsonPath("$.error").value("Forbidden"))
-                .andExpect(jsonPath("$.message").value("Forbidden action"));
+        @Test
+        void whenGlobalException_returns500AndJson() throws Exception {
+            // Act & Assert
+            mockMvc.perform(get("/test/500"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.statusCode").value(500))
+                    .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                    .andExpect(jsonPath("$.message").value("Unexpected errorDatabase timeout"));
+        }
     }
 }

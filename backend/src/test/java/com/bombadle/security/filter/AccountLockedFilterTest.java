@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -59,90 +60,125 @@ class AccountLockedFilterTest {
         SecurityContextHolder.clearContext();
     }
 
-    @Test
-    void shouldNotFilter_authPath_returnsTrue() {
-        request.setRequestURI("/api/auth/login");
-        assertTrue(filter.shouldNotFilter(request));
+    @Nested
+    class ShouldNotFilterTests {
+
+        @Test
+        void shouldNotFilter_authPath_returnsTrue() {
+            // Arrange
+            request.setRequestURI("/api/auth/login");
+
+            // Act & Assert
+            assertTrue(filter.shouldNotFilter(request));
+        }
+
+        @Test
+        void shouldNotFilter_playersMeGet_returnsTrue() {
+            // Arrange
+            request.setRequestURI("/api/players/me");
+            request.setMethod("GET");
+
+            // Act & Assert
+            assertTrue(filter.shouldNotFilter(request));
+        }
+
+        @Test
+        void shouldNotFilter_playersMePost_returnsFalse() {
+            // Arrange
+            request.setRequestURI("/api/players/me");
+            request.setMethod("POST");
+
+            // Act & Assert
+            assertFalse(filter.shouldNotFilter(request));
+        }
+
+        @Test
+        void shouldNotFilter_leaderboardPath_returnsTrue() {
+            // Arrange
+            request.setRequestURI("/api/leaderboard/top10");
+
+            // Act & Assert
+            assertTrue(filter.shouldNotFilter(request));
+        }
     }
 
-    @Test
-    void shouldNotFilter_playersMeGet_returnsTrue() {
-        request.setRequestURI("/api/players/me");
-        request.setMethod("GET");
-        assertTrue(filter.shouldNotFilter(request));
-    }
+    @Nested
+    class DoFilterInternalTests {
 
-    @Test
-    void shouldNotFilter_playersMePost_returnsFalse() {
-        request.setRequestURI("/api/players/me");
-        request.setMethod("POST");
-        assertFalse(filter.shouldNotFilter(request));
-    }
+        @Test
+        void doFilterInternal_notAuthenticated_continuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(null);
 
-    @Test
-    void shouldNotFilter_leaderboardPath_returnsTrue() {
-        request.setRequestURI("/api/leaderboard/top10");
-        assertTrue(filter.shouldNotFilter(request));
-    }
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
 
-    @Test
-    void doFilterInternal_notAuthenticated_continuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
+            // Assert
+            verify(filterChain).doFilter(request, response);
+        }
 
-        filter.doFilterInternal(request, response, filterChain);
+        @Test
+        void doFilterInternal_authenticatedButNotLockedPrincipal_continuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.isAuthenticated()).thenReturn(true);
+            when(authentication.getPrincipal()).thenReturn(playerPrincipal);
+            when(playerPrincipal.isAccountLocked()).thenReturn(false);
 
-        verify(filterChain).doFilter(request, response);
-    }
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
 
-    @Test
-    void doFilterInternal_authenticatedButNotLockedPrincipal_continuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(playerPrincipal);
-        when(playerPrincipal.isAccountLocked()).thenReturn(false);
+            // Assert
+            verify(filterChain).doFilter(request, response);
+        }
 
-        filter.doFilterInternal(request, response, filterChain);
+        @Test
+        void doFilterInternal_authenticatedAndLockedPrincipal_returns423() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.isAuthenticated()).thenReturn(true);
+            when(authentication.getPrincipal()).thenReturn(playerPrincipal);
+            when(playerPrincipal.isAccountLocked()).thenReturn(true);
 
-        verify(filterChain).doFilter(request, response);
-    }
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
 
-    @Test
-    void doFilterInternal_authenticatedAndLockedPrincipal_returns423() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(playerPrincipal);
-        when(playerPrincipal.isAccountLocked()).thenReturn(true);
+            // Assert
+            assertEquals(423, response.getStatus());
+            assertEquals("application/json", response.getContentType());
+            assertTrue(response.getContentAsString().contains("Account Locked"));
+            verify(filterChain, never()).doFilter(any(), any());
+        }
 
-        filter.doFilterInternal(request, response, filterChain);
+        @Test
+        void doFilterInternal_authenticatedAndLockedOAuth2User_returns423() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.isAuthenticated()).thenReturn(true);
+            when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
+            when(customOAuth2PlayerUser.getPlayer()).thenReturn(Player.builder().accountLocked(true).build());
 
-        assertEquals(423, response.getStatus());
-        assertEquals("application/json", response.getContentType());
-        assertTrue(response.getContentAsString().contains("Account Locked"));
-        verify(filterChain, never()).doFilter(any(), any());
-    }
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
 
-    @Test
-    void doFilterInternal_authenticatedAndLockedOAuth2User_returns423() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
-        when(customOAuth2PlayerUser.getPlayer()).thenReturn(Player.builder().accountLocked(true).build());
+            // Assert
+            assertEquals(423, response.getStatus());
+            verify(filterChain, never()).doFilter(any(), any());
+        }
 
-        filter.doFilterInternal(request, response, filterChain);
+        @Test
+        void doFilterInternal_authenticatedAndNotLockedOAuth2User_continuesChain() throws ServletException, IOException {
+            // Arrange
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.isAuthenticated()).thenReturn(true);
+            when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
+            when(customOAuth2PlayerUser.getPlayer()).thenReturn(Player.builder().accountLocked(false).build());
 
-        assertEquals(423, response.getStatus());
-        verify(filterChain, never()).doFilter(any(), any());
-    }
+            // Act
+            filter.doFilterInternal(request, response, filterChain);
 
-    @Test
-    void doFilterInternal_authenticatedAndNotLockedOAuth2User_continuesChain() throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(customOAuth2PlayerUser);
-        when(customOAuth2PlayerUser.getPlayer()).thenReturn(Player.builder().accountLocked(false).build());
-
-        filter.doFilterInternal(request, response, filterChain);
-
-        verify(filterChain).doFilter(request, response);
+            // Assert
+            verify(filterChain).doFilter(request, response);
+        }
     }
 }
