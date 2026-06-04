@@ -51,30 +51,6 @@ public class RefreshTokenService {
                 .build();
     }
 
-    @Transactional
-    public RefreshTokenCookieDto createRefreshTokenFromExisting(String currentToken) {
-        String newToken = UUID.randomUUID().toString();
-        String hashedNewToken = DigestUtils.sha256Hex(newToken);
-        Instant expiresAt = Instant.now().plusSeconds(60 * 60); //1h
-        Player player = getRefreshTokenByToken(currentToken).getPlayer();
-
-        RefreshToken newRefreshToken = RefreshToken.builder()
-                .player(player)
-                .tokenHash(hashedNewToken)
-                .expiresAt(expiresAt)
-                .revoked(false)
-                .revokedAt(null)
-                .build();
-
-        refreshTokenRepository.save(newRefreshToken);
-
-        return RefreshTokenCookieDto.builder()
-                .refreshToken(newToken)
-                .expiresAt(expiresAt)
-                .jwt(jwtService.generateJwtToken(new PlayerPrincipal(player)))
-                .build();
-    }
-
 
     public RefreshToken getRefreshTokenByToken(String token){
         return refreshTokenRepository.findByTokenHash(
