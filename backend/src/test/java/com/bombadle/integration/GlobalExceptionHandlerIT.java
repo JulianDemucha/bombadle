@@ -1,5 +1,6 @@
-package com.bombadle.exception;
+package com.bombadle.integration;
 
+import com.bombadle.exception.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class GlobalExceptionHandlerIntegrationTest {
+class GlobalExceptionHandlerIT {
 
     private MockMvc mockMvc;
 
