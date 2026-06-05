@@ -6,11 +6,13 @@ spring:
     password:
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
   flyway:
     enabled: false
 bombadle:
   daily-reset:
     enabled: false
+  jwt:
+    secret: "superkluczdotestownoeloeloopukpukpukpukplakalplakalsigmasigmaboy"
 server:
   port: 0
