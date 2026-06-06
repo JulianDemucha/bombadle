@@ -24,7 +24,6 @@ public class AdminPendingChange {
     @Column(name = "action_key")
     private String actionKey; // works like an id of the card, but in "pending create" case, card isnt in the database yet
 
-    @Lob
     @Column(name = "payload", nullable = false)
     private String payload;
 
