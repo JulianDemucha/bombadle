@@ -6,6 +6,7 @@ import com.bombadle.enums.Gender;
 import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
 import com.bombadle.repository.*;
+import com.bombadle.service.game.CurrentCardStateService;
 import com.bombadle.service.scheduling.DailyResetService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,10 +49,14 @@ class DailyResetIT {
     private AdminPendingChangeRepository adminPendingChangeRepository;
 
     @Autowired
+    private CurrentCardStateService currentCardStateService;
+
+    @Autowired
     private EntityManager entityManager;
 
     private Player activePlayer;
     private Player deletedPlayer;
+
     @BeforeEach
     void setUp() {
         Score activePlayerScore = scoreRepository.save(Score.builder()
@@ -137,6 +142,8 @@ class DailyResetIT {
         assertEquals(0, anonymousSessionRepository.count());
         assertEquals(0, anonymousGuessListRepository.count());
         assertEquals(0, adminPendingChangeRepository.count());
-    }
 
+        // Assert - Singleton Daily Card State is properly updated
+        assertNotNull(currentCardStateService.getCurrentCardState().getCurrentCharacter());
+    }
 }

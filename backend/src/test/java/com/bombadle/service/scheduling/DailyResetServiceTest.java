@@ -6,6 +6,7 @@ import com.bombadle.service.admin.AdminChangeQueueService;
 import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.AnonymousGuessListService;
 import com.bombadle.service.game.CharacterCardService;
+import com.bombadle.service.game.CurrentCardStateService;
 import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerDeletionService;
@@ -47,6 +48,8 @@ class DailyResetServiceTest {
     private AnonymousSessionService anonymousSessionService;
     @Mock
     private AnonymousGuessListService anonymousGuessListService;
+    @Mock
+    private CurrentCardStateService currentCardStateService;
 
     @InjectMocks
     private DailyResetService dailyResetService;
@@ -71,11 +74,12 @@ class DailyResetServiceTest {
                     guessListService,
                     anonymousSessionService,
                     anonymousGuessListService,
-                    playerDeletionService,
                     playerService,
                     scoreService,
+                    playerDeletionService,
                     characterCardService,
                     currentCharacterCardWrapper,
+                    currentCardStateService,
                     cacheService
             );
 
@@ -83,11 +87,12 @@ class DailyResetServiceTest {
             inOrder.verify(guessListService).truncateTable();
             inOrder.verify(anonymousSessionService).truncateTable();
             inOrder.verify(anonymousGuessListService).truncateTable();
-            inOrder.verify(playerDeletionService).deleteMarkedForDeletion(Duration.ofHours(48));
             inOrder.verify(playerService).resetAllScores();
             inOrder.verify(scoreService).deleteAllInBatch();
+            inOrder.verify(playerDeletionService).deleteMarkedForDeletion(Duration.ofHours(48));
             inOrder.verify(characterCardService).findRandomCard();
             inOrder.verify(currentCharacterCardWrapper).set(mockCard);
+            inOrder.verify(currentCardStateService).updateCurrentCard(mockCard);
             inOrder.verify(currentCharacterCardWrapper).get();
             inOrder.verify(cacheService).reloadCardCompareCache();
         }
@@ -106,6 +111,7 @@ class DailyResetServiceTest {
             verify(playerDeletionService).deleteMarkedForDeletion(Duration.ofHours(48));
 
             verify(currentCharacterCardWrapper, never()).set(any());
+            verify(currentCardStateService, never()).updateCurrentCard(any());
             verifyNoInteractions(cacheService);
         }
     }

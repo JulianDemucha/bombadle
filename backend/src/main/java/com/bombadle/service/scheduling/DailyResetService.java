@@ -1,8 +1,10 @@
 package com.bombadle.service.scheduling;
 
 import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.entity.CharacterCard;
 import com.bombadle.service.game.AnonymousGuessListService;
 import com.bombadle.service.game.CharacterCardService;
+import com.bombadle.service.game.CurrentCardStateService;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.cache.CacheService;
@@ -34,6 +36,7 @@ public class DailyResetService {
     private final AdminChangeQueueService adminChangeQueueService;
     private final AnonymousSessionService anonymousSessionService;
     private final AnonymousGuessListService anonymousGuessListService;
+    private final CurrentCardStateService currentCardStateService;
 
     /* Cron:  seconds, minutes, hours, day (of the month), month, day (of the week) */
     @Scheduled(cron = "0 0 7 * * *", zone = "Europe/Warsaw")
@@ -41,16 +44,22 @@ public class DailyResetService {
     @Transactional
     public void pickNewCharacterCardAndResetScores() {
         log.info("7:00 - Daily reset triggered: selecting new character and resetting scores.");
+
         adminChangeQueueService.applyAll();
+
         guessListService.truncateTable();
         anonymousSessionService.truncateTable();
         anonymousGuessListService.truncateTable();
-        playerDeletionService.deleteMarkedForDeletion(Duration.ofHours(48));
         playerService.resetAllScores();
         scoreService.deleteAllInBatch();
+        playerDeletionService.deleteMarkedForDeletion(Duration.ofHours(48));
         log.info("All scores has been deleted");
-        currentCharacterCardWrapper.set(characterCardService.findRandomCard());
+
+        CharacterCard newCard = characterCardService.findRandomCard();
+        currentCharacterCardWrapper.set(newCard);
+        currentCardStateService.updateCurrentCard(newCard);
         log.info("new Character card has been picked: {}", currentCharacterCardWrapper.get().getName());
+
         cacheService.reloadCardCompareCache();
         log.info("Card comparison cache have been cleared and reloaded.");
     }
