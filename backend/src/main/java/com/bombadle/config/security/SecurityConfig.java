@@ -74,8 +74,8 @@ public class SecurityConfig {
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
-                        .requestMatchers("/api/daily-reset/manual-trigger").hasRole("SUPERADMIN")
+                        .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
+                        .requestMatchers("/api/daily-reset/manual-trigger").hasAuthority("ROLE_SUPERADMIN")
                         .requestMatchers("/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate",
                                 "/api/auth/refreshToken", "/api/card-guessing/classic/anonymous-guess/**",
                                 "/api/character-card/search-index", "/api/leaderboard/**", "/images/**",

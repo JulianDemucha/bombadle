@@ -56,6 +56,10 @@ public class DailyResetService {
         log.info("All scores has been deleted");
 
         CharacterCard newCard = characterCardService.findRandomCard();
+        if (newCard == null) { // just in case
+            throw new IllegalStateException("No character cards in the database");
+        }
+
         currentCharacterCardWrapper.set(newCard);
         currentCardStateService.updateCurrentCard(newCard);
         log.info("new Character card has been picked: {}", currentCharacterCardWrapper.get().getName());
