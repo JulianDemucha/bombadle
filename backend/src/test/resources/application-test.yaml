@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:bombadle_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
-    driver-class-name: org.h2.Driver
+    url: jdbc:postgresql://localhost:5433/bombadle_test
     username: sa
-    password:
+    password: sa
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -11,7 +11,7 @@ spring:
     enabled: false
 bombadle:
   daily-reset:
-    enabled: false
+    enabled: true
   jwt:
     secret: "superkluczdotestownoeloeloopukpukpukpukplakalplakalsigmasigmaboy"
 server:

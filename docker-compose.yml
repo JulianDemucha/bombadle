@@ -3,14 +3,25 @@ version: '3.8'
 services:
   db:
     image: postgres:16-alpine
+    container_name: bombadle-db
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_DB: bombadle
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  db-test:
+    image: postgres:16-alpine
+    container_name: bombadle-test-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: bombadle_test
+      POSTGRES_USER: sa
+      POSTGRES_PASSWORD: sa
 
 volumes:
   postgres_data:
