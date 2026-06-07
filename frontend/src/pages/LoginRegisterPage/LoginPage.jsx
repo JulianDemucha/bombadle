@@ -26,6 +26,25 @@ function LoginPage() {
     const navigate = useNavigate();
     const {reload} = useAuth();
 
+    const handleMergeConfirmation = () => {
+        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
+        if (anonymousGuesses && anonymousGuesses !== '[]') {
+            if (window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?")) {
+                const sessionId = localStorage.getItem('bombadle_anonymous_session_id');
+                if (sessionId) {
+                    document.cookie = `bombadle_anonymous_session_id=${sessionId}; path=/; max-age=60`;
+                } else {
+                     document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
+                }
+                
+                localStorage.removeItem('anonymousGuessList');
+                localStorage.removeItem('anonymousWinTime');
+                localStorage.removeItem('lastPlayedDate');
+                localStorage.removeItem('bombadle_anonymous_session_id');
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -39,25 +58,13 @@ function LoginPage() {
             return;
         }
 
-        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
-        if (anonymousGuesses && anonymousGuesses !== '[]') {
-            const confirmMerge = window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?");
-            if (confirmMerge) {
-                document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
-            }
-        }
-
+        handleMergeConfirmation();
         setLoading(true);
 
         try {
             const res = await axios.post("/api/auth/authenticate", {email, password});
 
             if (res.status === 201 || res.status === 200) {
-                if (document.cookie.includes("TRIGGER_MERGE=true")) {
-                    localStorage.removeItem('anonymousGuessList');
-                    localStorage.removeItem('anonymousWinTime');
-                    localStorage.removeItem('lastPlayedDate');
-                }
                 await reload();
                 navigate("/");
             }
@@ -79,13 +86,7 @@ function LoginPage() {
     };
 
     const handleGoogleLogin = () => {
-        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
-        if (anonymousGuesses && anonymousGuesses !== '[]') {
-            const confirmMerge = window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?");
-            if (confirmMerge) {
-                document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
-            }
-        }
+        handleMergeConfirmation();
         window.location.href = 'https://localhost:8443/oauth2/authorization/google';
     };
 
@@ -94,7 +95,7 @@ function LoginPage() {
         {/*     LOGO     */}
         <NavImgButton
             to="/"
-            imgSrc="src/assets/bombadle_logo.png"
+            imgSrc="/src/assets/bombadle_logo.png"
             altText="logo"
             className="logo logo-desktop"
             onError={handleImageError}
@@ -103,7 +104,7 @@ function LoginPage() {
         {/*     LOGO MOBILE     */}
         <NavImgButton
             to="/"
-            imgSrc="src/assets/bombadle_logo_mobile.png"
+            imgSrc="/src/assets/bombadle_logo_mobile.png"
             altText="logoMobile"
             className="logo logo-mobile"
             onError={handleImageError}
@@ -161,4 +162,3 @@ function LoginPage() {
 }
 
 export default LoginPage;
-
