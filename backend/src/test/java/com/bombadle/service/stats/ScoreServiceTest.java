@@ -147,7 +147,7 @@ public class ScoreServiceTest {
             when(repo.findByPlayerId(player.getId())).thenReturn(Optional.of(score));
 
             // Act
-            Optional<Score> result = scoreService.findScoreByPlayerId(player.getId());
+            Optional<Score> result = scoreService.findByPlayerId(player.getId());
 
             // Assert
             assertTrue(result.isPresent());
@@ -298,6 +298,18 @@ public class ScoreServiceTest {
 
             // Assert
             verify(repo).deleteAllInBatch();
+        }
+
+        @Test
+        void manualDelete_validScore_callsRepositoryDelete() {
+            // Arrange
+            Score score = mock(Score.class);
+
+            // Act
+            scoreService.manualDelete(score);
+
+            // Assert
+            verify(repo).delete(score);
         }
     }
 

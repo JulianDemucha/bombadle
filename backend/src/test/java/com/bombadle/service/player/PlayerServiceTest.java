@@ -143,6 +143,35 @@ class PlayerServiceTest {
     }
 
     @Nested
+    class GetPlayerByIdTests {
+
+        @Test
+        void getPlayerById_userExists_returnsPlayer() {
+            // Arrange
+            long id = 1L;
+            Player player = mock(Player.class);
+            when(repo.findById(id)).thenReturn(Optional.of(player));
+
+            // Act
+            Player result = playerService.getPlayerById(id);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(player, result);
+        }
+
+        @Test
+        void getPlayerById_userDoesNotExist_throwsUsernameNotFoundException() {
+            // Arrange
+            long id = 1L;
+            when(repo.findById(id)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(UsernameNotFoundException.class, () -> playerService.getPlayerById(id));
+        }
+    }
+
+    @Nested
     class GetAllPlayersTests {
 
         @Test
@@ -238,6 +267,25 @@ class PlayerServiceTest {
             // Assert
             verify(repo).resetAllScores();
             verify(repo).flush();
+        }
+    }
+
+    @Nested
+    class FindAllByMarkedForDeletionAtBeforeTests {
+
+        @Test
+        void findAllByMarkedForDeletionAtBefore_callsRepo() {
+            // Arrange
+            Instant cutoff = Instant.now();
+            List<Player> expectedList = List.of(mock(Player.class));
+            when(repo.findAllByMarkedForDeletionAtBefore(cutoff)).thenReturn(expectedList);
+
+            // Act
+            List<Player> result = playerService.findAllByMarkedForDeletionAtBefore(cutoff);
+
+            // Assert
+            assertEquals(expectedList, result);
+            verify(repo).findAllByMarkedForDeletionAtBefore(cutoff);
         }
     }
 
@@ -432,6 +480,18 @@ class PlayerServiceTest {
 
             // Assert
             verify(playerDeletionService).deletePlayerSelf(playerId);
+        }
+
+        @Test
+        void manualDelete_validPlayer_callsRepositoryDelete() {
+            // Arrange
+            Player player = mock(Player.class);
+
+            // Act
+            playerService.manualDelete(player);
+
+            // Assert
+            verify(repo).delete(player);
         }
     }
 

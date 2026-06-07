@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -50,6 +51,14 @@ public class RefreshTokenService {
                 .expiresAt(expiresAt)
                 .jwt(jwtService.generateJwtToken(new PlayerPrincipal(player)))
                 .build();
+    }
+
+    public Optional<RefreshToken> findByPlayerId(Long playerId) {
+        return refreshTokenRepository.findByPlayerId(playerId);
+    }
+
+    public void manualDelete(RefreshToken refreshToken) {
+        refreshTokenRepository.delete(refreshToken);
     }
 
 

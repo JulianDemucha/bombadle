@@ -196,7 +196,19 @@ class GuessListServiceTest {
     }
 
     @Nested
-    class TruncateTableTests {
+    class DeletionTests {
+
+        @Test
+        void manualDelete_validList_callsRepositoryDelete() {
+            // Arrange
+            GuessList guessList = mock(GuessList.class);
+
+            // Act
+            guessListService.manualDelete(guessList);
+
+            // Assert
+            verify(guessListRepository).delete(guessList);
+        }
 
         @Test
         void truncateTable_called_callsRepositoryTruncate() {

@@ -54,6 +54,10 @@ public class GuessListService {
         guessListRepository.save(guessList);
     }
 
+    public void manualDelete(GuessList guessList) {
+        guessListRepository.delete(guessList);
+    }
+
     public void truncateTable() {
         guessListRepository.truncateTable();
     }

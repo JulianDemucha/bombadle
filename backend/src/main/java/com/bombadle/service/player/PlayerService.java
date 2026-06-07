@@ -47,6 +47,11 @@ public class PlayerService {
         return repo.findById(id);
     }
 
+    public Player getPlayerById(long id){
+        return findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + id));
+    }
+
     public List<Player> getAllPlayers() {
         return repo.findAllByOrderByIdAsc();
     }
@@ -75,6 +80,10 @@ public class PlayerService {
     public void resetAllScores() {
         repo.resetAllScores();
         repo.flush();
+    }
+
+    public List<Player> findAllByMarkedForDeletionAtBefore(Instant cutoff){
+        return repo.findAllByMarkedForDeletionAtBefore(cutoff);
     }
 
     @Transactional
@@ -173,6 +182,10 @@ public class PlayerService {
     @Transactional
     public void deletePlayer(long playerId) {
         playerDeletionService.deletePlayerSelf(playerId);
+    }
+
+    public void manualDelete(Player player) {
+        repo.delete(player);
     }
 
     private String generateUniqueLogin(String baseName) {

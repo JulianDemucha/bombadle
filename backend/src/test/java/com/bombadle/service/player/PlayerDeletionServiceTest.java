@@ -4,7 +4,7 @@ import com.bombadle.entity.DeletedAccount;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.Role;
 import com.bombadle.exception.AdminOperationNotAllowedException;
-import com.bombadle.repository.*;
+import com.bombadle.repository.DeletedAccountRepository;
 import com.bombadle.service.admin.AdminAuditService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,15 +28,11 @@ import static org.mockito.Mockito.*;
 class PlayerDeletionServiceTest {
 
     @Mock
-    private PlayerRepository playerRepository;
+    private PlayerService playerService;
     @Mock
     private AdminAuditService adminAuditService;
     @Mock
-    private GuessListRepository guessListRepository;
-    @Mock
-    private RefreshTokenRepository refreshTokenRepository;
-    @Mock
-    private ScoreRepository scoreRepository;
+    private PlayerCascadeDeletionService playerCascadeDeletionService;
     @Mock
     private DeletedAccountRepository deletedAccountRepository;
 
@@ -50,11 +45,11 @@ class PlayerDeletionServiceTest {
         @Test
         void markForDeletion_actorNotFound_throwsUsernameNotFoundException() {
             // Arrange
-            when(playerRepository.findById(1L)).thenReturn(Optional.empty());
+            when(playerService.getPlayerById(1L)).thenThrow(new UsernameNotFoundException("User not found"));
 
             // Act & Assert
             assertThrows(UsernameNotFoundException.class, () -> playerDeletionService.markForDeletion(1L, 2L));
-            verify(playerRepository, never()).save(any());
+            verify(playerService, never()).save(any());
         }
 
         @Test
@@ -62,7 +57,7 @@ class PlayerDeletionServiceTest {
             // Arrange
             Player actor = mock(Player.class);
             when(actor.getId()).thenReturn(1L);
-            when(playerRepository.findById(1L)).thenReturn(Optional.of(actor));
+            when(playerService.getPlayerById(1L)).thenReturn(actor);
 
             // Act & Assert
             assertThrows(AdminOperationNotAllowedException.class, () -> playerDeletionService.markForDeletion(1L, 1L));
@@ -78,8 +73,8 @@ class PlayerDeletionServiceTest {
             when(actor.getRole()).thenReturn(Role.ROLE_ADMIN);
             when(target.getRole()).thenReturn(Role.ROLE_ADMIN);
 
-            when(playerRepository.findById(1L)).thenReturn(Optional.of(actor));
-            when(playerRepository.findById(2L)).thenReturn(Optional.of(target));
+            when(playerService.getPlayerById(1L)).thenReturn(actor);
+            when(playerService.getPlayerById(2L)).thenReturn(target);
 
             // Act & Assert
             assertThrows(AccessDeniedException.class, () -> playerDeletionService.markForDeletion(1L, 2L));
@@ -95,8 +90,8 @@ class PlayerDeletionServiceTest {
             when(actor.getRole()).thenReturn(Role.ROLE_ADMIN);
             when(target.getRole()).thenReturn(Role.ROLE_USER);
 
-            when(playerRepository.findById(1L)).thenReturn(Optional.of(actor));
-            when(playerRepository.findById(2L)).thenReturn(Optional.of(target));
+            when(playerService.getPlayerById(1L)).thenReturn(actor);
+            when(playerService.getPlayerById(2L)).thenReturn(target);
 
             // Act
             playerDeletionService.markForDeletion(1L, 2L);
@@ -104,7 +99,7 @@ class PlayerDeletionServiceTest {
             // Assert
             verify(target).setMarkedForDeletionAt(any(Instant.class));
             verify(target).setAccountLocked(true);
-            verify(playerRepository).save(target);
+            verify(playerService).save(target);
             verify(adminAuditService).logAction(1L, "mark_user_2_for_deletion", null);
         }
     }
@@ -122,8 +117,8 @@ class PlayerDeletionServiceTest {
             when(actor.getRole()).thenReturn(Role.ROLE_ADMIN);
             when(target.getRole()).thenReturn(Role.ROLE_USER);
 
-            when(playerRepository.findById(1L)).thenReturn(Optional.of(actor));
-            when(playerRepository.findById(2L)).thenReturn(Optional.of(target));
+            when(playerService.getPlayerById(1L)).thenReturn(actor);
+            when(playerService.getPlayerById(2L)).thenReturn(target);
 
             // Act
             playerDeletionService.cancelDeletion(1L, 2L);
@@ -131,7 +126,7 @@ class PlayerDeletionServiceTest {
             // Assert
             verify(target).setMarkedForDeletionAt(null);
             verify(target).setAccountLocked(false);
-            verify(playerRepository).save(target);
+            verify(playerService).save(target);
             verify(adminAuditService).logAction(1L, "cancel_mark_user_2", null);
         }
     }
@@ -142,15 +137,14 @@ class PlayerDeletionServiceTest {
         @Test
         void deleteMarkedForDeletion_noPlayersFound_doesNothing() {
             // Arrange
-            when(playerRepository.findAllByMarkedForDeletionAtBefore(any(Instant.class)))
+            when(playerService.findAllByMarkedForDeletionAtBefore(any(Instant.class)))
                     .thenReturn(Collections.emptyList());
 
             // Act
             playerDeletionService.deleteMarkedForDeletion(Duration.ofDays(7));
 
             // Assert
-            verifyNoInteractions(guessListRepository, refreshTokenRepository, scoreRepository, deletedAccountRepository, adminAuditService);
-            verify(playerRepository, never()).delete(any());
+            verifyNoInteractions(playerCascadeDeletionService, deletedAccountRepository, adminAuditService);
         }
 
         @Test
@@ -158,7 +152,7 @@ class PlayerDeletionServiceTest {
             // Arrange
             Player target = mock(Player.class);
             when(target.getId()).thenReturn(5L);
-            when(playerRepository.findAllByMarkedForDeletionAtBefore(any(Instant.class)))
+            when(playerService.findAllByMarkedForDeletionAtBefore(any(Instant.class)))
                     .thenReturn(List.of(target));
 
             // Act
@@ -166,10 +160,7 @@ class PlayerDeletionServiceTest {
 
             // Assert
             verify(deletedAccountRepository).save(any(DeletedAccount.class));
-            verify(guessListRepository).deleteByPlayerId(5L);
-            verify(refreshTokenRepository).deleteByPlayerId(5L);
-            verify(scoreRepository).deleteByPlayerId(5L);
-            verify(playerRepository).delete(target);
+            verify(playerCascadeDeletionService).deletePlayerWithCascade(target);
             verifyNoInteractions(adminAuditService);
         }
     }
@@ -182,17 +173,14 @@ class PlayerDeletionServiceTest {
             // Arrange
             Player target = mock(Player.class);
             when(target.getId()).thenReturn(10L);
-            when(playerRepository.findById(10L)).thenReturn(Optional.of(target));
+            when(playerService.getPlayerById(10L)).thenReturn(target);
 
             // Act
             playerDeletionService.deletePlayerSelf(10L);
 
             // Assert
             verify(deletedAccountRepository).save(any(DeletedAccount.class));
-            verify(guessListRepository).deleteByPlayerId(10L);
-            verify(refreshTokenRepository).deleteByPlayerId(10L);
-            verify(scoreRepository).deleteByPlayerId(10L);
-            verify(playerRepository).delete(target);
+            verify(playerCascadeDeletionService).deletePlayerWithCascade(target);
         }
     }
 
@@ -208,8 +196,8 @@ class PlayerDeletionServiceTest {
             when(target.getId()).thenReturn(2L);
             when(actor.getRole()).thenReturn(Role.ROLE_ADMIN);
 
-            when(playerRepository.findById(1L)).thenReturn(Optional.of(actor));
-            when(playerRepository.findById(2L)).thenReturn(Optional.of(target));
+            when(playerService.getPlayerById(1L)).thenReturn(actor);
+            when(playerService.getPlayerById(2L)).thenReturn(target);
 
             // Act & Assert
             assertThrows(AccessDeniedException.class, () -> playerDeletionService.deletePlayerByAdmin(1L, 2L));
@@ -225,8 +213,8 @@ class PlayerDeletionServiceTest {
             when(actor.getRole()).thenReturn(Role.ROLE_SUPERADMIN);
             when(target.getRole()).thenReturn(Role.ROLE_SUPERADMIN);
 
-            when(playerRepository.findById(1L)).thenReturn(Optional.of(actor));
-            when(playerRepository.findById(2L)).thenReturn(Optional.of(target));
+            when(playerService.getPlayerById(1L)).thenReturn(actor);
+            when(playerService.getPlayerById(2L)).thenReturn(target);
 
             // Act & Assert
             assertThrows(AccessDeniedException.class, () -> playerDeletionService.deletePlayerByAdmin(1L, 2L));
@@ -242,18 +230,15 @@ class PlayerDeletionServiceTest {
             when(actor.getRole()).thenReturn(Role.ROLE_SUPERADMIN);
             when(target.getRole()).thenReturn(Role.ROLE_USER);
 
-            when(playerRepository.findById(1L)).thenReturn(Optional.of(actor));
-            when(playerRepository.findById(2L)).thenReturn(Optional.of(target));
+            when(playerService.getPlayerById(1L)).thenReturn(actor);
+            when(playerService.getPlayerById(2L)).thenReturn(target);
 
             // Act
             playerDeletionService.deletePlayerByAdmin(1L, 2L);
 
             // Assert
             verify(deletedAccountRepository).save(any(DeletedAccount.class));
-            verify(guessListRepository).deleteByPlayerId(2L);
-            verify(refreshTokenRepository).deleteByPlayerId(2L);
-            verify(scoreRepository).deleteByPlayerId(2L);
-            verify(playerRepository).delete(target);
+            verify(playerCascadeDeletionService).deletePlayerWithCascade(target);
             verify(adminAuditService).logAction(1L, "delete_user_2", null);
         }
     }

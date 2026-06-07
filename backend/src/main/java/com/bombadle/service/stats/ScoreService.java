@@ -39,12 +39,16 @@ public class ScoreService {
         return repo.findAll(pageable);
     }
 
-    public Optional<Score> findScoreByPlayerId(Long playerId) {
+    public Optional<Score> findByPlayerId(Long playerId) {
         return repo.findByPlayerId(playerId);
     }
 
     public Optional<Score> findScoreByPlayerEmail(String playerEmail) {
         return repo.findByPlayerEmail(playerEmail);
+    }
+
+    public void manualDelete(Score score) {
+        repo.delete(score);
     }
 
     @Transactional
