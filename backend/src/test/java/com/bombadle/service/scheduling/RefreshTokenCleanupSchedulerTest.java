@@ -1,6 +1,6 @@
 package com.bombadle.service.scheduling;
 
-import com.bombadle.service.auth.RefreshTokenService;
+import com.bombadle.service.auth.cookie.RefreshTokenService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

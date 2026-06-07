@@ -1,4 +1,4 @@
-package com.bombadle.service.auth;
+package com.bombadle.service.auth.cookie;
 
 import com.bombadle.config.ApplicationConfigProperties;
 import com.bombadle.config.PlayerPrincipal;
@@ -7,6 +7,7 @@ import com.bombadle.entity.Player;
 import com.bombadle.entity.RefreshToken;
 import com.bombadle.enums.Role;
 import com.bombadle.repository.RefreshTokenRepository;
+import com.bombadle.service.auth.JwtService;
 import com.bombadle.service.player.PlayerService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.BeforeEach;

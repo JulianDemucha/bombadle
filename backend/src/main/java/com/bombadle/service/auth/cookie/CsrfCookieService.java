@@ -1,4 +1,4 @@
-package com.bombadle.service.auth;
+package com.bombadle.service.auth.cookie;
 
 import com.bombadle.config.ApplicationConfigProperties;
 import org.springframework.http.HttpHeaders;
