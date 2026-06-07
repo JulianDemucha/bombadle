@@ -178,7 +178,7 @@ class PlayerDeletionServiceTest {
     class DeletePlayerSelfTests {
 
         @Test
-        void deletePlayerSelf_playerExists_deletesEverythingAndLogs() {
+        void deletePlayerSelf_playerExists_deletesEverything() {
             // Arrange
             Player target = mock(Player.class);
             when(target.getId()).thenReturn(10L);
@@ -193,7 +193,6 @@ class PlayerDeletionServiceTest {
             verify(refreshTokenRepository).deleteByPlayerId(10L);
             verify(scoreRepository).deleteByPlayerId(10L);
             verify(playerRepository).delete(target);
-            verify(adminAuditService).logAction(10L, "delete_user_self_10", null);
         }
     }
 

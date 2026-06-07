@@ -64,7 +64,7 @@ public class PlayerDeletionService {
 
     public void deletePlayerSelf(long playerId) {
         Player target = getPlayer(playerId);
-        deletePlayerWithSnapshot(target, playerId, "delete_user_self_" + target.getId());
+        deletePlayerWithSnapshotNoAudit(target, playerId);
     }
 
     public void deletePlayerByAdmin(long actorId, long targetId) {
