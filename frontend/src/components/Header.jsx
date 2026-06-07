@@ -16,7 +16,7 @@ function Header({logoClassName}) {
             {/*     LOGO     */}
             <NavImgButton
                 to="/"
-                imgSrc="src/assets/bombadle_logo.png"
+                imgSrc="/src/assets/bombadle_logo.png"
                 altText="logo"
                 className={logoClassName}
                 onError={handleImageError}
@@ -25,7 +25,7 @@ function Header({logoClassName}) {
             {/*     LOGIN BUTTON     */}
             <NavImgButton
                 to="/login"
-                imgSrc="src/assets/buttons/login_button.png"
+                imgSrc="/src/assets/buttons/login_button.png"
                 altText="Zaloguj się"
                 className="image-button login-desktop"
                 onError={handleImageError}
@@ -35,7 +35,7 @@ function Header({logoClassName}) {
             {/*     PROFILE SETTINGS BUTTON     */}
             <NavImgButton
                 to="/profile"
-                imgSrc="src/assets/buttons/profile_button.png"
+                imgSrc="/src/assets/buttons/profile_button.png"
                 altText="Ustawienia Profilu"
                 className="image-button profile-button"
                 onError={handleImageError}
@@ -45,7 +45,7 @@ function Header({logoClassName}) {
             {/*     LOGO MOBILE     */}
             <NavImgButton
                 to="/"
-                imgSrc="src/assets/bombadle_logo_mobile.png"
+                imgSrc="/src/assets/bombadle_logo_mobile.png"
                 altText="logoMobile"
                 className="logo logo-mobile"
                 onError={handleImageError}

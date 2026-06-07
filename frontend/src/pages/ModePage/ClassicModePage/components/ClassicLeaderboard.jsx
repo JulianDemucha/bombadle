@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function ClassicLeaderboard({
     topThree = [],
@@ -12,7 +12,17 @@ function ClassicLeaderboard({
     isAnonymousAndWon = false
 }) {
     const navigate = useNavigate();
+    const location = useLocation();
     const containerClassName = `stamped-banner-container leaderboard-wrapper leaderboard-section ${className}`.trim();
+
+    const handleLoginRedirect = () => {
+        const currentUrl = encodeURIComponent(location.pathname + location.search);
+        navigate(`/login?target=${currentUrl}`);
+    };
+
+    const handleFullLeaderboardRedirect = () => {
+        navigate('/leaderboard/classic');
+    };
 
     return (
         <div className={containerClassName}>
@@ -73,10 +83,7 @@ function ClassicLeaderboard({
                     <button
                         type="button"
                         className="login-prompt-button"
-                        onClick={() => {
-                            const currentUrl = encodeURIComponent(window.location.pathname + window.location.search);
-                            navigate(`/login?target=${currentUrl}`);
-                        }}
+                        onClick={handleLoginRedirect}
                     >
                         Zaloguj się / Zarejestruj
                     </button>
@@ -85,7 +92,7 @@ function ClassicLeaderboard({
 
             {dailyCounterText && <p className="daily-solved-counter">{dailyCounterText}</p>}
 
-            <button type="button" className="leaderboard-cta">
+            <button type="button" className="leaderboard-cta" onClick={handleFullLeaderboardRedirect}>
                 {ctaLabel}
             </button>
         </div>

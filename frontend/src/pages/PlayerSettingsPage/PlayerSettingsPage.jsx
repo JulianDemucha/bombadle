@@ -206,7 +206,7 @@ export default function PlayerSettingsPage() {
                     </div>
 
                     <div className="form-section">
-                        <h3>Bezpieczeństwo</h3>
+                        <h3>Bezpieczenstwo (tu jest bezpiecznie klikać)</h3>
                         <div className="form-group">
                             <label>Hasło</label>
                             <button type="button" className="btn-link">
@@ -216,9 +216,9 @@ export default function PlayerSettingsPage() {
                     </div>
 
                     <div className="form-section">
-                        <h3>Strefa niebezpieczna</h3>
+                        <h3>Strefa niebezpieczna (tu jest średnio bezpiecznie klikać)</h3>
                         <div>
-                            <p>Ta operacja jest nieodwracalna. Wszystkie Twoje dane zostaną trwale usunięte!</p>
+                            <p>Ta operacja jest nieodwracalna. Wszystkie twoje dane zostaną trwale usunięte!</p>
                             <br/>
                             <button type="button" className="btn btn-danger" onClick={handleDelete}>
                                 Usuń konto

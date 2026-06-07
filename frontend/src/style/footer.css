@@ -11,6 +11,11 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
+
+    /* Dodane właściwości aby zwęzić tekst w stopce */
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.4;
 }
 
 .bombadle-footer a {
