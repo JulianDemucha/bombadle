@@ -81,6 +81,7 @@ public class SecurityConfig {
                                 "/api/character-card/search-index", "/api/leaderboard/**", "/images/**",
                                 "/api/guess-list/**",
                                 "/api/players/anonymous/me",
+                                "/api/character-card/previous-character-card",
                                 "/character_card_avatars/**" /*dev */).permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
