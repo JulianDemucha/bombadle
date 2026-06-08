@@ -224,6 +224,26 @@ class GlobalExceptionHandlerTest {
     }
 
     @Nested
+    class TooManyRequestsExceptions {
+
+        @Test
+        void handleEmailRateLimit_returns429AndCorrectBody() {
+            // Arrange
+            EmailRateLimitException exception = new EmailRateLimitException("You must wait 60 seconds before send");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleEmailRateLimit(exception);
+
+            // Assert
+            assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(429, response.getBody().statusCode());
+            assertEquals("Too Many Requests", response.getBody().error());
+            assertEquals("You must wait 60 seconds before send", response.getBody().message());
+        }
+    }
+
+    @Nested
     class SecurityExceptions {
 
         @Test

@@ -37,6 +37,11 @@ class GlobalExceptionHandlerIT {
             throw new ExpiredOtpException("This code has expired");
         }
 
+        @GetMapping("/test/email-rate-limit")
+        public void throwEmailRateLimit() {
+            throw new EmailRateLimitException("You must wait 60 seconds before send");
+        }
+
         @GetMapping("/test/404")
         public void throwNotFound() {
             throw new UsernameNotFoundException("User missing");
@@ -118,6 +123,15 @@ class GlobalExceptionHandlerIT {
                     .andExpect(jsonPath("$.statusCode").value(410))
                     .andExpect(jsonPath("$.error").value("Verification code has expired"))
                     .andExpect(jsonPath("$.message").value("This code has expired"));
+        }
+
+        @Test
+        void whenEmailRateLimit_returns429AndJson() throws Exception {
+            mockMvc.perform(get("/test/email-rate-limit"))
+                    .andExpect(status().isTooManyRequests())
+                    .andExpect(jsonPath("$.statusCode").value(429))
+                    .andExpect(jsonPath("$.error").value("Too Many Requests"))
+                    .andExpect(jsonPath("$.message").value("You must wait 60 seconds before send"));
         }
 
         @Test

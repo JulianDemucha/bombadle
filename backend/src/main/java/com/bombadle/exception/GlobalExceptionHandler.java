@@ -206,4 +206,14 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDetails);
     }
+
+    @ExceptionHandler(EmailRateLimitException.class)
+    public ResponseEntity<ErrorResponse> handleEmailRateLimit(EmailRateLimitException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                "Too Many Requests",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorDetails);
+    }
 }
