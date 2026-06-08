@@ -35,7 +35,7 @@ public class PlayerService {
     private final CacheManager cacheManager;
     private final PasswordEncoder passwordEncoder;
 
-    public Optional<Player> findByEmail(String email){
+    public Optional<Player> findByEmail(String email) {
         if (email == null) return Optional.empty();
         return repo.findByEmail(email.toLowerCase());
     }
@@ -45,11 +45,11 @@ public class PlayerService {
         return repo.findByLogin(login.toLowerCase());
     }
 
-    public Optional<Player> findById(long id){
+    public Optional<Player> findById(long id) {
         return repo.findById(id);
     }
 
-    public Player getPlayerById(long id){
+    public Player getPlayerById(long id) {
         return findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + id));
     }
@@ -84,7 +84,7 @@ public class PlayerService {
         repo.flush();
     }
 
-    public List<Player> findAllByMarkedForDeletionAtBefore(Instant cutoff){
+    public List<Player> findAllByMarkedForDeletionAtBefore(Instant cutoff) {
         return repo.findAllByMarkedForDeletionAtBefore(cutoff);
     }
 
@@ -158,7 +158,7 @@ public class PlayerService {
     public void activateAccount(Long playerId) {
         Optional<Player> playerOpt = findById(playerId);
 
-        if(playerOpt.isEmpty()) {
+        if (playerOpt.isEmpty()) {
             throw new UsernameNotFoundException("User has NOT been found: " + playerId);
         }
 
@@ -170,7 +170,7 @@ public class PlayerService {
 
     public void changePassword(Long playerId, String newPassword) {
         Optional<Player> playerOpt = findById(playerId);
-        if(playerOpt.isEmpty()) {
+        if (playerOpt.isEmpty()) {
             throw new UsernameNotFoundException("User has NOT been found: " + playerId);
         }
         Player player = playerOpt.get();
@@ -178,27 +178,31 @@ public class PlayerService {
         repo.save(player);
     }
 
+    public void recordEmailSent(Long playerId) {
+        repo.updateLastEmailSentAt(playerId);
+    }
+
     public void changePasswordWithVerification(Long playerId, ChangePasswordRequest request) {
         Player player = getPlayerById(playerId);
 
         if (!passwordEncoder.matches(request.oldPassword(), player.getPasswordHash())) {
-            throw new InvalidCredentialsException("Obecne hasło jest niepoprawne.");
+            throw new InvalidCredentialsException("Current password is incorrect.");
         }
 
         player.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         repo.save(player);
 
-        log.info("Gracz {} pomyślnie zmienił swoje hasło w ustawieniach profilu.", player.getLogin());
+        log.info("Player {} successfully changed their password in profile settings.", player.getLogin());
     }
 
     // for OAuth2 users, that want to set up password
     public void setPasswordIfBlank(Long playerId, String password) {
         Optional<Player> playerOpt = findById(playerId);
-        if(playerOpt.isEmpty()) {
+        if (playerOpt.isEmpty()) {
             throw new UsernameNotFoundException("User has NOT been found: " + playerId);
         }
         Player player = playerOpt.get();
-        if(!player.getPasswordHash().isBlank()) {
+        if (!player.getPasswordHash().isBlank()) {
             throw new PasswordAlreadySetException();
         }
         player.setPasswordHash(passwordEncoder.encode(password));

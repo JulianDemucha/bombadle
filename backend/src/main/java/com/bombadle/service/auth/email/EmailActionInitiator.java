@@ -25,6 +25,7 @@ public class EmailActionInitiator {
                 player, EmailVerificationType.ACCOUNT_ACTIVATION, getExpirationMinutes());
 
         emailService.sendActivationEmail(player.getEmail(), token.getVerificationCode());
+        playerService.recordEmailSent(player.getId());
         log.info("Account activation process initiated for: {}", player.getEmail());
     }
 
@@ -36,6 +37,7 @@ public class EmailActionInitiator {
                 player, EmailVerificationType.PASSWORD_RESET, getExpirationMinutes());
 
         emailService.sendPasswordResetEmail(player.getEmail(), token.getVerificationCode());
+        playerService.recordEmailSent(player.getId());
         log.info("Password reset process initiated for: {}", player.getEmail());
     }
 
@@ -44,6 +46,7 @@ public class EmailActionInitiator {
                 player, EmailVerificationType.ACCOUNT_DELETION, getExpirationMinutes());
 
         emailService.sendAccountDeletionConfirmationEmail(player.getEmail(), token.getVerificationCode());
+        playerService.recordEmailSent(player.getId());
         log.info("Account deletion process initiated for: {}", player.getEmail());
     }
 

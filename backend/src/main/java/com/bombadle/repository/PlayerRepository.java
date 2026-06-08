@@ -39,4 +39,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     void updateLastActiveAtBulk(@Param("ids") Set<Long> ids, @Param("now") Instant now);
 
     int countByLastActiveAtAfter(Instant threshold);
+
+    @Modifying
+    @Query("UPDATE Player p SET p.lastEmailSentAt = CURRENT_TIMESTAMP WHERE p.id = :id")
+    void updateLastEmailSentAt(@Param("id") Long id);
 }
