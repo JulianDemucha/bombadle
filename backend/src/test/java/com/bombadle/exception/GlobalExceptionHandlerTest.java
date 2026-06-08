@@ -16,6 +16,26 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Nested
+    class BadRequestExceptions {
+
+        @Test
+        void handleIllegalArgument_returns400AndCorrectBody() {
+            // Arrange
+            IllegalArgumentException exception = new IllegalArgumentException("Invalid name");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleIllegalArgument(exception);
+
+            // Assert
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(400, response.getBody().statusCode());
+            assertEquals("Bad Request", response.getBody().error());
+            assertEquals("Invalid name", response.getBody().message());
+        }
+    }
+
+    @Nested
     class NotFoundExceptions {
 
         @Test
@@ -64,6 +84,22 @@ class GlobalExceptionHandlerTest {
             assertEquals(404, response.getBody().statusCode());
             assertEquals("Character Card Not Found", response.getBody().error());
             assertEquals("Character card with id 99 not found", response.getBody().message());
+        }
+
+        @Test
+        void handleOtpNotFound_returns404AndCorrectBody() {
+            // Arrange
+            OtpNotFoundException exception = new OtpNotFoundException("OTP not found");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleOtpNotFound(exception);
+
+            // Assert
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(404, response.getBody().statusCode());
+            assertEquals("Verification code not found", response.getBody().error());
+            assertEquals("OTP not found", response.getBody().message());
         }
     }
 
@@ -168,6 +204,26 @@ class GlobalExceptionHandlerTest {
     }
 
     @Nested
+    class GoneExceptions {
+
+        @Test
+        void handleExpiredOtp_returns410AndCorrectBody() {
+            // Arrange
+            ExpiredOtpException exception = new ExpiredOtpException("Code expired");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleExpiredOtp(exception);
+
+            // Assert
+            assertEquals(HttpStatus.GONE, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(410, response.getBody().statusCode());
+            assertEquals("Verification code has expired", response.getBody().error());
+            assertEquals("Code expired", response.getBody().message());
+        }
+    }
+
+    @Nested
     class SecurityExceptions {
 
         @Test
@@ -216,6 +272,39 @@ class GlobalExceptionHandlerTest {
             assertEquals(403, response.getBody().statusCode());
             assertEquals("Forbidden", response.getBody().error());
             assertEquals("Forbidden action", response.getBody().message());
+        }
+
+        @Test
+        void handleUnverifiedEmail_returns403AndCorrectBody() {
+            // Arrange
+            UnverifiedEmailException exception = new UnverifiedEmailException("Account isn't verified", "test@test.com");
+
+            // Act
+            ResponseEntity<ErrorResponseWithEmail> response = handler.handleUnverifiedEmail(exception);
+
+            // Assert
+            assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(403, response.getBody().statusCode());
+            assertEquals("Unverified Email", response.getBody().error());
+            assertEquals("Account isn't verified", response.getBody().message());
+            assertEquals("test@test.com", response.getBody().email());
+        }
+
+        @Test
+        void handleInvalidOtp_returns403AndCorrectBody() {
+            // Arrange
+            InvalidOtpException exception = new InvalidOtpException("Wrong code");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleInvalidOtp(exception);
+
+            // Assert
+            assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(403, response.getBody().statusCode());
+            assertEquals("Invalid verification code", response.getBody().error());
+            assertEquals("Wrong code", response.getBody().message());
         }
     }
 

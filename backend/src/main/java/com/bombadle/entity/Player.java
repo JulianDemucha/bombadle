@@ -73,6 +73,12 @@ public class Player{
     @Column(name = "marked_for_deletion_at")
     private Instant markedForDeletionAt;
 
+    @Column(name ="email_verified")
+    private Boolean emailVerified = false;
+
+    @Column(name = "last_email_sent_at")
+    private Instant lastEmailSentAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", nullable = false)
     private PlayerAuthProvider authProvider;

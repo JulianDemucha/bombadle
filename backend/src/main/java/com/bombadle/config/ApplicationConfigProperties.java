@@ -11,7 +11,8 @@ public record ApplicationConfigProperties(
         CsrfConfig csrf,
         FrontendConfig frontend,
         CacheConfig cache,
-        DailyResetConfig dailyReset
+        DailyResetConfig dailyReset,
+        EmailConfig email
 ) {
     public record JwtConfig(
             String secret,
@@ -50,4 +51,11 @@ public record ApplicationConfigProperties(
             boolean enabled
     ) {
     }
+
+    public record EmailConfig(
+            String fromAddress,
+            Duration otpExpiration,
+            Boolean autoActivateAccount,
+            Integer emailRateLimitSeconds
+    ) {}
 }

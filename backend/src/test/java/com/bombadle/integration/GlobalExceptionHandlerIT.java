@@ -22,6 +22,21 @@ class GlobalExceptionHandlerIT {
     @RestController
     private static class DummyController {
 
+        @GetMapping("/test/illegal-argument")
+        public void throwIllegalArgument() {
+            throw new IllegalArgumentException("Invalid ID provided");
+        }
+
+        @GetMapping("/test/otp-not-found")
+        public void throwOtpNotFound() {
+            throw new OtpNotFoundException("OTP for this user not found");
+        }
+
+        @GetMapping("/test/expired-otp")
+        public void throwExpiredOtp() {
+            throw new ExpiredOtpException("This code has expired");
+        }
+
         @GetMapping("/test/404")
         public void throwNotFound() {
             throw new UsernameNotFoundException("User missing");
@@ -61,6 +76,11 @@ class GlobalExceptionHandlerIT {
         public void throwCharacterCardNotFound() {
             throw new CharacterCardNotFoundException(99L);
         }
+
+        @GetMapping("/test/unverified-email")
+        public void throwUnverifiedEmail() {
+            throw new UnverifiedEmailException("Account isn't verified", "test@test.com");
+        }
     }
 
     @BeforeEach
@@ -74,8 +94,34 @@ class GlobalExceptionHandlerIT {
     class ClientErrorTests {
 
         @Test
+        void whenIllegalArgument_returns400AndJson() throws Exception {
+            mockMvc.perform(get("/test/illegal-argument"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.statusCode").value(400))
+                    .andExpect(jsonPath("$.error").value("Bad Request"))
+                    .andExpect(jsonPath("$.message").value("Invalid ID provided"));
+        }
+
+        @Test
+        void whenOtpNotFound_returns404AndJson() throws Exception {
+            mockMvc.perform(get("/test/otp-not-found"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.statusCode").value(404))
+                    .andExpect(jsonPath("$.error").value("Verification code not found"))
+                    .andExpect(jsonPath("$.message").value("OTP for this user not found"));
+        }
+
+        @Test
+        void whenExpiredOtp_returns410AndJson() throws Exception {
+            mockMvc.perform(get("/test/expired-otp"))
+                    .andExpect(status().isGone())
+                    .andExpect(jsonPath("$.statusCode").value(410))
+                    .andExpect(jsonPath("$.error").value("Verification code has expired"))
+                    .andExpect(jsonPath("$.message").value("This code has expired"));
+        }
+
+        @Test
         void whenUsernameNotFound_returns404AndJson() throws Exception {
-            // Act & Assert
             mockMvc.perform(get("/test/404"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.statusCode").value(404))
@@ -85,7 +131,6 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenCharacterCardNotFound_returns404AndJson() throws Exception {
-            // Act & Assert
             mockMvc.perform(get("/test/character-card-not-found"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.statusCode").value(404))
@@ -95,7 +140,6 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenRegistrationConflict_returns409AndJson() throws Exception {
-            // Act & Assert
             mockMvc.perform(get("/test/409"))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.statusCode").value(409))
@@ -105,7 +149,6 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenCardAlreadyGuessed_returns409AndJson() throws Exception {
-            // Act & Assert
             mockMvc.perform(get("/test/card-already-guessed"))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.statusCode").value(409))
@@ -115,7 +158,6 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenAnonymousSessionAlreadyGuessed_returns409AndJson() throws Exception {
-            // Act & Assert
             mockMvc.perform(get("/test/anonymous-session-already-guessed"))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.statusCode").value(409))
@@ -125,7 +167,6 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenInvalidCredentials_returns401AndJson() throws Exception {
-            // Act & Assert
             mockMvc.perform(get("/test/401"))
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.statusCode").value(401))
@@ -135,12 +176,21 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenAccessDenied_returns403AndJson() throws Exception {
-            // Act & Assert
             mockMvc.perform(get("/test/403"))
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.statusCode").value(403))
                     .andExpect(jsonPath("$.error").value("Forbidden"))
                     .andExpect(jsonPath("$.message").value("Forbidden action"));
+        }
+
+        @Test
+        void whenUnverifiedEmail_returns403AndJson() throws Exception {
+            mockMvc.perform(get("/test/unverified-email"))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.statusCode").value(403))
+                    .andExpect(jsonPath("$.error").value("Unverified Email"))
+                    .andExpect(jsonPath("$.message").value("Account isn't verified"))
+                    .andExpect(jsonPath("$.email").value("test@test.com"));
         }
     }
 
@@ -149,7 +199,6 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenGlobalException_returns500AndJson() throws Exception {
-            // Act & Assert
             mockMvc.perform(get("/test/500"))
                     .andExpect(status().isInternalServerError())
                     .andExpect(jsonPath("$.statusCode").value(500))

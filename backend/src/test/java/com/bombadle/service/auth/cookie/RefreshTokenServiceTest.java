@@ -59,6 +59,7 @@ class RefreshTokenServiceTest {
     @BeforeEach
     void setUp() {
         player = Player.builder()
+                .id(1L)
                 .role(Role.ROLE_USER)
                 .build();
         player.setEmail(TEST_EMAIL);
@@ -106,6 +107,35 @@ class RefreshTokenServiceTest {
             // Act & Assert
             assertThrows(UsernameNotFoundException.class, () -> refreshTokenService.createRefreshToken(TEST_EMAIL));
             verify(refreshTokenRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    class FindByPlayerIdTests {
+
+        @Test
+        void findByPlayerId_tokenExists_returnsOptionalWithToken() {
+            // Arrange
+            when(refreshTokenRepository.findByPlayerId(player.getId())).thenReturn(Optional.of(existingToken));
+
+            // Act
+            Optional<RefreshToken> result = refreshTokenService.findByPlayerId(player.getId());
+
+            // Assert
+            assertTrue(result.isPresent());
+            assertEquals(existingToken, result.get());
+        }
+
+        @Test
+        void findByPlayerId_tokenDoesNotExist_returnsEmptyOptional() {
+            // Arrange
+            when(refreshTokenRepository.findByPlayerId(player.getId())).thenReturn(Optional.empty());
+
+            // Act
+            Optional<RefreshToken> result = refreshTokenService.findByPlayerId(player.getId());
+
+            // Assert
+            assertTrue(result.isEmpty());
         }
     }
 
@@ -180,7 +210,19 @@ class RefreshTokenServiceTest {
     }
 
     @Nested
-    class CleanupTests {
+    class DeletionTests {
+
+        @Test
+        void manualDelete_validToken_callsRepositoryDelete() {
+            // Arrange
+            RefreshToken token = mock(RefreshToken.class);
+
+            // Act
+            refreshTokenService.manualDelete(token);
+
+            // Assert
+            verify(refreshTokenRepository).delete(token);
+        }
 
         @Test
         void deleteRevokedRefreshTokens_callsRepositoryWithCorrectTime() {

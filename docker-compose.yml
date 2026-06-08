@@ -23,5 +23,16 @@ services:
       POSTGRES_USER: sa
       POSTGRES_PASSWORD: sa
 
+  mailpit:
+    image: axllent/mailpit
+    profiles: ["dev"]
+    container_name: bombadle-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    environment:
+      MP_MAX_MESSAGES: 500
+    restart: unless-stopped
+
 volumes:
   postgres_data:

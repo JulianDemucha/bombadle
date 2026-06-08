@@ -1,9 +1,10 @@
 package com.bombadle.service.player;
 
 import com.bombadle.dto.PlayerDto;
+import com.bombadle.dto.request.ChangePasswordRequest;
 import com.bombadle.entity.Score;
-import com.bombadle.enums.PlayerAuthProvider;
-import com.bombadle.enums.Role;
+import com.bombadle.exception.InvalidCredentialsException;
+import com.bombadle.exception.PasswordAlreadySetException;
 import com.bombadle.exception.UsernameAlreadyTakenException;
 import com.bombadle.dto.request.PlayerUpdateRequest;
 import com.bombadle.entity.Player;
@@ -17,6 +18,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -29,9 +31,9 @@ import java.util.Optional;
 @AllArgsConstructor
 public class PlayerService {
     private final PlayerRepository repo;
-    private final PlayerDeletionService playerDeletionService;
     private final LeaderboardService leaderboardService;
     private final CacheManager cacheManager;
+    private final PasswordEncoder passwordEncoder;
 
     public Optional<Player> findByEmail(String email){
         if (email == null) return Optional.empty();
@@ -153,50 +155,65 @@ public class PlayerService {
         return PlayerDto.toDto(updatedPlayer);
     }
 
+    public void activateAccount(Long playerId) {
+        Optional<Player> playerOpt = findById(playerId);
+
+        if(playerOpt.isEmpty()) {
+            throw new UsernameNotFoundException("User has NOT been found: " + playerId);
+        }
+
+        Player player = playerOpt.get();
+        player.setEmailVerified(true);
+
+        repo.save(player);
+    }
+
+    public void changePassword(Long playerId, String newPassword) {
+        Optional<Player> playerOpt = findById(playerId);
+        if(playerOpt.isEmpty()) {
+            throw new UsernameNotFoundException("User has NOT been found: " + playerId);
+        }
+        Player player = playerOpt.get();
+        player.setPasswordHash(passwordEncoder.encode(newPassword));
+        repo.save(player);
+    }
+
+    public void changePasswordWithVerification(Long playerId, ChangePasswordRequest request) {
+        Player player = getPlayerById(playerId);
+
+        if (!passwordEncoder.matches(request.oldPassword(), player.getPasswordHash())) {
+            throw new InvalidCredentialsException("Obecne hasło jest niepoprawne.");
+        }
+
+        player.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        repo.save(player);
+
+        log.info("Gracz {} pomyślnie zmienił swoje hasło w ustawieniach profilu.", player.getLogin());
+    }
+
+    // for OAuth2 users, that want to set up password
+    public void setPasswordIfBlank(Long playerId, String password) {
+        Optional<Player> playerOpt = findById(playerId);
+        if(playerOpt.isEmpty()) {
+            throw new UsernameNotFoundException("User has NOT been found: " + playerId);
+        }
+        Player player = playerOpt.get();
+        if(!player.getPasswordHash().isBlank()) {
+            throw new PasswordAlreadySetException();
+        }
+        player.setPasswordHash(passwordEncoder.encode(password));
+        repo.save(player);
+    }
+
     public Player save(Player player) {
         return repo.save(player);
     }
 
-    @Transactional
-    public Player registerOAuth2Player(String email, String rawName) {
-        String cleanName = rawName.replace('\u00A0', ' ').strip();
-        String uniqueLogin = generateUniqueLogin(cleanName);
-
-        Player newPlayer = Player.builder()
-                .displayName(cleanName)
-                .login(uniqueLogin)
-                .email(email.toLowerCase())
-                .passwordHash("")
-                .role(Role.ROLE_USER)
-                .createdAt(Instant.now())
-                .lastActiveAt(Instant.now())
-                .hasGuessedToday(false)
-                .avatarImage(AvatarImage.AVATAR_DEFAULT)
-                .authProvider(PlayerAuthProvider.OAUTH2_GOOGLE)
-                .build();
-
-        return save(newPlayer);
-    }
-
-
-    @Transactional
-    public void deletePlayer(long playerId) {
-        playerDeletionService.deletePlayerSelf(playerId);
-    }
 
     public void manualDelete(Player player) {
         repo.delete(player);
     }
 
-    private String generateUniqueLogin(String baseName) {
-        String login = baseName.toLowerCase();
-        int counter = 1;
-        while (repo.existsByLogin(login)) {
-            login = baseName.toLowerCase() + counter;
-            counter++;
-        }
-        return login;
-    }
 
     public Boolean existsByLogin(String login) {
         if (login == null) return false;

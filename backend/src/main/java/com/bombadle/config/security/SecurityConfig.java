@@ -3,7 +3,7 @@ package com.bombadle.config.security;
 import com.bombadle.security.filter.*;
 import com.bombadle.security.oauth2.CustomOAuth2UserService;
 import com.bombadle.security.oauth2.OAuth2SuccessHandler;
-import com.bombadle.service.auth.CsrfCookieService;
+import com.bombadle.service.auth.cookie.CsrfCookieService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

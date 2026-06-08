@@ -9,10 +9,27 @@ spring:
       ddl-auto: create-drop
   flyway:
     enabled: false
+  mail:
+    host: localhost
+    port: 1025
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
 bombadle:
   daily-reset:
     enabled: true
   jwt:
     secret: "superkluczdotestownoeloeloopukpukpukpukplakalplakalsigmasigmaboy"
+  email:
+    from-address: test@bombadle.com
+
 server:
   port: 0
+
+

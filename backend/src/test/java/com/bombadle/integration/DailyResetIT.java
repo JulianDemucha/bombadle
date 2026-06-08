@@ -78,10 +78,11 @@ class DailyResetIT {
                 .accountLocked(false)
                 .createdAt(Instant.now())
                 .lastActiveAt(Instant.now())
+                .emailVerified(true)
                 .build());
 
         deletedPlayer = playerRepository.save(Player.builder()
-                .email("usuniety@kosmici.com")
+                .email("usuniety@juzniesigma.com")
                 .login("usuniety")
                 .passwordHash("hash")
                 .role(Role.ROLE_USER)

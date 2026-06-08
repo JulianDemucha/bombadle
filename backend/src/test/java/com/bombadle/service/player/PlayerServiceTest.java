@@ -2,6 +2,9 @@ package com.bombadle.service.player;
 
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.dto.PlayerDto;
+import com.bombadle.dto.request.ChangePasswordRequest;
+import com.bombadle.exception.InvalidCredentialsException;
+import com.bombadle.exception.PasswordAlreadySetException;
 import com.bombadle.exception.UsernameAlreadyTakenException;
 import com.bombadle.dto.request.PlayerUpdateRequest;
 import com.bombadle.entity.Player;
@@ -20,8 +23,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
 import java.util.List;
@@ -37,13 +42,13 @@ class PlayerServiceTest {
     private PlayerRepository repo;
 
     @Mock
-    private PlayerDeletionService playerDeletionService;
-
-    @Mock
     private LeaderboardService leaderboardService;
 
     @Mock
     private CacheManager cacheManager;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private PlayerService playerService;
@@ -62,6 +67,7 @@ class PlayerServiceTest {
                 .totalSuccessfulGuesses(0)
                 .hasGuessedToday(false)
                 .authProvider(PlayerAuthProvider.LOCAL)
+                .emailVerified(false)
                 .build();
     }
 
@@ -191,7 +197,9 @@ class PlayerServiceTest {
         void getAllPlayersWithPageable_returnsPage() {
             // Arrange
             Pageable pageable = mock(Pageable.class);
-            Page<Player> expectedPage = mock(Page.class);
+
+            Page<Player> expectedPage = new PageImpl<>(List.of(mock(Player.class)));
+
             when(repo.findAllByOrderByIdAsc(pageable)).thenReturn(expectedPage);
 
             // Act
@@ -425,62 +433,7 @@ class PlayerServiceTest {
     }
 
     @Nested
-    class RegisterOAuth2PlayerTests {
-
-        @Test
-        void registerOAuth2Player_validData_generatesUniqueLoginAndSavesPlayer() {
-            // Arrange
-            String rawName = "John Doe";
-            String email = "john@example.com";
-
-            when(repo.existsByLogin("john doe")).thenReturn(false);
-            when(repo.save(any(Player.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-            // Act
-            Player result = playerService.registerOAuth2Player(email, rawName);
-
-            // Assert
-            assertEquals("john doe", result.getLogin());
-            assertEquals("John Doe", result.getDisplayName());
-            assertEquals("john@example.com", result.getEmail());
-            assertEquals(PlayerAuthProvider.OAUTH2_GOOGLE, result.getAuthProvider());
-            verify(repo).save(any(Player.class));
-        }
-
-        @Test
-        void registerOAuth2Player_loginExists_generatesLoginWithCounter() {
-            // Arrange
-            String rawName = "John";
-            String email = "john@example.com";
-
-            when(repo.existsByLogin("john")).thenReturn(true);
-            when(repo.existsByLogin("john1")).thenReturn(false);
-            when(repo.save(any(Player.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-            // Act
-            Player result = playerService.registerOAuth2Player(email, rawName);
-
-            // Assert
-            assertEquals("john1", result.getLogin());
-            assertEquals("John", result.getDisplayName());
-            verify(repo, times(2)).existsByLogin(anyString());
-        }
-    }
-
-    @Nested
     class DeletePlayerTests {
-
-        @Test
-        void deletePlayer_callsDeletionService() {
-            // Arrange
-            long playerId = 1L;
-
-            // Act
-            playerService.deletePlayer(playerId);
-
-            // Assert
-            verify(playerDeletionService).deletePlayerSelf(playerId);
-        }
 
         @Test
         void manualDelete_validPlayer_callsRepositoryDelete() {
@@ -544,6 +497,137 @@ class PlayerServiceTest {
 
             // Assert
             assertTrue(result);
+        }
+    }
+
+    @Nested
+    class AccountActivationTests {
+        @Test
+        void activateAccount_userExists_setsEmailVerifiedAndSaves() {
+            // Arrange
+            long playerId = 1L;
+            Player player = buildPlayer(playerId, "test@mail.com", "test");
+            when(repo.findById(playerId)).thenReturn(Optional.of(player));
+
+            // Act
+            playerService.activateAccount(playerId);
+
+            // Assert
+            assertTrue(player.getEmailVerified());
+            verify(repo).save(player);
+        }
+
+        @Test
+        void activateAccount_userDoesNotExist_throwsUsernameNotFoundException() {
+            // Arrange
+            long playerId = 1L;
+            when(repo.findById(playerId)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(UsernameNotFoundException.class, () -> playerService.activateAccount(playerId));
+        }
+    }
+
+    @Nested
+    class ChangePasswordTests {
+        @Test
+        void changePassword_userExists_encodesAndSaves() {
+            // Arrange
+            long playerId = 1L;
+            Player player = buildPlayer(playerId, "test@mail.com", "test");
+            when(repo.findById(playerId)).thenReturn(Optional.of(player));
+            when(passwordEncoder.encode("newPass")).thenReturn("encodedNewPass");
+
+            // Act
+            playerService.changePassword(playerId, "newPass");
+
+            // Assert
+            assertEquals("encodedNewPass", player.getPasswordHash());
+            verify(repo).save(player);
+        }
+
+        @Test
+        void changePassword_userDoesNotExist_throwsException() {
+            // Arrange
+            long playerId = 1L;
+            when(repo.findById(playerId)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(UsernameNotFoundException.class, () -> playerService.changePassword(playerId, "newPass"));
+        }
+    }
+
+    @Nested
+    class ChangePasswordWithVerificationTests {
+        @Test
+        void changePasswordWithVerification_validOldPassword_updatesAndSaves() {
+            // Arrange
+            long playerId = 1L;
+            Player player = buildPlayer(playerId, "test@mail.com", "test");
+            player.setPasswordHash("encodedOldPass");
+            ChangePasswordRequest request = new ChangePasswordRequest("oldPass", "newPass");
+
+            when(repo.findById(playerId)).thenReturn(Optional.of(player));
+            when(passwordEncoder.matches("oldPass", "encodedOldPass")).thenReturn(true);
+            when(passwordEncoder.encode("newPass")).thenReturn("encodedNewPass");
+
+            // Act
+            playerService.changePasswordWithVerification(playerId, request);
+
+            // Assert
+            assertEquals("encodedNewPass", player.getPasswordHash());
+            verify(repo).save(player);
+        }
+
+        @Test
+        void changePasswordWithVerification_invalidOldPassword_throwsInvalidCredentialsException() {
+            // Arrange
+            long playerId = 1L;
+            Player player = buildPlayer(playerId, "test@mail.com", "test");
+            player.setPasswordHash("encodedOldPass");
+            ChangePasswordRequest request = new ChangePasswordRequest("wrongOldPass", "newPass");
+
+            when(repo.findById(playerId)).thenReturn(Optional.of(player));
+            when(passwordEncoder.matches("wrongOldPass", "encodedOldPass")).thenReturn(false);
+
+            // Act & Assert
+            assertThrows(InvalidCredentialsException.class, () -> playerService.changePasswordWithVerification(playerId, request));
+            verify(repo, never()).save(any());
+        }
+    }
+
+    @Nested
+    class SetPasswordIfBlankTests {
+        @Test
+        void setPasswordIfBlank_passwordIsBlank_updatesAndSaves() {
+            // Arrange
+            long playerId = 1L;
+            Player player = buildPlayer(playerId, "test@mail.com", "test");
+            player.setPasswordHash("");
+
+            when(repo.findById(playerId)).thenReturn(Optional.of(player));
+            when(passwordEncoder.encode("newPass")).thenReturn("encodedNewPass");
+
+            // Act
+            playerService.setPasswordIfBlank(playerId, "newPass");
+
+            // Assert
+            assertEquals("encodedNewPass", player.getPasswordHash());
+            verify(repo).save(player);
+        }
+
+        @Test
+        void setPasswordIfBlank_passwordNotBlank_throwsPasswordAlreadySetException() {
+            // Arrange
+            long playerId = 1L;
+            Player player = buildPlayer(playerId, "test@mail.com", "test");
+            player.setPasswordHash("existingHash");
+
+            when(repo.findById(playerId)).thenReturn(Optional.of(player));
+
+            // Act & Assert
+            assertThrows(PasswordAlreadySetException.class, () -> playerService.setPasswordIfBlank(playerId, "newPass"));
+            verify(repo, never()).save(any());
         }
     }
 }

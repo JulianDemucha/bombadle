@@ -65,6 +65,7 @@ class PostLoginServiceTest {
     @Test
     void processSuccessfulLogin_withAnonSessionAndMergeTrigger_executesFullFlowAndDeletesCookies() {
         // Arrange
+        player.setEmailVerified(true);
         UUID anonSessionId = UUID.randomUUID();
 
         when(cookieService.getCookieValue(eq(request), eq("ANON_SESSION_ID"), any()))
@@ -91,6 +92,7 @@ class PostLoginServiceTest {
     @Test
     void processSuccessfulLogin_withoutCookies_executesFlowWithoutMergeAndCookieDeletion() {
         // Arrange
+        player.setEmailVerified(true);
         when(cookieService.getCookieValue(eq(request), eq("ANON_SESSION_ID"), any()))
                 .thenReturn(Optional.empty());
         when(cookieService.getCookieValue(eq(request), eq("TRIGGER_MERGE"), any()))
@@ -109,7 +111,6 @@ class PostLoginServiceTest {
         verify(authCookiesService).setAuthCookies(JWT_TOKEN, REFRESH_TOKEN, response);
         verify(csrfCookieService).ensureCsrfCookie(request, response);
 
-        // Upewniamy się, że metody kasujące ciastka NIE zostały wywołane
         verify(cookieService, never()).deleteCookieFromResponse(response, "ANON_SESSION_ID");
         verify(cookieService, never()).deleteCookieFromResponse(response, "TRIGGER_MERGE");
     }
@@ -117,6 +118,7 @@ class PostLoginServiceTest {
     @Test
     void processSuccessfulLogin_onlyAnonSessionIdPresent_deletesOnlyAnonCookie() {
         // Arrange
+        player.setEmailVerified(true);
         UUID anonSessionId = UUID.randomUUID();
 
         when(cookieService.getCookieValue(eq(request), eq("ANON_SESSION_ID"), any()))
@@ -134,5 +136,24 @@ class PostLoginServiceTest {
         verify(anonymousMergeService).handleAnonymousSessionMerge(player, anonSessionId, false);
         verify(cookieService).deleteCookieFromResponse(response, "ANON_SESSION_ID");
         verify(cookieService, never()).deleteCookieFromResponse(response, "TRIGGER_MERGE");
+    }
+
+    @Test
+    void processSuccessfulLogin_emailNotVerified_doesNotCreateAuthTokens() {
+        // Arrange
+        player.setEmailVerified(false);
+        when(cookieService.getCookieValue(eq(request), eq("ANON_SESSION_ID"), any()))
+                .thenReturn(Optional.empty());
+        when(cookieService.getCookieValue(eq(request), eq("TRIGGER_MERGE"), any()))
+                .thenReturn(Optional.empty());
+
+        // Act
+        postLoginService.processSuccessfulLogin(request, response, player);
+
+        // Assert
+        verify(anonymousMergeService).handleAnonymousSessionMerge(player, null, false);
+        verify(refreshTokenService, never()).createRefreshToken(any());
+        verify(authCookiesService, never()).setAuthCookies(any(), any(), any());
+        verify(csrfCookieService).ensureCsrfCookie(request, response);
     }
 }

@@ -23,6 +23,12 @@ bombadle:
   daily-reset:
     enabled: true
 
+  email:
+    from-address: ${MAIL_FROM}
+    otp-expiration: 15m
+    auto-activate-account: false
+    email-rate-limit-seconds: 60
+
   # CACHE CONFIGURATION
   cache:
     default-ttl: 3600 # 1 hour
@@ -66,6 +72,18 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS}
   jpa:
     hibernate:
       ddl-auto: none

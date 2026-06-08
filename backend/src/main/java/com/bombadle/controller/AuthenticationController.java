@@ -1,13 +1,17 @@
 package com.bombadle.controller;
 
 import com.bombadle.dto.RefreshTokenCookieDto;
+import com.bombadle.dto.request.*;
 import com.bombadle.entity.Player;
 import com.bombadle.service.auth.*;
-import com.bombadle.dto.request.AuthenticationRequest;
-import com.bombadle.dto.request.RegisterRequest;
+import com.bombadle.service.auth.cookie.AuthCookiesService;
+import com.bombadle.service.auth.cookie.RefreshTokenService;
+import com.bombadle.service.auth.email.EmailActionInitiator;
+import com.bombadle.service.auth.email.EmailConfirmationService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -26,10 +30,12 @@ public class AuthenticationController {
     private final RefreshTokenService refreshTokenService;
     private final AuthCookiesService authCookieService;
     private final PostLoginService postLoginService;
+    private final EmailConfirmationService emailConfirmationService;
+    private final EmailActionInitiator emailActionInitiator;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(
-            @RequestBody RegisterRequest registerRequest,
+            @RequestBody @Valid RegisterRequest registerRequest,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
@@ -40,7 +46,7 @@ public class AuthenticationController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(
-            @RequestBody AuthenticationRequest authRequest,
+            @RequestBody @Valid AuthenticationRequest authRequest,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
@@ -49,6 +55,27 @@ public class AuthenticationController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(
+            @Valid @RequestBody VerificationCodeWithEmailRequest request
+    ) {
+        emailConfirmationService.confirmEmailVerification(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody ForgotPasswordRequest request) {
+        emailActionInitiator.initiatePasswordReset(request.email());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/confirm-reset-password")
+    public ResponseEntity<Void> confirmResetPassword(@RequestBody PasswordResetRequest request) {
+        emailConfirmationService.confirmResetPassword(request);
+        return ResponseEntity.ok().build();
+    }
+
+    //todo: switch to @RequestBody, so potential email won't log from url
     @GetMapping("/check/email")
     public ResponseEntity<Map<String, Object>> checkPlayerByEmail(@RequestParam String email) {
         try {
@@ -82,7 +109,7 @@ public class AuthenticationController {
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response
     ) {
-        if(refreshToken == null) {
+        if (refreshToken == null) {
             return ResponseEntity.badRequest().body("refreshToken not found");
         }
 

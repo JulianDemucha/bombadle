@@ -14,6 +14,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetails);
+    }
+
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUsernameNotFound(UsernameNotFoundException ex) {
 
@@ -156,4 +166,44 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDetails);
     }
 
+    @ExceptionHandler(UnverifiedEmailException.class)
+    public ResponseEntity<ErrorResponseWithEmail> handleUnverifiedEmail(UnverifiedEmailException ex) {
+        ErrorResponseWithEmail errorDetails = new ErrorResponseWithEmail(
+                HttpStatus.FORBIDDEN.value(),
+                "Unverified Email",
+                ex.getMessage(),
+                ex.getEmail()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorDetails);
+    }
+
+    @ExceptionHandler(InvalidOtpException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidOtp(InvalidOtpException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Invalid verification code",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorDetails);
+    }
+
+    @ExceptionHandler(ExpiredOtpException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredOtp(ExpiredOtpException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.GONE.value(),
+                "Verification code has expired",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.GONE).body(errorDetails);
+    }
+
+    @ExceptionHandler(OtpNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOtpNotFound(OtpNotFoundException ex) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Verification code not found",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDetails);
+    }
 }

@@ -1,6 +1,10 @@
 package com.bombadle.security.oauth2;
 
 import com.bombadle.entity.Player;
+import com.bombadle.enums.AvatarImage;
+import com.bombadle.enums.PlayerAuthProvider;
+import com.bombadle.enums.Role;
+import com.bombadle.service.auth.AuthenticationService;
 import com.bombadle.service.player.PlayerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +16,8 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +32,7 @@ public class CustomOAuth2UserService extends OidcUserService {
 
         String email = oidcUser.getAttribute("email");
         Object nameAttribute = oidcUser.getAttribute("name");
+
         if (email == null) {
             OAuth2Error error = new OAuth2Error("missing_email", "No email address found in OAuth2 profile", null);
             throw new OAuth2AuthenticationException(error);
@@ -37,12 +44,49 @@ public class CustomOAuth2UserService extends OidcUserService {
         }
 
         Player player = playerService.findByEmail(email.toLowerCase())
-                .orElseGet( () -> playerService.registerOAuth2Player(
+                .orElseGet(() -> registerOAuth2Player(
                         email.toLowerCase(),
                         nameAttribute.toString()
-                        )
-                );
+                ));
+
+        if (!player.getEmailVerified()) {
+            log.info("Player {} logged in via OAuth2. Auto-verifying unverified LOCAL account email.", player.getLogin());
+            playerService.activateAccount(player.getId());
+        }
 
         return new CustomOAuth2PlayerUser(oidcUser, player);
+    }
+
+
+    private Player registerOAuth2Player(String email, String rawName) {
+        String cleanName = rawName.replace('\u00A0', ' ').strip();
+        String uniqueLogin = generateUniqueLogin(cleanName);
+
+        Player newPlayer = Player.builder()
+                .displayName(cleanName)
+                .login(uniqueLogin)
+                .email(email.toLowerCase())
+                .passwordHash("")
+                .role(Role.ROLE_USER)
+                .createdAt(Instant.now())
+                .lastActiveAt(Instant.now())
+                .hasGuessedToday(false)
+                .accountLocked(false)
+                .emailVerified(true)
+                .avatarImage(AvatarImage.AVATAR_DEFAULT)
+                .authProvider(PlayerAuthProvider.OAUTH2_GOOGLE)
+                .build();
+
+        return playerService.save(newPlayer);
+    }
+
+    private String generateUniqueLogin(String baseName) {
+        String login = baseName.toLowerCase();
+        int counter = 1;
+        while (playerService.existsByLogin(login)) {
+            login = baseName.toLowerCase() + counter;
+            counter++;
+        }
+        return login;
     }
 }

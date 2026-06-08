@@ -39,16 +39,22 @@ public class CustomOAuth2UserServiceTest {
             // Arrange
             Map<String, Object> claims = Map.of("sub", "sigmaId123", "email", "sigma@sigma.sigma", "name", "sigma");
             OidcUserRequest userRequest = createOidcUserRequest(claims);
+
             when(playerService.findByEmail("sigma@sigma.sigma")).thenReturn(Optional.empty());
 
-            Player dummyPlayer = Player.builder().email("sigma@sigma.sigma").build();
-            when(playerService.registerOAuth2Player("sigma@sigma.sigma", "sigma")).thenReturn(dummyPlayer);
+            when(playerService.existsByLogin("sigma")).thenReturn(false);
+
+            Player savedPlayer = Player.builder()
+                    .email("sigma@sigma.sigma")
+                    .emailVerified(true)
+                    .build();
+            when(playerService.save(any(Player.class))).thenReturn(savedPlayer);
 
             // Act
             OidcUser resultUser = customOAuth2UserService.loadUser(userRequest);
 
             // Assert
-            verify(playerService).registerOAuth2Player("sigma@sigma.sigma", "sigma");
+            verify(playerService, times(1)).save(any(Player.class));
             assertNotNull(resultUser);
         }
 
@@ -57,13 +63,19 @@ public class CustomOAuth2UserServiceTest {
             // Arrange
             Map<String, Object> claims = Map.of("sub", "sigmaId123", "email", "sigma@sigma.sigma", "name", "sigma");
             OidcUserRequest userRequest = createOidcUserRequest(claims);
-            when(playerService.findByEmail("sigma@sigma.sigma")).thenReturn(Optional.of(Player.builder().build()));
+
+            Player existingPlayer = Player.builder()
+                    .id(1L)
+                    .email("sigma@sigma.sigma")
+                    .emailVerified(true)
+                    .build();
+            when(playerService.findByEmail("sigma@sigma.sigma")).thenReturn(Optional.of(existingPlayer));
 
             // Act
             OidcUser resultUser = customOAuth2UserService.loadUser(userRequest);
 
             // Assert
-            verify(playerService, never()).registerOAuth2Player(anyString(), anyString());
+            verify(playerService, never()).save(any(Player.class));
             assertNotNull(resultUser);
         }
 

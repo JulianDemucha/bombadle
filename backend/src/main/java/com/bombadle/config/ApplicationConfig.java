@@ -34,7 +34,8 @@ public class ApplicationConfig {
     @Bean
     public AuthenticationProvider authenticationProvider(
             UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder
+    ) {
 
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder);
@@ -81,6 +82,11 @@ public class ApplicationConfig {
     @Bean
     public ApplicationConfigProperties.CsrfConfig csrfConfig(ApplicationConfigProperties config) {
         return config.csrf();
+    }
+
+    @Bean
+    public ApplicationConfigProperties.EmailConfig emailConfig(ApplicationConfigProperties config) {
+        return config.email();
     }
 
 

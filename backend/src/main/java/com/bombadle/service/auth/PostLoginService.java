@@ -45,13 +45,15 @@ public class PostLoginService {
                 triggerMerge
         );
 
-        RefreshTokenCookieDto refreshData = refreshTokenService.createRefreshToken(player.getEmail());
 
-        authCookiesService.setAuthCookies(
-                refreshData.getJwt(),
-                refreshData.getRefreshToken(),
-                response
-        );
+        if(player.getEmailVerified()){
+            RefreshTokenCookieDto refreshData = refreshTokenService.createRefreshToken(player.getEmail());
+            authCookiesService.setAuthCookies(
+                    refreshData.getJwt(),
+                    refreshData.getRefreshToken(),
+                    response
+            );
+        }
         csrfCookieService.ensureCsrfCookie(request, response);
 
         if (anonSessionId != null) {

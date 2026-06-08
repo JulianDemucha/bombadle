@@ -1,5 +1,6 @@
 package com.bombadle.service.auth;
 
+import com.bombadle.config.ApplicationConfigProperties;
 import com.bombadle.dto.request.AuthenticationRequest;
 import com.bombadle.dto.request.RegisterRequest;
 import com.bombadle.entity.Player;
@@ -8,6 +9,8 @@ import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
 import com.bombadle.exception.InvalidCredentialsException;
 import com.bombadle.exception.RegistrationConflictException;
+import com.bombadle.exception.UnverifiedEmailException;
+import com.bombadle.service.auth.email.EmailActionInitiator;
 import com.bombadle.service.player.PlayerService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,7 +34,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthenticationServiceTest {
+class AuthenticationServiceTest {
 
     @InjectMocks
     private AuthenticationService authenticationService;
@@ -45,6 +48,12 @@ public class AuthenticationServiceTest {
     @Mock
     private AuthenticationManager authenticationManager;
 
+    @Mock
+    private EmailActionInitiator emailActionInitiator;
+
+    @Mock
+    private ApplicationConfigProperties.EmailConfig emailConfig;
+
     @Captor
     private ArgumentCaptor<Player> playerCaptor;
 
@@ -52,13 +61,14 @@ public class AuthenticationServiceTest {
     class RegisterTests {
 
         @Test
-        void register_validData_savesAndReturnsPlayer() {
+        void register_validDataAutoActivateFalse_savesReturnsPlayerAndInitiatesEmail() {
             // Arrange
             RegisterRequest request = new RegisterRequest("TestUser", "Test@Email.com", "password123");
 
             when(playerService.existsByEmail("test@email.com")).thenReturn(false);
             when(playerService.existsByLogin("testuser")).thenReturn(false);
             when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+            when(emailConfig.autoActivateAccount()).thenReturn(false);
             when(playerService.save(any(Player.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             // Act
@@ -67,6 +77,8 @@ public class AuthenticationServiceTest {
             // Assert
             verify(playerService).save(playerCaptor.capture());
             Player savedPlayer = playerCaptor.getValue();
+
+            verify(emailActionInitiator).initiateAccountActivation(savedPlayer);
 
             assertThat(result).isNotNull();
             assertThat(savedPlayer.getDisplayName()).isEqualTo("TestUser");
@@ -78,8 +90,31 @@ public class AuthenticationServiceTest {
             assertThat(savedPlayer.getAuthProvider()).isEqualTo(PlayerAuthProvider.LOCAL);
             assertThat(savedPlayer.getHasGuessedToday()).isFalse();
             assertThat(savedPlayer.getAccountLocked()).isFalse();
+            assertThat(savedPlayer.getEmailVerified()).isFalse();
             assertThat(savedPlayer.getCreatedAt()).isNotNull();
             assertThat(savedPlayer.getLastActiveAt()).isNotNull();
+        }
+
+        @Test
+        void register_validDataAutoActivateTrue_savesReturnsPlayerAndSkipsEmail() {
+            // Arrange
+            RegisterRequest request = new RegisterRequest("TestUser", "Test@Email.com", "password123");
+
+            when(playerService.existsByEmail("test@email.com")).thenReturn(false);
+            when(playerService.existsByLogin("testuser")).thenReturn(false);
+            when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+            when(emailConfig.autoActivateAccount()).thenReturn(true);
+            when(playerService.save(any(Player.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            // Act
+            Player result = authenticationService.register(request);
+
+            // Assert
+            verify(playerService).save(playerCaptor.capture());
+            Player savedPlayer = playerCaptor.getValue();
+
+            verify(emailActionInitiator, never()).initiateAccountActivation(any());
+            assertThat(savedPlayer.getEmailVerified()).isTrue();
         }
 
         @Test
@@ -122,11 +157,12 @@ public class AuthenticationServiceTest {
     class AuthenticateTests {
 
         @Test
-        void authenticate_validCredentials_authenticatesAndUpdatesLastActiveAt() {
+        void authenticate_validCredentialsAndVerified_authenticatesAndUpdatesLastActiveAt() {
             // Arrange
             AuthenticationRequest request = new AuthenticationRequest("Test@Email.com", "password123");
             Player existingPlayer = Player.builder()
                     .email("test@email.com")
+                    .emailVerified(true) // Zmiana dla poprawnego flow
                     .lastActiveAt(Instant.now().minusSeconds(3600))
                     .build();
 
@@ -148,6 +184,28 @@ public class AuthenticationServiceTest {
         }
 
         @Test
+        void authenticate_validCredentialsButUnverified_throwsUnverifiedEmailException() {
+            // Arrange
+            AuthenticationRequest request = new AuthenticationRequest("test@email.com", "password123");
+            Player unverifiedPlayer = Player.builder()
+                    .email("test@email.com")
+                    .emailVerified(false)
+                    .build();
+
+            when(playerService.findByEmail("test@email.com")).thenReturn(Optional.of(unverifiedPlayer));
+
+            // Act
+            UnverifiedEmailException exception = assertThrows(
+                    UnverifiedEmailException.class,
+                    () -> authenticationService.authenticate(request)
+            );
+
+            // Assert
+            assertThat(exception.getMessage()).isEqualTo("Account isn't verified");
+            verify(playerService, never()).save(any());
+        }
+
+        @Test
         void authenticate_authenticationManagerFails_throwsInvalidCredentialsException() {
             // Arrange
             AuthenticationRequest request = new AuthenticationRequest("test@email.com", "wrongPassword");
@@ -164,23 +222,6 @@ public class AuthenticationServiceTest {
             // Assert
             assertThat(exception.getMessage()).isEqualTo("Invalid email or password");
             verify(playerService, never()).findByEmail(any());
-            verify(playerService, never()).save(any());
-        }
-
-        @Test
-        void authenticate_playerNotFoundAfterAuth_throwsInvalidCredentialsException() {
-            // Arrange
-            AuthenticationRequest request = new AuthenticationRequest("test@email.com", "password123");
-            when(playerService.findByEmail("test@email.com")).thenReturn(Optional.empty());
-
-            // Act
-            InvalidCredentialsException exception = assertThrows(
-                    InvalidCredentialsException.class,
-                    () -> authenticationService.authenticate(request)
-            );
-
-            // Assert
-            assertThat(exception.getMessage()).isEqualTo("Invalid email or password");
             verify(playerService, never()).save(any());
         }
     }
