@@ -18,7 +18,8 @@ public record PlayerDto (
     boolean hasGuessedToday,
     String todayScore,
     int totalGuesses,
-    String authProvider
+    String authProvider,
+    boolean hasPassword
 ){
 
     public static PlayerDto toDto(Player player) {
@@ -37,6 +38,7 @@ public record PlayerDto (
                         .orElse(null))
                 .totalGuesses(player.getTotalSuccessfulGuesses())
                 .authProvider(player.getAuthProvider().toString())
+                .hasPassword(player.getPasswordHash() != null && !player.getPasswordHash().isBlank())
                 .build();
         /*
                 ( for createdAt, lastLoginAt and todayScore )
