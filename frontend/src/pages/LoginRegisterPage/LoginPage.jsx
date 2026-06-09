@@ -87,7 +87,7 @@ function LoginPage() {
 
     const handleGoogleLogin = () => {
         handleMergeConfirmation();
-        window.location.href = 'https://localhost:8443/oauth2/authorization/google';
+        window.location.href = '/oauth2/authorization/google';
     };
 
     const handleSendActivationCode = async () => {
