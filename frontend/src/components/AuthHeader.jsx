@@ -9,8 +9,8 @@ const handleImageError = (e) => {
 
 function AuthHeader() {
     return (
-        <header className="header-container auth-header">
-            <div style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)' }}>
+        <header className="header-container auth-header" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: '30px', padding: '10px 20px', width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                 <BackArrowButton />
             </div>
 
