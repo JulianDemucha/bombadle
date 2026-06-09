@@ -39,7 +39,7 @@ class GlobalExceptionHandlerIT {
 
         @GetMapping("/test/email-rate-limit")
         public void throwEmailRateLimit() {
-            throw new EmailRateLimitException("You must wait 60 seconds before send");
+            throw new EmailRateLimitException("You must wait 60 seconds before send", 60);
         }
 
         @GetMapping("/test/404")

@@ -208,12 +208,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(EmailRateLimitException.class)
-    public ResponseEntity<ErrorResponse> handleEmailRateLimit(EmailRateLimitException ex) {
-        ErrorResponse errorDetails = new ErrorResponse(
+    public ResponseEntity<RateLimitErrorResponse> handleEmailRateLimit(EmailRateLimitException ex) {
+
+        RateLimitErrorResponse errorDetails = new RateLimitErrorResponse(
                 HttpStatus.TOO_MANY_REQUESTS.value(),
                 "Too Many Requests",
-                ex.getMessage()
+                ex.getMessage(),
+                ex.getSecondsToWait()
         );
+
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorDetails);
     }
 }

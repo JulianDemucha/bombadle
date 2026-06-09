@@ -229,10 +229,10 @@ class GlobalExceptionHandlerTest {
         @Test
         void handleEmailRateLimit_returns429AndCorrectBody() {
             // Arrange
-            EmailRateLimitException exception = new EmailRateLimitException("You must wait 60 seconds before send");
+            EmailRateLimitException exception = new EmailRateLimitException("You must wait 60 seconds before send", 60);
 
             // Act
-            ResponseEntity<ErrorResponse> response = handler.handleEmailRateLimit(exception);
+            ResponseEntity<RateLimitErrorResponse> response = handler.handleEmailRateLimit(exception);
 
             // Assert
             assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());

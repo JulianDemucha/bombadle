@@ -24,7 +24,7 @@ public class EmailRateLimitService {
 
         if (lastSent != null && Instant.now().isBefore(lastSent.plusSeconds(cooldownSeconds))) {
             long secondsLeft = lastSent.plusSeconds(cooldownSeconds).getEpochSecond() - Instant.now().getEpochSecond();
-            throw new EmailRateLimitException("You must wait " + secondsLeft + " seconds before sending another email.");
+            throw new EmailRateLimitException("You must wait " + secondsLeft + " seconds before sending another email.", secondsLeft);
         }
 
         emailLocks.put(normalizedEmail, Instant.now());
