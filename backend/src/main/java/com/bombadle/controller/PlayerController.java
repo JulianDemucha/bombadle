@@ -75,7 +75,7 @@ public class PlayerController {
         return ResponseEntity.ok(anonymousSessionDto);
     }
 
-    @PutMapping("/password")
+    @PutMapping("/me/password")
     public ResponseEntity<Void> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
             @AuthenticationPrincipal PlayerPrincipal principal) {
@@ -87,7 +87,7 @@ public class PlayerController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/set-up-password")
+    @PutMapping("/me/set-up-password")
     public ResponseEntity<Void> setUpPasswordForOAuth2Player(
             @RequestBody @Valid SetPasswordRequest request,
             @AuthenticationPrincipal PlayerPrincipal principal
@@ -96,7 +96,7 @@ public class PlayerController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/delete-request")
+    @PostMapping("/me/delete-request")
     public ResponseEntity<Void> requestAccountDeletion(
             @AuthenticationPrincipal PlayerPrincipal principal) {
 
@@ -105,7 +105,7 @@ public class PlayerController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/delete-confirm")
+    @PostMapping("/me/delete-confirm")
     public ResponseEntity<Void> confirmAccountDeletion(
             @Valid @RequestBody VerificationCodeRequest request,
             @AuthenticationPrincipal PlayerPrincipal principal) {
