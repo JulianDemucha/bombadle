@@ -155,6 +155,7 @@ public class PlayerService {
         return PlayerDto.toDto(updatedPlayer);
     }
 
+    @Transactional
     public void activateAccount(Long playerId) {
         Optional<Player> playerOpt = findById(playerId);
 
@@ -168,6 +169,7 @@ public class PlayerService {
         repo.save(player);
     }
 
+    @Transactional
     public void changePassword(Long playerId, String newPassword) {
         Optional<Player> playerOpt = findById(playerId);
         if (playerOpt.isEmpty()) {
@@ -178,10 +180,12 @@ public class PlayerService {
         repo.save(player);
     }
 
+    @Transactional
     public void recordEmailSent(Long playerId) {
         repo.updateLastEmailSentAt(playerId);
     }
 
+    @Transactional
     public void changePasswordWithVerification(Long playerId, ChangePasswordRequest request) {
         Player player = getPlayerById(playerId);
 
@@ -196,6 +200,7 @@ public class PlayerService {
     }
 
     // for OAuth2 users, that want to set up password
+    @Transactional
     public void setPasswordIfBlank(Long playerId, String password) {
         Optional<Player> playerOpt = findById(playerId);
         if (playerOpt.isEmpty()) {
