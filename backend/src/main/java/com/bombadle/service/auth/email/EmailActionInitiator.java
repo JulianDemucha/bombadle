@@ -29,6 +29,13 @@ public class EmailActionInitiator {
         log.info("Account activation process initiated for: {}", player.getEmail());
     }
 
+    public void initiateAccountActivation(String email) {
+        Player player = playerService.findByEmail(email).orElseThrow(
+                () -> new UsernameNotFoundException("User not found")
+        );
+        initiateAccountActivation(player);
+    }
+
     public void initiatePasswordReset(String email) {
         Player player = playerService.findByEmail(email).orElseThrow(
                 () -> new UsernameNotFoundException("User not found")

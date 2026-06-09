@@ -55,22 +55,31 @@ public class AuthenticationController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/initiate-verify-email")
+    public ResponseEntity<Void> initiateVerifyEmail(
+            @RequestBody @Valid InitiateVerifyEmailRequest request
+    ) {
+        emailActionInitiator.initiateAccountActivation(request.email());
+        return ResponseEntity.ok().build();
+    }
+
+
     @PostMapping("/verify-email")
     public ResponseEntity<Void> verifyEmail(
-            @Valid @RequestBody VerificationCodeWithEmailRequest request
+            @RequestBody @Valid VerificationCodeWithEmailRequest request
     ) {
         emailConfirmationService.confirmEmailVerification(request);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/reset-password")
-    public ResponseEntity<Void> resetPassword(@RequestBody ForgotPasswordRequest request) {
+    @PostMapping("/initiate-reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody @Valid ForgotPasswordRequest request) {
         emailActionInitiator.initiatePasswordReset(request.email());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/confirm-reset-password")
-    public ResponseEntity<Void> confirmResetPassword(@RequestBody PasswordResetRequest request) {
+    public ResponseEntity<Void> confirmResetPassword(@RequestBody @Valid PasswordResetRequest request) {
         emailConfirmationService.confirmResetPassword(request);
         return ResponseEntity.ok().build();
     }

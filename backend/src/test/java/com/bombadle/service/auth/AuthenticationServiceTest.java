@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.Instant;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.anyOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -113,7 +114,7 @@ class AuthenticationServiceTest {
             verify(playerService).save(playerCaptor.capture());
             Player savedPlayer = playerCaptor.getValue();
 
-            verify(emailActionInitiator, never()).initiateAccountActivation(any());
+            verify(emailActionInitiator, never()).initiateAccountActivation(any(Player.class));
             assertThat(savedPlayer.getEmailVerified()).isTrue();
         }
 
