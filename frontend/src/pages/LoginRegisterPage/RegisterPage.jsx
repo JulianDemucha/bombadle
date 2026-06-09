@@ -4,14 +4,9 @@ import './GoogleButton.css';
 import '../../style/logo.css';
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import Footer from "../../components/Footer.jsx";
-import NavImgButton from "../../components/NavImgButton.jsx";
+import AuthHeader from '../../components/AuthHeader';
 import axios from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
-import {useAuth} from "../../auth/UseAuth.jsx";
-
-const handleImageError = (e) => {
-    e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
-};
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const MIN_PASSWORD_LEN = 8;
@@ -19,9 +14,6 @@ const MAX_PASSWORD_LEN = 24;
 const MIN_USERNAME_LEN = 3;
 const MAX_USERNAME_LEN = 16;
 
-/**
- *  { exists: boolean } OR ERROR ON ENDPOINT
- */
 function useDebouncedCheck({value, minLen = 1, url, fieldSetter, delay = 500, fieldName}) {
     const controllerRef = useRef(null);
     const mountedRef = useRef(true);
@@ -91,7 +83,6 @@ function RegisterPage() {
     });
 
     const navigate = useNavigate();
-    const {reload} = useAuth();
 
     const setUsernameError = useCallback((msg) => {
         setErrors(prev => ({...prev, username: msg}));
@@ -102,7 +93,6 @@ function RegisterPage() {
     }, [setErrors]);
 
     const [loading, setLoading] = useState(false);
-    const [successMessage, setSuccessMessage] = useState("");
 
     useDebouncedCheck({
         value: username,
@@ -143,7 +133,6 @@ function RegisterPage() {
         e.preventDefault();
 
         setErrors({email: "", username: "", password: "", confirmPassword: "", general: ""});
-        setSuccessMessage("");
 
         if (!email || !username || !password) {
             setErrors(prev => ({...prev, general: "Wypełnij wymagane pola."}));
@@ -187,13 +176,8 @@ function RegisterPage() {
         handleMergeConfirmation();
         setLoading(true);
         try {
-            const res = await axios.post("/api/auth/register", {email: email, username: username, password: password});
-
-            if (res.status === 201 || res.status === 200) {
-                setSuccessMessage(res.data?.message || "Konto zostało utworzone.");
-                await reload();
-                navigate("/");
-            }
+            await axios.post("/api/auth/register", {email: email, username: username, password: password});
+            navigate('/verify-email', { state: { email } });
 
         } catch (err) {
             if (err?.response) {
@@ -212,7 +196,6 @@ function RegisterPage() {
                 } else {
                     setErrors(prev => ({...prev, general: data?.message || "Błąd podczas rejestracji."}));
                 }
-            } else if (err?.code === "ERR_CANCELED" || err?.name === "CanceledError") {
             } else {
                 setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
             }
@@ -227,135 +210,118 @@ function RegisterPage() {
     };
 
     return (
-        <>
-            <NavImgButton
-                to="/"
-                imgSrc="/src/assets/bombadle_logo.png"
-                altText="logo"
-                className="logo logo-desktop"
-                onError={handleImageError}
-            />
-            <NavImgButton
-                to="/"
-                imgSrc="/src/assets/bombadle_logo_mobile.png"
-                altText="logoMobile"
-                className="logo logo-mobile"
-                onError={handleImageError}
-            />
+        <div className="login-register-page">
+            <AuthHeader />
+            <form className="login-container" onSubmit={handleSubmit} noValidate>
+                <h1>REJESTRACJA</h1>
 
-            <div className="login-register-page">
-                <form className="login-container" onSubmit={handleSubmit} noValidate>
-                    <h1>REJESTRACJA</h1>
+                <div className="input-group">
+                    <label htmlFor="email">EMAIL</label>
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="twoj@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        aria-describedby="email-error"
+                    />
+                    {errors.email && <div id="email-error" className="field-error">{errors.email}</div>}
+                </div>
 
-                    <div className="input-group">
-                        <label htmlFor="email">EMAIL</label>
-                        <input
-                            type="email"
-                            id="email"
-                            placeholder="twoj@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            aria-describedby="email-error"
-                        />
-                        {errors.email && <div id="email-error" className="field-error">{errors.email}</div>}
-                    </div>
-
-                    <div className="input-group">
-                        <label htmlFor="username">NAZWA UŻYTKOWNIKA</label>
-                        <input
-                            type="text"
-                            id="username"
-                            placeholder="Kapitan Bomba"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            required
-                            aria-describedby="username-error"
-                        />
+                <div className="input-group">
+                    <label htmlFor="username">NAZWA UŻYTKOWNIKA</label>
+                    <input
+                        type="text"
+                        id="username"
+                        placeholder="Kapitan Bomba"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        aria-describedby="username-error"
+                    />
                         {errors.username && <div id="username-error" className="field-error">{errors.username}</div>}
-                    </div>
+                </div>
 
-                    <div className="input-group">
-                        <label htmlFor="password">HASŁO</label>
+                <div className="input-group">
+                    <label htmlFor="password">HASŁO</label>
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        aria-describedby="password-error"
+                    />
+                    {errors.password && <div id="password-error" className="field-error">{errors.password}</div>}
+                </div>
+
+                <div className="input-group">
+                    <label htmlFor="confirmPassword">POWTÓRZ HASŁO</label>
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        aria-describedby="confirm-error"
+                    />
+                    {errors.confirmPassword &&
+                        <div id="confirm-error" className="field-error">{errors.confirmPassword}</div>}
+                </div>
+
+                <div className="checkboxes">
+                    <label className="custom-checkbox" htmlFor="terms">
                         <input
-                            type="password"
-                            id="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            aria-describedby="password-error"
+                            id="terms"
+                            type="checkbox"
+                            checked={acceptedTerms}
+                            onChange={(e) => setAcceptedTerms(e.target.checked)}
                         />
-                        {errors.password && <div id="password-error" className="field-error">{errors.password}</div>}
-                    </div>
+                        <span className="checkmark" aria-hidden="true"/>
+                        <span className="checkbox-text">
+            Akceptuję <a href="/regulamin.html" target="_blank" rel="noopener noreferrer">regulamin</a>
+          </span>
+                    </label>
 
-                    <div className="input-group">
-                        <label htmlFor="confirmPassword">POWTÓRZ HASŁO</label>
+                    <label className="custom-checkbox" htmlFor="privacy">
                         <input
-                            type="password"
-                            id="confirmPassword"
-                            placeholder="••••••••"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                            aria-describedby="confirm-error"
+                            id="privacy"
+                            type="checkbox"
+                            checked={acceptedPrivacy}
+                            onChange={(e) => setAcceptedPrivacy(e.target.checked)}
                         />
-                        {errors.confirmPassword &&
-                            <div id="confirm-error" className="field-error">{errors.confirmPassword}</div>}
-                    </div>
+                        <span className="checkmark" aria-hidden="true"/>
+                        <span className="checkbox-text">
+            Akceptuję <a href="/src/pages/PrivacyPolicyPage/privacy_policy.html" target="_blank"
+                         rel="noopener noreferrer">politykę prywatności / RODO</a>
+          </span>
+                    </label>
+                </div>
 
-                    <div className="checkboxes">
-                        <label className="custom-checkbox" htmlFor="terms">
-                            <input
-                                id="terms"
-                                type="checkbox"
-                                checked={acceptedTerms}
-                                onChange={(e) => setAcceptedTerms(e.target.checked)}
-                            />
-                            <span className="checkmark" aria-hidden="true"/>
-                            <span className="checkbox-text">
-                Akceptuję <a href="/regulamin.html" target="_blank" rel="noopener noreferrer">regulamin</a>
-              </span>
-                        </label>
+                <div aria-live="polite" className="form-message">
+                    {errors.general && <div className="form-error" role="alert">{errors.general}</div>}
+                </div>
 
-                        <label className="custom-checkbox" htmlFor="privacy">
-                            <input
-                                id="privacy"
-                                type="checkbox"
-                                checked={acceptedPrivacy}
-                                onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                            />
-                            <span className="checkmark" aria-hidden="true"/>
-                            <span className="checkbox-text">
-                Akceptuję <a href="/src/pages/PrivacyPolicyPage/privacy_policy.html" target="_blank"
-                             rel="noopener noreferrer">politykę prywatności / RODO</a>
-              </span>
-                        </label>
-                    </div>
+                <button type="submit" className="submit-btn" disabled={loading}>
+                    {loading ? "Ładowanie..." : "ZAREJESTRUJ SIĘ"}
+                </button>
 
-                    <div aria-live="polite" className="form-message">
-                        {errors.general && <div className="form-error" role="alert">{errors.general}</div>}
-                        {successMessage && <div className="form-success" role="status">{successMessage}</div>}
-                    </div>
+                <div className="divider">LUB</div>
 
-                    <button type="submit" className="submit-btn" disabled={loading}>
-                        {loading ? "Ładowanie..." : "ZAREJESTRUJ SIĘ"}
-                    </button>
+                <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
+                    ZALOGUJ PRZEZ GOOGLE
+                </button>
 
-                    <div className="divider">LUB</div>
+                <div className="loginFooter">
+                    Masz już konto? <a href="/login">Zaloguj się</a>
+                </div>
+            </form>
 
-                    <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
-                        ZALOGUJ SIĘ PRZEZ GOOGLE
-                    </button>
-
-                    <div className="loginFooter">
-                        Masz już konto? <a href="/login">Zaloguj się</a>
-                    </div>
-                </form>
-
-                <Footer/>
-            </div>
-        </>
+            <Footer/>
+        </div>
     );
 }
 

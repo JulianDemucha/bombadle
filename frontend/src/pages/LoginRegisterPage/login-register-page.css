@@ -8,19 +8,13 @@
 }
 
 .login-register-page {
-    background-image: url('../../../public/img/background_img.jpeg');
-    background-repeat: no-repeat;
-    background-position: top center;
-    background-size: cover;
-    background-attachment: scroll;
-    background-color: var(--login_secondary);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     min-height: 100vh;
-    padding: 20px;
-    margin-top: 2rem;
+    padding: 50px;
+    padding-top: 1rem;
 }
 
 .login-register-page input::placeholder {
@@ -36,7 +30,7 @@
     box-shadow: var(--shadow);
     position: relative;
     border-radius: 12px;
-
+    margin-top: 60px;
 }
 
 .login-register-page .login-container::before {
@@ -53,10 +47,22 @@
 
 .login-register-page h1 {
     color: var(--login_primary);
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     font-size: 28px;
     font-weight: 700;
     text-align: center;
+}
+
+.login-register-page .instruction-text {
+    color: var(--login_primary);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.login-register-page .instruction-text strong {
+    color: var(--accent);
 }
 
 .login-register-page .input-group {
@@ -76,7 +82,6 @@
     padding: 12px 15px;
     border: 2px solid var(--login_primary);
     background-color: var(--login_secondary);
-
     font-size: 16px;
     outline: none;
     transition: all 0.3s;
@@ -86,7 +91,7 @@
     box-shadow: 4px 4px 0px var(--login_primary);
 }
 
-.login-register-page button {
+.login-register-page .login-container button {
     width: 100%;
     padding: 12px;
     background-color: var(--accent);
@@ -99,9 +104,39 @@
     transition: all 0.3s;
 }
 
-.login-register-page button:hover {
+.login-register-page .login-container button:hover {
     box-shadow: 4px 4px 0px var(--login_primary);
     transform: translate(-2px, -2px);
+}
+
+.login-register-page .login-container button:disabled {
+    background-color: #6c757d;
+    color: #f8f9fa;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.login-register-page .login-container .btn-secondary {
+    background-color: transparent;
+    color: var(--login_primary);
+    margin-top: 15px;
+}
+
+.login-register-page .login-container .btn-secondary:hover {
+    background-color: transparent;
+    box-shadow: 4px 4px 0px var(--login_primary);
+    transform: translate(-2px, -2px);
+}
+
+.login-register-page .login-container .btn-secondary:disabled {
+    background-color: transparent;
+    color: var(--login_primary);
+    border-color: var(--login_primary);
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .login-register-page .divider {
@@ -135,6 +170,7 @@
 .custom-checkbox {
     font-size: 12px;
     margin-top: -18px;
+    display: block;
 }
 
 .custom-checkbox input[type="checkbox"] {
@@ -168,7 +204,6 @@
     text-decoration: underline;
 }
 
-/* jf accessibility */
 .custom-checkbox input[type="checkbox"]:focus + .checkmark {
     outline: 3px solid rgba(0, 0, 0, 0.08);
     outline-offset: 2px;
@@ -176,9 +211,25 @@
 
 .form-error {
     color: #b00020;
-    margin-bottom: 8px;
+    margin-bottom: 15px;
     font-weight: 700;
     text-align: center;
+    font-size: 14px;
+}
+
+.form-success {
+    color: #2b2b2b;
+    margin-top: 15px;
+    font-weight: 700;
+    text-align: center;
+    font-size: 14px;
+}
+
+.field-error {
+    color: #b00020;
+    font-size: 12px;
+    margin-top: 5px;
+    font-weight: bold;
 }
 
 @media (max-width: 480px) {
@@ -189,4 +240,3 @@
         top: 5px;
     }
 }
-

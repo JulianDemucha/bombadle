@@ -9,12 +9,16 @@ import AuthenticatedRoute from "./auth/AuthenticatedRoute.jsx";
 import PlayerSettingsPage from "./pages/PlayerSettingsPage/PlayerSettingsPage.jsx";
 import ClassicModePage from "./pages/ModePage/ClassicModePage/ClassicModePage.jsx";
 import LeaderboardPage from "./pages/LeaderboardPage/LeaderboardPage.jsx";
+import EmailVerificationPage from "./pages/LoginRegisterPage/EmailVerificationPage.jsx";
+import ForgotPasswordPage from "./pages/LoginRegisterPage/ForgotPasswordPage.jsx";
 import {Navigate} from "react-router-dom";
 
 export const routes = [
     {path: '/', element: <> <MainPage/></>},
     {path: '/Login', element: <UnauthenticatedRoute><LoginPage/></UnauthenticatedRoute>},
     {path: '/Register', element: <UnauthenticatedRoute><RegisterPage/></UnauthenticatedRoute>},
+    {path: '/verify-email', element: <UnauthenticatedRoute><EmailVerificationPage/></UnauthenticatedRoute>},
+    {path: '/forgot-password', element: <UnauthenticatedRoute><ForgotPasswordPage/></UnauthenticatedRoute>},
     {path: '/Profile/', element: <AuthenticatedRoute><PlayerSettingsPage/></AuthenticatedRoute>},
     {path: '/Classic/', element: <ClassicModePage/>},
     {path: '/leaderboard/classic', element: <LeaderboardPage />},

@@ -1,17 +1,12 @@
-/* css komponentu bazowany na https://freefrontend.com/css-login-forms/ */
 import './login-register-page.css';
 import './GoogleButton.css'
-import '../../style/logo.css'
 import React, {useState} from "react";
 import Footer from "../../components/Footer.jsx";
-import NavImgButton from "../../components/NavImgButton.jsx";
+import AuthHeader from '../../components/AuthHeader';
 import axios from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../auth/UseAuth.jsx";
 
-const handleImageError = (e) => {
-    e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
-};
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 function LoginPage() {
@@ -23,6 +18,7 @@ function LoginPage() {
         general: ""
     });
     const [loading, setLoading] = useState(false);
+    const [unverifiedEmail, setUnverifiedEmail] = useState("");
     const navigate = useNavigate();
     const {reload} = useAuth();
 
@@ -72,10 +68,14 @@ function LoginPage() {
         } catch (err) {
             if (err?.response) {
                 const {status, data} = err.response;
-                if (status === 401) {
+                if (status === 403 && data?.error === "Unverified Email" && data?.email) {
+                    setUnverifiedEmail(data.email);
+                } else if (status === 401 || status === 403) {
                     setErrors(prev => ({...prev, general: data?.message || "Nieprawidłowy email lub hasło."}));
                 } else if (status === 409) {
                     setErrors(prev => ({...prev, general: data?.message || "Błąd podczas logowania."}));
+                } else {
+                     setErrors(prev => ({...prev, general: data?.message || "Wystąpił błąd."}));
                 }
             } else {
                 setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
@@ -90,26 +90,40 @@ function LoginPage() {
         window.location.href = 'https://localhost:8443/oauth2/authorization/google';
     };
 
-    return (<>
+    const handleSendActivationCode = async () => {
+        setLoading(true);
+        try {
+             await axios.post('/api/auth/initiate-verify-email', { email: unverifiedEmail });
+             navigate('/verify-email', { state: { email: unverifiedEmail } });
+        } catch(err) {
+             setErrors(prev => ({...prev, general: "Nie udało się wysłać kodu. Spróbuj ponownie."}));
+        } finally {
+             setLoading(false);
+        }
+    }
 
-        {/*     LOGO     */}
-        <NavImgButton
-            to="/"
-            imgSrc="/src/assets/bombadle_logo.png"
-            altText="logo"
-            className="logo logo-desktop"
-            onError={handleImageError}
-        />
+    if (unverifiedEmail) {
+         return (
+             <div className="login-register-page">
+                 <AuthHeader />
+                 <div className="login-container">
+                     <h1>Konto nieaktywne</h1>
+                     <p className="instruction-text">
+                         Twoje konto powiązane z adresem <strong>{unverifiedEmail}</strong> nie zostało jeszcze aktywowane.
+                     </p>
+                      {errors.general && <div className="form-error" role="alert">{errors.general}</div>}
+                     <button onClick={handleSendActivationCode} disabled={loading}>
+                         {loading ? "Wysyłanie..." : "Wyślij kod aktywacyjny"}
+                     </button>
+                 </div>
+                 <Footer/>
+             </div>
+         );
+    }
 
-        {/*     LOGO MOBILE     */}
-        <NavImgButton
-            to="/"
-            imgSrc="/src/assets/bombadle_logo_mobile.png"
-            altText="logoMobile"
-            className="logo logo-mobile"
-            onError={handleImageError}
-        />
+    return (
         <div className="login-register-page">
+            <AuthHeader />
             <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>LOGOWANIE</h1>
 
@@ -141,6 +155,11 @@ function LoginPage() {
                 </div>
 
                 {errors.general && <div className="form-error" role="alert">{errors.general}</div>}
+
+                <div className="loginFooter" style={{textAlign: "right", marginTop: "-10px", marginBottom: "15px"}}>
+                    <a href="/forgot-password" style={{fontSize: "0.8rem"}}>Zapomniałeś hasła?</a>
+                </div>
+
                 <button type="submit" disabled={loading}>
                     {loading ? "Ładowanie..." : "ZALOGUJ SIĘ"}
                 </button>
@@ -158,7 +177,7 @@ function LoginPage() {
             </form>
             <Footer/>
         </div>
-    </>)
+    )
 }
 
 export default LoginPage;
