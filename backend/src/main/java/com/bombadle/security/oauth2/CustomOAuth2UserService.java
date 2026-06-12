@@ -4,7 +4,7 @@ import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
-import com.bombadle.service.auth.AuthenticationService;
+import com.bombadle.service.player.PlayerCredentialsService;
 import com.bombadle.service.player.PlayerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -63,14 +63,13 @@ public class CustomOAuth2UserService extends OidcUserService {
         String uniqueLogin = generateUniqueLogin(cleanName);
 
         Player newPlayer = Player.builder()
-                .displayName(cleanName)
+                .displayName(uniqueLogin)
                 .login(uniqueLogin)
                 .email(email.toLowerCase())
                 .passwordHash("")
                 .role(Role.ROLE_USER)
                 .createdAt(Instant.now())
                 .lastActiveAt(Instant.now())
-                .hasGuessedToday(false)
                 .accountLocked(false)
                 .emailVerified(true)
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
@@ -82,11 +81,22 @@ public class CustomOAuth2UserService extends OidcUserService {
 
     private String generateUniqueLogin(String baseName) {
         String login = baseName.toLowerCase();
+
+        if (login.length() > 16) {
+            login = login.substring(0, 16);
+        }
+
         int counter = 1;
         while (playerService.existsByLogin(login)) {
-            login = baseName.toLowerCase() + counter;
+            String suffix = String.valueOf(counter);
+
+            int allowedBaseLength = 16 - suffix.length();
+            String base = login.substring(0, Math.min(login.length(), allowedBaseLength));
+
+            login = base + suffix;
             counter++;
         }
+
         return login;
     }
 }
