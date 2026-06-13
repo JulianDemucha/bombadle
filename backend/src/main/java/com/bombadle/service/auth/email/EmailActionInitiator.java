@@ -7,8 +7,10 @@ import com.bombadle.enums.EmailVerificationType;
 import com.bombadle.service.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -20,6 +22,8 @@ public class EmailActionInitiator {
     private final ApplicationConfigProperties.EmailConfig emailConfig;
     private final PlayerService playerService;
 
+    @Async
+    @Transactional
     public void initiateAccountActivation(Player player) {
         VerificationToken token = tokenService.generateNewToken(
                 player, EmailVerificationType.ACCOUNT_ACTIVATION, getExpirationMinutes());
@@ -29,6 +33,8 @@ public class EmailActionInitiator {
         log.info("Account activation process initiated for: {}", player.getEmail());
     }
 
+    @Async
+    @Transactional
     public void initiateAccountActivation(String email) {
         Player player = playerService.findByEmail(email).orElseThrow(
                 () -> new UsernameNotFoundException("User not found")
@@ -36,6 +42,8 @@ public class EmailActionInitiator {
         initiateAccountActivation(player);
     }
 
+    @Async
+    @Transactional
     public void initiatePasswordReset(String email) {
         Player player = playerService.findByEmail(email).orElseThrow(
                 () -> new UsernameNotFoundException("User not found")
@@ -48,6 +56,8 @@ public class EmailActionInitiator {
         log.info("Password reset process initiated for: {}", player.getEmail());
     }
 
+    @Async
+    @Transactional
     public void initiateAccountDeletion(Player player) {
         VerificationToken token = tokenService.generateNewToken(
                 player, EmailVerificationType.ACCOUNT_DELETION, getExpirationMinutes());
