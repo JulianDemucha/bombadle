@@ -5,6 +5,7 @@ import com.bombadle.enums.Affiliation;
 import com.bombadle.enums.Color;
 import com.bombadle.enums.Gender;
 import com.bombadle.enums.Race;
+import com.bombadle.integration.BaseIT;
 import com.bombadle.repository.CharacterCardRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class SecurityAccessControlIT {
+class SecurityAccessControlIT extends BaseIT {
 
     @Autowired
     private MockMvc mockMvc;

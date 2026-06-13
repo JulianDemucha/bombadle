@@ -20,7 +20,7 @@ class GlobalExceptionHandlerIT {
     private MockMvc mockMvc;
 
     @RestController
-    private static class DummyController {
+    private static class DummyController extends BaseIT {
 
         @GetMapping("/test/illegal-argument")
         public void throwIllegalArgument() {

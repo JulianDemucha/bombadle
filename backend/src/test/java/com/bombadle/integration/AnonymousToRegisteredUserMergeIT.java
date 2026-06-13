@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-class AnonymousToRegisteredUserMergeIT {
+class AnonymousToRegisteredUserMergeIT extends BaseIT{
 
     @Autowired
     private MockMvc mockMvc;
