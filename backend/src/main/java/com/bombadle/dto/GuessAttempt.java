@@ -1,24 +1,22 @@
 package com.bombadle.dto;
 
-import com.bombadle.enums.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import java.util.Set;
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type"
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = ClassicGuessAttempt.class, name = "CLASSIC"),
+        @JsonSubTypes.Type(value = NameOnlyGuessAttempt.class, name = "QUOTES"),
+        @JsonSubTypes.Type(value = NameOnlyGuessAttempt.class, name = "IMAGES")
+})
+public sealed interface GuessAttempt permits ClassicGuessAttempt, NameOnlyGuessAttempt {
+    CardField<String> name();
 
-@Builder
-public record GuessAttempt(
-        CardField<String> name,
-        CardField<Gender> gender,
-        CardField<Race> race,
-        CardField<Boolean> alive,
-        CardField<Set<Color>> colors,
-        CardField<Set<Affiliation>> affiliations,
-        CardField<Integer> firstAppearanceEpisode
-
-) {
     @JsonIgnore
-    public boolean isCorrect() {
-        return name.match().equals(MatchType.MATCH);
-    }
+    boolean isCorrect();
 }

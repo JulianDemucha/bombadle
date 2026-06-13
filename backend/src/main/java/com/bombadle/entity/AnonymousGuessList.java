@@ -1,6 +1,7 @@
 package com.bombadle.entity;
 
 import com.bombadle.dto.GuessAttempt;
+import com.bombadle.enums.GameMode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,7 +11,9 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Getter
@@ -24,5 +27,9 @@ public class AnonymousGuessList {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private List<GuessAttempt> guesses = new ArrayList<>();
+    private Map<GameMode, List<GuessAttempt>> guesses = new HashMap<>();
+
+    public void addGuess(GameMode mode, GuessAttempt attempt) {
+        this.guesses.computeIfAbsent(mode, k -> new ArrayList<>()).add(attempt);
+    }
 }

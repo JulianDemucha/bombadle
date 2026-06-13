@@ -1,10 +1,7 @@
 package com.bombadle.integration;
 
 import com.bombadle.entity.*;
-import com.bombadle.enums.AvatarImage;
-import com.bombadle.enums.Gender;
-import com.bombadle.enums.PlayerAuthProvider;
-import com.bombadle.enums.Role;
+import com.bombadle.enums.*;
 import com.bombadle.repository.*;
 import com.bombadle.service.game.CurrentCardStateService;
 import com.bombadle.service.scheduling.DailyResetService;
@@ -18,7 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -61,32 +61,34 @@ class DailyResetIT {
     void setUp() {
         Score activePlayerScore = scoreRepository.save(Score.builder()
                 .numberOfTries(5)
+                .gameMode(GameMode.CLASSIC)
                 .scoreTimestamp(Instant.now())
                 .build());
         scoreRepository.flush();
 
-        activePlayer = playerRepository.save(Player.builder()
+        activePlayer = Player.builder()
                 .email("aktywny@gwiezdnaflota.com")
                 .login("aktywny")
                 .passwordHash("hash")
                 .role(Role.ROLE_USER)
-                .hasGuessedToday(true)
-                .todayScore(activePlayerScore)
                 .totalSuccessfulGuesses(10)
                 .avatarImage(AvatarImage.AVATAR_BOMBA)
+                .todayScores(new HashMap<>(Map.of(GameMode.CLASSIC, activePlayerScore)))
                 .authProvider(PlayerAuthProvider.LOCAL)
                 .accountLocked(false)
                 .createdAt(Instant.now())
                 .lastActiveAt(Instant.now())
                 .emailVerified(true)
-                .build());
+                .build();
+        activePlayer = playerRepository.save(activePlayer);
+        activePlayer.addTodayScore(GameMode.CLASSIC, activePlayerScore); // POPRAWKA: Przeniesione do dedykowanej metody
+        playerRepository.save(activePlayer);
 
         deletedPlayer = playerRepository.save(Player.builder()
                 .email("usuniety@juzniesigma.com")
                 .login("usuniety")
                 .passwordHash("hash")
                 .role(Role.ROLE_USER)
-                .hasGuessedToday(false)
                 .totalSuccessfulGuesses(0)
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
                 .authProvider(PlayerAuthProvider.LOCAL)
@@ -98,14 +100,16 @@ class DailyResetIT {
 
         guessListRepository.save(GuessList.builder()
                 .player(activePlayer)
+                .gameMode(GameMode.CLASSIC)
                 .guesses(List.of())
                 .build());
 
-        anonymousSessionRepository.save(AnonymousSession.builder()
-                .guessList(AnonymousGuessList.builder().guesses(List.of()).build())
-                .hasGuessedToday(true)
+        AnonymousSession anonSession = AnonymousSession.builder()
+                .guessList(AnonymousGuessList.builder().guesses(Map.of()).build())
                 .lastActiveAt(Instant.now())
-                .build());
+                .build();
+        anonSession.markModeAsCompleted(GameMode.CLASSIC); // POPRAWKA
+        anonymousSessionRepository.save(anonSession);
 
         adminPendingChangeRepository.save(AdminPendingChange.builder()
                 .actionType("UPDATE_CARD")
@@ -115,7 +119,12 @@ class DailyResetIT {
                 .build());
 
         entityManager.persist(CharacterCard.builder()
-                .name("Bomba")
+                .name("Kapitan Bomba")
+                .race(Race.Czlowiek)
+                .alive(true)
+                .firstAppearanceEpisode(1)
+                .affiliations(Set.of(Affiliation.Gwiezdna_Flota))
+                .colors(Set.of(Color.BIALY))
                 .gender(Gender.MALE)
                 .build());
 
@@ -128,23 +137,19 @@ class DailyResetIT {
         // Act
         dailyResetService.pickNewCharacterCardAndResetScores();
 
-        // Assert - Players cleared of flags and scores
+        // Assert
         Player resetActivePlayer = playerRepository.findById(activePlayer.getId()).orElseThrow();
-        assertFalse(resetActivePlayer.getHasGuessedToday());
-        assertNull(resetActivePlayer.getTodayScore());
+        assertFalse(resetActivePlayer.hasGuessedToday(GameMode.CLASSIC));
 
-        // Assert - Accounts marked for deletion are removed
         boolean deletedPlayerExists = playerRepository.existsById(deletedPlayer.getId());
         assertFalse(deletedPlayerExists);
 
-        // Assert - Temporary tables truncated/cleared to zero
         assertEquals(0, scoreRepository.count());
         assertEquals(0, guessListRepository.count());
         assertEquals(0, anonymousSessionRepository.count());
         assertEquals(0, anonymousGuessListRepository.count());
         assertEquals(0, adminPendingChangeRepository.count());
 
-        // Assert - Singleton Daily Card State is properly updated
-        assertNotNull(currentCardStateService.getCurrentCardState().getCurrentCharacter());
+        assertFalse(currentCardStateService.getCurrentCardState().getCurrentCards().isEmpty());
     }
 }

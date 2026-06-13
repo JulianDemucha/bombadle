@@ -24,6 +24,7 @@ import java.time.Instant;
 public class CustomOAuth2UserService extends OidcUserService {
     private final PlayerService playerService;
     private static final Logger log = LoggerFactory.getLogger(CustomOAuth2UserService.class);
+    private final PlayerCredentialsService playerCredentialsService;
 
     @Override
     @Transactional
@@ -51,7 +52,7 @@ public class CustomOAuth2UserService extends OidcUserService {
 
         if (!player.getEmailVerified()) {
             log.info("Player {} logged in via OAuth2. Auto-verifying unverified LOCAL account email.", player.getLogin());
-            playerService.activateAccount(player.getId());
+            playerCredentialsService.activateAccount(player.getId());
         }
 
         return new CustomOAuth2PlayerUser(oidcUser, player);

@@ -4,11 +4,13 @@ import com.bombadle.dto.CharacterCardSearchDto;
 import com.bombadle.dto.PreviousCharacterCardDto;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.CurrentCardState;
+import com.bombadle.enums.GameMode;
 import com.bombadle.service.game.CharacterCardService;
 import com.bombadle.service.game.CurrentCardStateService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,10 +28,13 @@ public class CharacterCardController {
         return characterCardService.getAllCardsForSearch();
     }
 
-    @GetMapping("/previous-character-card")
-    public ResponseEntity<PreviousCharacterCardDto> getPreviousCharacterCard() {
+    @GetMapping("/{gameMode}/previous-character-card")
+    public ResponseEntity<PreviousCharacterCardDto> getPreviousCharacterCard(@PathVariable String gameMode) {
+        GameMode mode = GameMode.valueOf(gameMode.toUpperCase());
+
         CurrentCardState state = currentCardStateService.getCurrentCardState();
-        CharacterCard prevCard = state.getPreviousCharacter();
+
+        CharacterCard prevCard = state.getPreviousCards().get(mode);
 
         if (prevCard == null) {
             return ResponseEntity.noContent().build();

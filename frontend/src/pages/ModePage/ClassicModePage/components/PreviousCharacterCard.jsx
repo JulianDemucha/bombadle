@@ -10,7 +10,7 @@ function PreviousCharacterCard() {
         const fetchPreviousCharacter = async () => {
             try {
                 setLoading(true);
-                const response = await apiFetch('/api/character-card/previous-character-card');
+                const response = await apiFetch('/api/character-card/CLASSIC/previous-character-card');
                 setPreviousCharacter(response.data);
             } catch (err) {
                 setError('Nie udało się załadować poprzedniej postaci.');

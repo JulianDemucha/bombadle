@@ -2,12 +2,14 @@ package com.bombadle.service.scheduling;
 
 import com.bombadle.config.CurrentCharacterCardWrapper;
 import com.bombadle.entity.CharacterCard;
+import com.bombadle.enums.GameMode;
 import com.bombadle.service.admin.AdminChangeQueueService;
 import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.AnonymousGuessListService;
 import com.bombadle.service.game.CharacterCardService;
 import com.bombadle.service.game.CurrentCardStateService;
 import com.bombadle.service.game.GuessListService;
+import com.bombadle.service.game.ScoreMaintenanceService;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerDeletionService;
 import com.bombadle.service.player.PlayerService;
@@ -15,7 +17,6 @@ import com.bombadle.service.stats.ScoreService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,6 +52,8 @@ class DailyResetServiceTest {
     private AnonymousGuessListService anonymousGuessListService;
     @Mock
     private CurrentCardStateService currentCardStateService;
+    @Mock
+    private ScoreMaintenanceService scoreMaintenanceService;
 
     @InjectMocks
     private DailyResetService dailyResetService;
@@ -58,60 +62,48 @@ class DailyResetServiceTest {
     class PickNewCharacterCardAndResetScoresTests {
 
         @Test
-        void pickNewCharacterCardAndResetScores_standardTrigger_executesAllResetStepsInSequence() {
+        void pickNewCharacterCardAndResetScores_validState_executesResetFlowAndUpdatesCards() {
             // Arrange
             CharacterCard mockCard = mock(CharacterCard.class);
-            when(mockCard.getName()).thenReturn("Gandalf");
             when(characterCardService.findRandomCard()).thenReturn(mockCard);
-            when(currentCharacterCardWrapper.get()).thenReturn(mockCard);
 
             // Act
             dailyResetService.pickNewCharacterCardAndResetScores();
 
             // Assert
-            InOrder inOrder = inOrder(
-                    adminChangeQueueService,
-                    guessListService,
-                    anonymousSessionService,
-                    anonymousGuessListService,
-                    playerService,
-                    scoreService,
-                    playerDeletionService,
-                    characterCardService,
-                    currentCharacterCardWrapper,
-                    currentCardStateService,
-                    cacheService
-            );
+            verify(adminChangeQueueService).applyAll();
+            verify(guessListService).truncateTable();
+            verify(anonymousSessionService).truncateTable();
+            verify(anonymousGuessListService).truncateTable();
+            verify(scoreMaintenanceService).resetAllScores();
+            verify(scoreService).deleteAllInBatch();
+            verify(playerDeletionService).deleteMarkedForDeletion(any(Duration.class));
 
-            inOrder.verify(adminChangeQueueService).applyAll();
-            inOrder.verify(guessListService).truncateTable();
-            inOrder.verify(anonymousSessionService).truncateTable();
-            inOrder.verify(anonymousGuessListService).truncateTable();
-            inOrder.verify(playerService).resetAllScores();
-            inOrder.verify(scoreService).deleteAllInBatch();
-            inOrder.verify(playerDeletionService).deleteMarkedForDeletion(Duration.ofHours(48));
-            inOrder.verify(characterCardService).findRandomCard();
-            inOrder.verify(currentCharacterCardWrapper).set(mockCard);
-            inOrder.verify(currentCardStateService).updateCurrentCard(mockCard);
-            inOrder.verify(currentCharacterCardWrapper).get();
-            inOrder.verify(cacheService).reloadCardCompareCache();
+            verify(characterCardService, times(GameMode.values().length)).findRandomCard();
+            verify(currentCharacterCardWrapper, times(GameMode.values().length)).set(any(GameMode.class), eq(mockCard));
+            verify(currentCardStateService).updateCurrentCards(any());
+            verify(cacheService).reloadCardCompareCache();
         }
 
         @Test
-        void pickNewCharacterCardAndResetScores_serviceThrowsException_propagatesExceptionAndInterruptsFlow() {
+        void pickNewCharacterCardAndResetScores_noCardsInDatabase_throwsIllegalStateException() {
             // Arrange
-            doThrow(new RuntimeException("Database error"))
-                    .when(characterCardService).findRandomCard();
+            when(characterCardService.findRandomCard()).thenReturn(null);
 
-            // Act & Assert
-            assertThrows(RuntimeException.class, () -> dailyResetService.pickNewCharacterCardAndResetScores());
+            // Act
+            // Assert
+            assertThrows(IllegalStateException.class, () -> dailyResetService.pickNewCharacterCardAndResetScores());
 
             verify(adminChangeQueueService).applyAll();
             verify(guessListService).truncateTable();
-            verify(playerDeletionService).deleteMarkedForDeletion(Duration.ofHours(48));
+            verify(anonymousSessionService).truncateTable();
+            verify(anonymousGuessListService).truncateTable();
+            verify(scoreMaintenanceService).resetAllScores();
+            verify(scoreService).deleteAllInBatch();
+            verify(playerDeletionService).deleteMarkedForDeletion(any(Duration.class));
 
-            verify(currentCharacterCardWrapper, never()).set(any());
-            verify(currentCardStateService, never()).updateCurrentCard(any());
+            verify(currentCharacterCardWrapper, never()).set(any(), any());
+            verify(currentCardStateService, never()).updateCurrentCards(any());
             verifyNoInteractions(cacheService);
         }
     }

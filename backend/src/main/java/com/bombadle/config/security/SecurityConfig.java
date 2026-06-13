@@ -81,7 +81,7 @@ public class SecurityConfig {
                                 "/api/character-card/search-index", "/api/leaderboard/**", "/images/**",
                                 "/api/guess-list/**",
                                 "/api/players/anonymous/me",
-                                "/api/character-card/previous-character-card",
+                                "/api/character-card/classic/previous-character-card",
                                 "/character_card_avatars/**", /*dev */
                         "/api/auth/initiate-verify-email", "/api/auth/verify-email", "/api/auth/initiate-reset-password",
                                 "/api/auth/confirm-reset-password"

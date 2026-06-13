@@ -1,5 +1,6 @@
-package com.bombadle.dto;
+package com.bombadle.dto.response;
 
+import com.bombadle.dto.GuessAttempt;
 import lombok.Builder;
 
 @Builder

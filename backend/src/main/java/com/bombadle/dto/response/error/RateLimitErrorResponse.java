@@ -1,4 +1,4 @@
-package com.bombadle.exception;
+package com.bombadle.dto.response.error;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

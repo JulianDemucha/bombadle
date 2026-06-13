@@ -36,6 +36,11 @@ public class AuthCookiesService {
         return cookieService.createCookie("refreshToken", refreshToken, jwtConfig.refreshExpirationSeconds());
     }
 
+    public ResponseCookie createAnonymousSessionCookie(String sessionId) {
+        Objects.requireNonNull(sessionId, "Anonymous session ID must not be null");
+        return cookieService.createCookie("ANON_SESSION_ID", sessionId, 60 * 60 * 24); // 24h
+    }
+
     public void setAuthCookies(String jwt, String refreshToken, HttpServletResponse response) {
 
         response.addHeader(HttpHeaders.SET_COOKIE,
@@ -59,6 +64,5 @@ public class AuthCookiesService {
         }
         return headers;
     }
-
 
 }

@@ -1,4 +1,4 @@
-package com.bombadle.exception;
+package com.bombadle.dto.response.error;
 
 public record ErrorResponse(
         int statusCode,

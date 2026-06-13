@@ -92,7 +92,7 @@ public class ApplicationConfig {
 
     @Bean
     public CurrentCharacterCardWrapper currentCharacterCard() {
-        return new CurrentCharacterCardWrapper(null);
+        return new CurrentCharacterCardWrapper();
     }
 
     @Bean

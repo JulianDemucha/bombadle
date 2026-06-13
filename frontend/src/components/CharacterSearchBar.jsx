@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import './style/CharacterSearchBar.css';
 import { apiFetch } from '../api/api.js';
 
@@ -8,12 +8,13 @@ const normalizeText = (value) =>
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
 
-const CharacterSearchBar = ({ onSelectCharacterId }) => {
+const CharacterSearchBar = ({ onSelectCharacterId, disabled = false }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [characterCards, setCharacterCards] = useState([]);
     const [selectedIndex, setSelectedIndex] = useState(-1);
-    const listRef = React.useRef(null);
+    const listRef = useRef(null);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         const fetchCharacterCards = async () => {
@@ -52,14 +53,25 @@ const CharacterSearchBar = ({ onSelectCharacterId }) => {
     }, [selectedIndex]);
 
     const handleSelect = (characterCard) => {
+        if (disabled) return;
         if (onSelectCharacterId) {
             onSelectCharacterId(characterCard.id);
         }
+        
         setSearchTerm('');
         setIsOpen(false);
+        
+        // Używamy setTimeout, aby React zdążył wyczyścić input (stan searchTerm)
+        // Zanim wywoła się zdarzenie onFocus, które ponownie otworzyłoby listę
+        setTimeout(() => {
+            if (inputRef.current) {
+                inputRef.current.focus();
+            }
+        }, 0);
     };
 
     const handleKeyDown = (e) => {
+        if (disabled) return;
         if (!isOpen) return;
 
         if (e.key === 'ArrowDown') {
@@ -89,6 +101,7 @@ const CharacterSearchBar = ({ onSelectCharacterId }) => {
     return (
         <div className="search-container">
             <input
+                ref={inputRef}
                 type="text"
                 className="search-input-image"
                 placeholder="Wpisz nazwę..."
@@ -98,8 +111,9 @@ const CharacterSearchBar = ({ onSelectCharacterId }) => {
                     setSearchTerm(value);
                     setIsOpen(value.trim().length > 0);
                 }}
-                onFocus={() => setIsOpen(searchTerm.trim().length > 0)}
+                onFocus={(e) => setIsOpen(e.target.value.trim().length > 0)}
                 onKeyDown={handleKeyDown}
+                disabled={disabled}
             />
 
             {isOpen && (

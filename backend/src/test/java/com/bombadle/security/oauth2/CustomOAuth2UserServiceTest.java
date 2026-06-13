@@ -1,6 +1,7 @@
 package com.bombadle.security.oauth2;
 
 import com.bombadle.entity.Player;
+import com.bombadle.service.player.PlayerCredentialsService;
 import com.bombadle.service.player.PlayerService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,96 +32,88 @@ public class CustomOAuth2UserServiceTest {
     @Mock
     private PlayerService playerService;
 
+    @Mock
+    private PlayerCredentialsService playerCredentialsService;
+
     @Nested
     class LoadUserTests {
 
         @Test
         void loadUser_playerDoesNotExist_createAndSaveNewPlayer() {
-            // Arrange
+            // ARRANGE
             Map<String, Object> claims = Map.of("sub", "sigmaId123", "email", "sigma@sigma.sigma", "name", "sigma");
             OidcUserRequest userRequest = createOidcUserRequest(claims);
 
             when(playerService.findByEmail("sigma@sigma.sigma")).thenReturn(Optional.empty());
-
             when(playerService.existsByLogin("sigma")).thenReturn(false);
 
             Player savedPlayer = Player.builder()
+                    .id(1L)
                     .email("sigma@sigma.sigma")
                     .emailVerified(true)
                     .build();
             when(playerService.save(any(Player.class))).thenReturn(savedPlayer);
 
-            // Act
+            // ACT
             OidcUser resultUser = customOAuth2UserService.loadUser(userRequest);
 
-            // Assert
+            // ASSERT
             verify(playerService, times(1)).save(any(Player.class));
             assertNotNull(resultUser);
         }
 
         @Test
-        void loadUser_playerExists_returnsExistingPlayer() {
-            // Arrange
+        void loadUser_playerExistsAndUnverified_verifiesAndReturnsExistingPlayer() {
+            // ARRANGE
             Map<String, Object> claims = Map.of("sub", "sigmaId123", "email", "sigma@sigma.sigma", "name", "sigma");
             OidcUserRequest userRequest = createOidcUserRequest(claims);
 
             Player existingPlayer = Player.builder()
                     .id(1L)
                     .email("sigma@sigma.sigma")
-                    .emailVerified(true)
+                    .emailVerified(false)
                     .build();
             when(playerService.findByEmail("sigma@sigma.sigma")).thenReturn(Optional.of(existingPlayer));
 
-            // Act
+            // ACT
             OidcUser resultUser = customOAuth2UserService.loadUser(userRequest);
 
-            // Assert
+            // ASSERT
+            verify(playerCredentialsService, times(1)).activateAccount(1L);
             verify(playerService, never()).save(any(Player.class));
             assertNotNull(resultUser);
         }
 
         @Test
         void loadUser_noEmailInToken_throwsOAuth2AuthenticationException() {
-            // Arrange
+            // ARRANGE
             Map<String, Object> claims = Map.of("sub", "sigmaId123", "name", "sigma");
             OidcUserRequest userRequest = createOidcUserRequest(claims);
-
-            // Act & Assert
+            
+            // ACT & ASSERT
             assertThrows(OAuth2AuthenticationException.class, () -> customOAuth2UserService.loadUser(userRequest));
         }
 
         @Test
         void loadUser_noNameInToken_throwsOAuth2AuthenticationException() {
-            // Arrange
+            // ARRANGE
             Map<String, Object> claims = Map.of("sub", "sigmaId123", "email", "sigma@sigma.sigma");
             OidcUserRequest userRequest = createOidcUserRequest(claims);
-
-            // Act & Assert
+            
+            // ACT & ASSERT
             assertThrows(OAuth2AuthenticationException.class, () -> customOAuth2UserService.loadUser(userRequest));
         }
     }
 
     private OidcUserRequest createOidcUserRequest(Map<String, Object> claims) {
         ClientRegistration clientRegistration = ClientRegistration.withRegistrationId("google")
-                .clientId("test-client-id")
-                .clientSecret("test-secret")
+                .clientId("test-client-id").clientSecret("test-secret")
                 .authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
-                .redirectUri("sigma")
-                .authorizationUri("sigma")
-                .tokenUri("boy")
-                .build();
-
+                .redirectUri("sigma").authorizationUri("sigma").tokenUri("boy").build();
         Instant issuedAt = Instant.now();
         Instant expiresAt = Instant.now().plusSeconds(60);
-
         OidcIdToken idToken = new OidcIdToken("mock-token", issuedAt, expiresAt, claims);
-        OAuth2AccessToken accessToken = new OAuth2AccessToken(
-                OAuth2AccessToken.TokenType.BEARER,
-                "mock-access",
-                issuedAt,
-                expiresAt
-        );
-
+        OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, "mock-access", issuedAt, expiresAt);
         return new OidcUserRequest(clientRegistration, accessToken, idToken);
     }
 }

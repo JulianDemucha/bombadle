@@ -2,9 +2,10 @@ package com.bombadle.service.cache;
 
 import com.bombadle.config.CurrentCharacterCardWrapper;
 import com.bombadle.entity.CharacterCard;
+import com.bombadle.enums.GameMode;
 import com.bombadle.repository.CharacterCardRepository;
+import com.bombadle.service.game.CardMatchingService;
 import com.bombadle.service.game.CharacterCardService;
-import com.bombadle.service.game.MatchUtils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +32,7 @@ class CacheServiceTest {
     private CacheManager cacheManager;
 
     @Mock
-    private MatchUtils matchUtils;
+    private CardMatchingService cardMatchingService;
 
     @Mock
     private CurrentCharacterCardWrapper currentCharacterCardWrapper;
@@ -46,22 +47,23 @@ class CacheServiceTest {
     class ReloadCardCompareCacheTests {
 
         @Test
-        void reloadCardCompareCache_iteratesOverAllCardsAndCompares() {
+        void reloadCardCompareCache_iteratesOverAllCardsAndModesToCompare() {
             // Arrange
             CharacterCard currentCard = CharacterCard.builder().id(1L).name("Current").build();
             CharacterCard card1 = CharacterCard.builder().id(2L).name("Card1").build();
             CharacterCard card2 = CharacterCard.builder().id(3L).name("Card2").build();
 
-            when(currentCharacterCardWrapper.get()).thenReturn(currentCard);
+            when(currentCharacterCardWrapper.get(any(GameMode.class))).thenReturn(currentCard);
             when(characterCardRepository.findAll()).thenReturn(List.of(card1, card2));
 
             // Act
             cacheService.reloadCardCompareCache();
 
             // Assert
-            verify(matchUtils).compareCharacterCards(card1, currentCard);
-            verify(matchUtils).compareCharacterCards(card2, currentCard);
-            verifyNoMoreInteractions(matchUtils);
+            for (GameMode mode : GameMode.values()) {
+                verify(cardMatchingService).compareCharacterCards(card1, currentCard, mode);
+                verify(cardMatchingService).compareCharacterCards(card2, currentCard, mode);
+            }
         }
     }
 
@@ -70,6 +72,7 @@ class CacheServiceTest {
 
         @Test
         void reloadSearchIndexCache_callsServiceToGetAllCards() {
+            // Arrange
             // Act
             cacheService.reloadSearchIndexCache();
 
@@ -111,6 +114,7 @@ class CacheServiceTest {
 
         @Test
         void evictCache_cacheNameIsNull_doesNothing() {
+            // Arrange
             // Act
             cacheService.evictCache(null);
 
@@ -120,6 +124,7 @@ class CacheServiceTest {
 
         @Test
         void evictCache_cacheNameIsBlank_doesNothing() {
+            // Arrange
             // Act
             cacheService.evictCache("   ");
 
@@ -177,6 +182,7 @@ class CacheServiceTest {
 
         @Test
         void evictCacheEntry_cacheNameIsNull_doesNothing() {
+            // Arrange
             // Act
             cacheService.evictCacheEntry(null, "key");
 
@@ -186,6 +192,7 @@ class CacheServiceTest {
 
         @Test
         void evictCacheEntry_cacheNameIsBlank_doesNothing() {
+            // Arrange
             // Act
             cacheService.evictCacheEntry("  ", "key");
 

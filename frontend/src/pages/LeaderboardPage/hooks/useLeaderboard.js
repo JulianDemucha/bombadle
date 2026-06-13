@@ -11,7 +11,7 @@ const useLeaderboard = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await apiFetch(`/api/leaderboard?page=${page}`);
+            const response = await apiFetch(`/api/leaderboard/classic?page=${page}`);
             setLeaderboardData(response.data);
         } catch (err) {
             setError(err.message || 'Wystąpił błąd podczas pobierania danych');

@@ -1,6 +1,7 @@
 package com.bombadle.controller;
 
 import com.bombadle.dto.GuessListDto;
+import com.bombadle.enums.GameMode;
 import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.player.AnonymousSessionService;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +18,12 @@ public class GuessListController {
     private final GuessListService guessListService;
     private final AnonymousSessionService anonymousSessionService;
 
-    @GetMapping("/classic/player/{playerId}")
-    public GuessListDto getGuessList(@PathVariable Long playerId) {
-        return guessListService.getGuessListByPlayerId(playerId);
+    @GetMapping("/{gameMode}/player/{playerId}")
+    public GuessListDto getGuessList(
+            @PathVariable Long playerId,
+            @PathVariable String gameMode
+    ) {
+        return guessListService.getGuessListByPlayerId(playerId, GameMode.valueOf(gameMode.toUpperCase()));
     }
 
 //    @GetMapping("/classic/anonymous")

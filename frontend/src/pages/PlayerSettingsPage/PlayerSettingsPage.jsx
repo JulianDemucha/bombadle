@@ -76,7 +76,6 @@ export default function PlayerSettingsPage() {
                 alert("Aktualizacja nie powiodła się: " + (serverMsg || `status ${res.status}`));
             } else {
                 await reload();
-                alert("Zapisano zmiany.");
             }
         } catch (err) {
             alert("Błąd podczas zapisu: " + (err.message || err));
@@ -251,12 +250,6 @@ export default function PlayerSettingsPage() {
                             <input type="email" name="email" id="email" value={user?.email ?? ""} disabled />
                         </div>
                     </div>
-
-                    <div className="form-actions">
-                        <button type="submit" className="btn btn-primary" disabled={saving}>
-                            {saving ? "Zapisuję..." : "Zapisz zmiany profilu"}
-                        </button>
-                    </div>
                 </form>
 
                 <div className="form-section" style={{ marginTop: "30px" }}>
@@ -353,9 +346,12 @@ export default function PlayerSettingsPage() {
                     )}
                 </div>
 
-                <div className="form-actions" style={{ marginTop: "40px" }}>
+                <div className="form-actions" style={{ marginTop: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <button type="button" className="btn btn-logout" disabled={saving} onClick={() => logout()}>
                         Wyloguj się
+                    </button>
+                    <button type="submit" form="settings-form" className="btn btn-primary" disabled={saving} onClick={handleSubmit}>
+                        {saving ? "Zapisuję..." : "Zapisz zmiany"}
                     </button>
                 </div>
             </div>

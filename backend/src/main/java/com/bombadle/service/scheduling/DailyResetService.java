@@ -2,13 +2,11 @@ package com.bombadle.service.scheduling;
 
 import com.bombadle.config.CurrentCharacterCardWrapper;
 import com.bombadle.entity.CharacterCard;
-import com.bombadle.service.game.AnonymousGuessListService;
-import com.bombadle.service.game.CharacterCardService;
-import com.bombadle.service.game.CurrentCardStateService;
+import com.bombadle.enums.GameMode;
+import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.cache.CacheService;
-import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.stats.ScoreService;
 import com.bombadle.service.player.PlayerDeletionService;
 import com.bombadle.service.admin.AdminChangeQueueService;
@@ -20,6 +18,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -37,34 +37,40 @@ public class DailyResetService {
     private final AnonymousSessionService anonymousSessionService;
     private final AnonymousGuessListService anonymousGuessListService;
     private final CurrentCardStateService currentCardStateService;
+    private final ScoreMaintenanceService scoreMaintenanceService;
 
     /* Cron:  seconds, minutes, hours, day (of the month), month, day (of the week) */
     @Scheduled(cron = "0 0 7 * * *", zone = "Europe/Warsaw")
 //    @PostConstruct //for manual testing
     @Transactional
     public void pickNewCharacterCardAndResetScores() {
-        log.info("7:00 - Daily reset triggered: selecting new character and resetting scores.");
+        log.info("7:00 - Daily reset triggered: selecting new characters and resetting scores.");
 
         adminChangeQueueService.applyAll();
 
         guessListService.truncateTable();
         anonymousSessionService.truncateTable();
         anonymousGuessListService.truncateTable();
-        playerService.resetAllScores();
+        scoreMaintenanceService.resetAllScores();
         scoreService.deleteAllInBatch();
         playerDeletionService.deleteMarkedForDeletion(Duration.ofHours(48));
-        log.info("All scores has been deleted");
+        log.info("All scores have been deleted");
 
-        CharacterCard newCard = characterCardService.findRandomCard();
-        if (newCard == null) { // just in case
-            throw new IllegalStateException("No character cards in the database");
+        Map<GameMode, CharacterCard> newDailyCards = new HashMap<>();
+
+        for (GameMode mode : GameMode.values()) {
+            CharacterCard newCard = characterCardService.findRandomCard();
+            if (newCard == null) {
+                throw new IllegalStateException("No character cards in the database");
+            }
+            newDailyCards.put(mode, newCard);
+
+            currentCharacterCardWrapper.set(mode, newCard);
+            log.info("New Character card picked for {}: {}", mode, newCard.getName());
         }
-
-        currentCharacterCardWrapper.set(newCard);
-        currentCardStateService.updateCurrentCard(newCard);
-        log.info("new Character card has been picked: {}", currentCharacterCardWrapper.get().getName());
+        currentCardStateService.updateCurrentCards(newDailyCards);
 
         cacheService.reloadCardCompareCache();
-        log.info("Card comparison cache have been cleared and reloaded.");
+        log.info("Card comparison caches have been cleared and reloaded.");
     }
 }

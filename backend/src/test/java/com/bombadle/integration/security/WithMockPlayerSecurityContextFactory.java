@@ -24,7 +24,6 @@ public class WithMockPlayerSecurityContextFactory implements WithSecurityContext
                 .passwordHash("sigmasigmaboy")
                 .role(Role.valueOf(annotation.role()))
                 .accountLocked(annotation.accountLocked())
-                .hasGuessedToday(false)
                 .totalSuccessfulGuesses(0)
                 .createdAt(Instant.now())
                 .lastActiveAt(Instant.now())

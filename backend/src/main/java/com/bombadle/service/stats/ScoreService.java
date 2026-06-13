@@ -21,8 +21,6 @@ import java.util.Optional;
 public class ScoreService {
 
     private final ScoreRepository repo;
-    private final LeaderboardService leaderboardService;
-    private final CacheService cacheService;
 
     public Score saveScore(Score score) {
         if (score == null)
@@ -51,54 +49,12 @@ public class ScoreService {
         repo.delete(score);
     }
 
-    @Transactional
-    @CacheEvict(value = "top-3-leaderboard", allEntries = true, condition = "@scoreRepository.count() <= 3")
-    public Score registerScore(Player player, int numberOfTries) {
-        Score score = Score.builder()
-                .player(player)
-                .scoreTimestamp(Instant.now())
-                .numberOfTries(numberOfTries)
-                .build();
-
-        Score savedScore = repo.save(score);
-        evictClassicLeaderboardLastPage();
-        return savedScore;
+    public Optional<Instant> findLatestScoreTimestamp(){
+        return repo.findLatestScoreTimestamp();
     }
 
-    @Transactional
-    public Score registerScoreWithTimestamp(Player player, int numberOfTries, Instant timestamp) {
-        Optional<Instant> latestTimestamp = repo.findLatestScoreTimestamp();
-        boolean isHistoricalInsert = latestTimestamp.isPresent() && timestamp.isBefore(latestTimestamp.get());
-
-        Score score = Score.builder()
-                .player(player)
-                .scoreTimestamp(timestamp)
-                .numberOfTries(numberOfTries)
-                .build();
-
-        Score savedScore = repo.save(score);
-        if (isHistoricalInsert) {
-            cacheService.clear("classic-leaderboard");
-        } else {
-            evictClassicLeaderboardLastPage();
-        }
-        evictTop3CacheIfNeeded(timestamp);
-
-        return savedScore;
-    }
-
-    private void evictClassicLeaderboardLastPage() {
-        long count = repo.count();
-        int lastPage = count > 0 ? (int) ((count - 1) / 10) : 0;
-        cacheService.evictCacheEntry("classic-leaderboard", lastPage);
-    }
-
-    private void evictTop3CacheIfNeeded(Instant newTimestamp) {
-        List<LeaderboardEntryDto> currentTop3 = leaderboardService.getTop3Leaderboard();
-
-        if (currentTop3.size() < 3 || !newTimestamp.isAfter(currentTop3.get(2).scoreTimeStamp())) {
-            cacheService.evictCache("top-3-leaderboard");
-        }
+    public Score save(Score score) {
+        return repo.save(score);
     }
 
     public Optional<Score> getScoreById(Long id) {
@@ -118,6 +74,11 @@ public class ScoreService {
 
     public boolean existsById(Long id) {
         return repo.existsById(id);
+    }
+
+    @Transactional
+    public void deleteAllByPlayerId(Long playerId) {
+        repo.deleteByPlayerId(playerId);
     }
 
 

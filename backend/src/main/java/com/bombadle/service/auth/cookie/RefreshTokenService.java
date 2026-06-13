@@ -100,6 +100,11 @@ public class RefreshTokenService {
                 .build();
     }
 
+    @Transactional
+    public void deleteAllByPlayerId(long playerId) {
+        refreshTokenRepository.deleteByPlayerId(playerId);
+    }
+
 
     @Transactional
     public int deleteRevokedRefreshTokens(int secondsBeforeCutoff) {

@@ -2,8 +2,8 @@ package com.bombadle.service.player;
 
 import com.bombadle.dto.AnonymousSessionDto;
 import com.bombadle.dto.GuessListDto;
-import com.bombadle.entity.AnonymousGuessList;
 import com.bombadle.entity.AnonymousSession;
+import com.bombadle.enums.GameMode;
 import com.bombadle.repository.AnonymousSessionRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,25 +21,22 @@ public class AnonymousSessionService {
         AnonymousSession anonymousSession;
 
         if (anonymousSessionId == null) {
-            anonymousSession = new AnonymousSession(new AnonymousGuessList());
+            anonymousSession = AnonymousSession.createEmptySession();
         } else {
             Optional<AnonymousSession> anonymousSessionOpt = repo.findById(anonymousSessionId);
-            anonymousSession = anonymousSessionOpt.orElseGet(() -> new AnonymousSession(new AnonymousGuessList()));
+            anonymousSession = anonymousSessionOpt.orElseGet(AnonymousSession::createEmptySession);
         }
 
-        return AnonymousSessionDto.toDto(
-                save(anonymousSession)
-        );
+        return AnonymousSessionDto.toDto(save(anonymousSession));
     }
 
-    public GuessListDto getGuessList(UUID anonymousSessionId) {
+    public GuessListDto getGuessList(UUID anonymousSessionId, GameMode gameMode) {
         if (anonymousSessionId == null) {
             return new GuessListDto(Collections.emptyList());
         }
         return repo.findById(anonymousSessionId)
-                .map(session -> GuessListDto.toDto(session.getGuessList()))
+                .map(session -> GuessListDto.toDto(session.getGuessList(), gameMode))
                 .orElse(new GuessListDto(Collections.emptyList()));
-
     }
 
     public AnonymousSession save(AnonymousSession anonymousSession) {

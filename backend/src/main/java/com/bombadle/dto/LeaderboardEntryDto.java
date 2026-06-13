@@ -3,9 +3,11 @@ package com.bombadle.dto;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.Score;
 import com.bombadle.enums.AvatarImage;
+import com.bombadle.enums.GameMode;
 import lombok.Builder;
 
 import java.time.Instant;
+import java.util.Objects;
 
 
 @Builder
@@ -24,27 +26,22 @@ public record LeaderboardEntryDto(
         return LeaderboardEntryDto.builder()
                 .playerId(score.getPlayer().getId())
                 .playerDisplayName(score.getPlayer().getDisplayName())
-                .playerAvatarImage(AvatarImage.valueOf(score.getPlayer().getAvatarImage().toString() + ".png"))
-                .scoreTimeStamp(Instant.parse(score.getScoreTimestamp().toString()))
-                /*
-                example toString output: 2025-07-24T15:30:45
-                24=day T=separator 15=hour 30=minutes 45=seconds
-                 */
+                .playerAvatarImage(score.getPlayer().getAvatarImage())
+                .scoreTimeStamp(score.getScoreTimestamp())
                 .numberOfTries(score.getNumberOfTries())
                 .build();
     }
 
-    public static LeaderboardEntryDto toDto(Player player) {
+    public static LeaderboardEntryDto toDto(Player player, GameMode gameMode) {
+        Score score = player.getTodayScore(gameMode)
+                .orElseThrow(() -> new IllegalArgumentException("Player does not have a score for mode: " + gameMode));
+
         return LeaderboardEntryDto.builder()
                 .playerId(player.getId())
                 .playerDisplayName(player.getDisplayName())
-                .playerAvatarImage(AvatarImage.valueOf(player.getAvatarImage().toString() + ".png"))
-                .scoreTimeStamp(Instant.parse(player.getTodayScore().getScoreTimestamp().toString()))
-                /*
-                example toString output: 2025-07-24T15:30:45
-                24=day T=separator 15=hour 30=minutes 45=seconds
-                 */
-                .numberOfTries(player.getTodayScore().getNumberOfTries())
+                .playerAvatarImage(player.getAvatarImage())
+                .scoreTimeStamp(score.getScoreTimestamp())
+                .numberOfTries(score.getNumberOfTries())
                 .build();
     }
 }

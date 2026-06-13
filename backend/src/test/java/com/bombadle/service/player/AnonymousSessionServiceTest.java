@@ -4,6 +4,7 @@ import com.bombadle.dto.AnonymousSessionDto;
 import com.bombadle.dto.GuessListDto;
 import com.bombadle.entity.AnonymousGuessList;
 import com.bombadle.entity.AnonymousSession;
+import com.bombadle.enums.GameMode;
 import com.bombadle.repository.AnonymousSessionRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -85,10 +86,10 @@ class AnonymousSessionServiceTest {
         @Test
         void getGuessList_sessionIdIsNull_returnsEmptyDto() {
             // Arrange
-            // No setup needed
+            GameMode gameMode = GameMode.CLASSIC;
 
             // Act
-            GuessListDto result = anonymousSessionService.getGuessList(null);
+            GuessListDto result = anonymousSessionService.getGuessList(null, gameMode);
 
             // Assert
             assertNotNull(result);
@@ -100,11 +101,12 @@ class AnonymousSessionServiceTest {
         void getGuessList_sessionExists_returnsDtoWithGuesses() {
             // Arrange
             UUID sessionId = UUID.randomUUID();
+            GameMode gameMode = GameMode.CLASSIC;
             AnonymousSession session = new AnonymousSession(new AnonymousGuessList());
             when(repo.findById(sessionId)).thenReturn(Optional.of(session));
 
             // Act
-            GuessListDto result = anonymousSessionService.getGuessList(sessionId);
+            GuessListDto result = anonymousSessionService.getGuessList(sessionId, gameMode);
 
             // Assert
             assertNotNull(result);
@@ -115,10 +117,11 @@ class AnonymousSessionServiceTest {
         void getGuessList_sessionNotFound_returnsEmptyDto() {
             // Arrange
             UUID sessionId = UUID.randomUUID();
+            GameMode gameMode = GameMode.CLASSIC;
             when(repo.findById(sessionId)).thenReturn(Optional.empty());
 
             // Act
-            GuessListDto result = anonymousSessionService.getGuessList(sessionId);
+            GuessListDto result = anonymousSessionService.getGuessList(sessionId, gameMode);
 
             // Assert
             assertNotNull(result);
@@ -199,8 +202,6 @@ class AnonymousSessionServiceTest {
         @Test
         void truncateTable_called_callsRepositoryTruncateTable() {
             // Arrange
-            // No setup needed
-
             // Act
             anonymousSessionService.truncateTable();
 

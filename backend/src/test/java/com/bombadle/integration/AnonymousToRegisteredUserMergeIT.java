@@ -6,6 +6,8 @@ import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.Score;
 import com.bombadle.enums.Affiliation;
+import com.bombadle.enums.Color;
+import com.bombadle.enums.GameMode;
 import com.bombadle.enums.Gender;
 import com.bombadle.enums.Race;
 import com.bombadle.repository.AnonymousSessionRepository;
@@ -24,7 +26,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
-import com.bombadle.enums.Color;
 
 import java.util.List;
 import java.util.Set;
@@ -66,7 +67,6 @@ class AnonymousToRegisteredUserMergeIT {
 
     @BeforeEach
     void setUp() {
-        // Arrange - Database baseline setup
         wrongCard = CharacterCard.builder()
                 .name("Michał Głuś")
                 .gender(Gender.MALE)
@@ -87,12 +87,11 @@ class AnonymousToRegisteredUserMergeIT {
                 .build();
 
         characterCardRepository.saveAll(List.of(wrongCard, correctCard));
-        currentCharacterCardWrapper.set(correctCard);
+        currentCharacterCardWrapper.set(GameMode.CLASSIC, correctCard);
     }
 
     @Test
     void anonymousSession_guestRegistersAfterGuessing_mergesDataSuccessfully() throws Exception {
-        // Arrange
         RegisterRequest registerRequest = RegisterRequest.builder()
                 .username("SigmaUserTest")
                 .email("integration@test.com")
@@ -104,7 +103,6 @@ class AnonymousToRegisteredUserMergeIT {
         String csrfToken = "sigma-csrf-token-123";
         Cookie csrfCookie = new Cookie("XSRF-TOKEN", csrfToken);
 
-        // Act - Initial incorrect guess
         MvcResult firstGuessResult = mockMvc.perform(post("/api/card-guessing/classic/anonymous-guess/" + wrongCard.getId())
                         .cookie(csrfCookie)
                         .header("X-XSRF-TOKEN", csrfToken))
@@ -115,29 +113,26 @@ class AnonymousToRegisteredUserMergeIT {
         assertNotNull(anonSessionCookie);
         String sessionId = anonSessionCookie.getValue();
 
-        // Act - Correct guess using the assigned anonymous session cookie
         mockMvc.perform(post("/api/card-guessing/classic/anonymous-guess/" + correctCard.getId())
                         .cookie(anonSessionCookie, csrfCookie)
                         .header("X-XSRF-TOKEN", csrfToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.correct").value(true));
 
-        // Act - Register account and trigger merge
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest))
                         .cookie(anonSessionCookie, triggerMergeCookie, csrfCookie)
                         .header("X-XSRF-TOKEN", csrfToken))
                 .andExpect(status().isOk())
-                .andExpect(cookie().maxAge("ANON_SESSION_ID", 0)) // Verify cookie clearing
+                .andExpect(cookie().maxAge("ANON_SESSION_ID", 0))
                 .andExpect(cookie().maxAge("TRIGGER_MERGE", 0));
 
-        // Assert - Verify final database state after merge
         Player savedPlayer = playerRepository.findByEmail("integration@test.com").orElse(null);
         assertNotNull(savedPlayer);
-        assertEquals("SigmaUserTest".toLowerCase(), savedPlayer.getLogin());
+        assertEquals("sigmausertest", savedPlayer.getLogin());
         assertEquals("SigmaUserTest", savedPlayer.getDisplayName());
-        assertEquals("integration@test.com".toLowerCase(), savedPlayer.getEmail());
+        assertEquals("integration@test.com", savedPlayer.getEmail());
 
         List<Score> playerScores = scoreRepository.findAll();
         assertEquals(1, playerScores.size());
@@ -145,6 +140,7 @@ class AnonymousToRegisteredUserMergeIT {
         Score mergedScore = playerScores.getFirst();
         assertEquals(savedPlayer.getId(), mergedScore.getPlayer().getId());
         assertEquals(2, mergedScore.getNumberOfTries());
+        assertEquals(GameMode.CLASSIC, mergedScore.getGameMode());
         assertNotNull(mergedScore.getScoreTimestamp());
 
         boolean sessionExists = anonymousSessionRepository.existsById(UUID.fromString(sessionId));

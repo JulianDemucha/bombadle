@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
+import confetti from 'canvas-confetti';
 import {
     extractGuessAttempt,
     mapLeaderboardEntryToRow,
@@ -17,8 +18,8 @@ const GUESS_LIST_ENDPOINT = '/api/guess-list/classic/player/'; // +user.id
 const ANONYMOUS_RECOVERY_ENDPOINT = '/api/players/anonymous/me';
 const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
 const ANONYMOUS_GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/anonymous-guess';
-const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/top3';
-const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/player';
+const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/CLASSIC/top3';
+const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/CLASSIC/player';
 
 const formatTimeLabel = (value) => {
     if (!value) return '--:--';
@@ -26,6 +27,28 @@ const formatTimeLabel = (value) => {
     if (Number.isNaN(date.getTime())) return '--:--';
     return date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
 };
+
+const triggerWinAnimation = () => {
+    const count = 200;
+    const defaults = {
+        origin: { y: 0.7 }
+    };
+
+    const fire = (particleRatio, opts) => {
+        confetti({
+            ...defaults,
+            ...opts,
+            particleCount: Math.floor(count * particleRatio)
+        });
+    };
+
+    fire(0.25, { spread: 50, startVelocity: 55, origin: { x: 0, y: 1 }, angle: 60 });
+    fire(0.25, { spread: 50, startVelocity: 55, origin: { x: 1, y: 1 }, angle: 120 });
+    fire(0.2, { spread: 60, startVelocity: 45, origin: { x: 0, y: 1 }, angle: 45 });
+    fire(0.2, { spread: 60, startVelocity: 45, origin: { x: 1, y: 1 }, angle: 135 });
+    fire(0.1, { spread: 120, decay: 0.91, scalar: 0.8, origin: { x: 0.5, y: 1 }, startVelocity: 60, angle: 90 });
+};
+
 
 const pickGuessTimestamp = (entry) =>
     entry?.scoreTimeStamp ||
@@ -205,6 +228,13 @@ function useClassicModeGame() {
         const loadGame = async () => {
             if (user) {
                 // Logged-in user logic
+                if (user.completedModesToday?.includes('CLASSIC')) {
+                    setIsWon(true);
+                    setIsLeaderboardExpanded(true);
+                    if (user.todayScoresTimestamps?.['CLASSIC']) {
+                        latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['CLASSIC']);
+                    }
+                }
                 try {
                     const response = await apiFetch(GUESS_LIST_ENDPOINT + user.id);
                     const items = pickGuessListItems(response.data);
@@ -250,9 +280,8 @@ function useClassicModeGame() {
                         const res = await apiFetch(ANONYMOUS_RECOVERY_ENDPOINT);
                         const sessionData = res.data;
 
-                        // POPRAWKA: .guessList.guessList zamiast .guessList.guesses
-                        if (sessionData && sessionData.guessList && sessionData.guessList.guessList) {
-                            const recoveredItems = sessionData.guessList.guessList;
+                        if (sessionData && sessionData.guessLists?.['CLASSIC']?.guessList) {
+                            const recoveredItems = sessionData.guessLists['CLASSIC'].guessList;
 
                             if (recoveredItems.length > 0) {
                                 storedGuesses = recoveredItems.map(item => ({
@@ -262,16 +291,16 @@ function useClassicModeGame() {
                                 localStorage.setItem('anonymousGuessList', JSON.stringify(storedGuesses));
                             }
 
-                            if (sessionData.hasGuessedToday) {
+                            if (sessionData.completedModesToday?.includes('CLASSIC')) {
                                 setIsWon(true);
                                 setIsAnonymousAndWon(true);
                                 setIsLeaderboardExpanded(true);
 
-                                if (sessionData.scoreTimestamp) {
-                                    const winTime = new Date(sessionData.ScoreTimestamp).getTime();
+                                if (sessionData.scoreTimestamps?.['CLASSIC']) {
+                                    const winTime = new Date(sessionData.scoreTimestamps['CLASSIC']).getTime();
                                     localStorage.setItem('anonymousWinTime', winTime.toString());
                                     latestWinTimeLabelRef.current = formatTimeLabel(winTime);
-                                }
+                                 }
                             }
                         }
                     } catch (error) {
@@ -344,6 +373,7 @@ function useClassicModeGame() {
                 setIsAnimatingSuccess(true);
 
                 setTimeout(() => {
+                    triggerWinAnimation();
                     setIsWon(true);
                     setIsAnimatingSuccess(false);
 
@@ -359,7 +389,7 @@ function useClassicModeGame() {
         } catch (error) {
             console.error('Blad wysylania guessa:', error);
         }
-    }, [cardsById, isAnimatingSuccess, isWon, smoothScrollToWinSection, user, cardsByName]);
+    }, [cardsById, isAnimatingSuccess, isWon, smoothScrollToWinSection, user]);
 
     return {
         guesses,

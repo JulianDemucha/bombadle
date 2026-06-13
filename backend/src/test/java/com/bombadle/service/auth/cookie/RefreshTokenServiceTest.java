@@ -213,13 +213,23 @@ class RefreshTokenServiceTest {
     class DeletionTests {
 
         @Test
+        void deleteAllByPlayerId_validPlayerId_callsRepositoryDelete() {
+            // Arrange
+            long playerId = 1L;
+
+            // Act
+            refreshTokenService.deleteAllByPlayerId(playerId);
+
+            // Assert
+            verify(refreshTokenRepository).deleteByPlayerId(playerId);
+        }
+
+        @Test
         void manualDelete_validToken_callsRepositoryDelete() {
             // Arrange
             RefreshToken token = mock(RefreshToken.class);
-
             // Act
             refreshTokenService.manualDelete(token);
-
             // Assert
             verify(refreshTokenRepository).delete(token);
         }
@@ -232,7 +242,6 @@ class RefreshTokenServiceTest {
 
             // Act
             int deletedCount = refreshTokenService.deleteRevokedRefreshTokens(seconds);
-
             // Assert
             assertEquals(5, deletedCount);
             verify(refreshTokenRepository).deleteRevokedBeforeCutoff(any(Instant.class));

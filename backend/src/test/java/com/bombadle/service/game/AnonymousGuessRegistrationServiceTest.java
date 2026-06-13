@@ -1,0 +1,89 @@
+package com.bombadle.service.game;
+
+import com.bombadle.dto.ClassicGuessAttempt;
+import com.bombadle.entity.AnonymousGuessList;
+import com.bombadle.entity.AnonymousSession;
+import com.bombadle.enums.GameMode;
+import com.bombadle.service.player.AnonymousSessionService;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class AnonymousGuessRegistrationServiceTest {
+
+    @Mock
+    private AnonymousGuessListService anonymousGuessListService;
+
+    @Mock
+    private AnonymousSessionService anonymousSessionService;
+
+    @InjectMocks
+    private AnonymousGuessRegistrationService anonymousGuessRegistrationService;
+
+    @Nested
+    class RegisterGuessAndGetSessionIdTests {
+
+        @Test
+        void registerGuessAndGetSessionId_incorrectGuess_addsGuessAndSavesWithoutTimestamp() {
+            // ARRANGE
+            UUID sessionId = UUID.randomUUID();
+            AnonymousSession session = mock(AnonymousSession.class);
+            AnonymousGuessList guessList = mock(AnonymousGuessList.class);
+            ClassicGuessAttempt attempt = mock(ClassicGuessAttempt.class);
+            GameMode gameMode = GameMode.CLASSIC;
+
+            when(session.getGuessList()).thenReturn(guessList);
+            when(attempt.isCorrect()).thenReturn(false);
+            when(anonymousGuessListService.save(guessList)).thenReturn(guessList);
+            when(anonymousSessionService.save(session)).thenReturn(session);
+            when(session.getId()).thenReturn(sessionId);
+
+            // ACT
+            UUID result = anonymousGuessRegistrationService.registerGuessAndGetSessionId(session, attempt, gameMode);
+
+            // ASSERT
+            assertEquals(sessionId, result);
+            verify(guessList).addGuess(gameMode, attempt);
+            verify(session, never()).markModeAsCompleted(any());
+            verify(session, never()).addScoreTimestamp(any(), any());
+            verify(anonymousGuessListService).save(guessList);
+            verify(anonymousSessionService).save(session);
+        }
+
+        @Test
+        void registerGuessAndGetSessionId_correctGuess_addsGuessMarksCompletedAndSavesWithTimestamp() {
+            // ARRANGE
+            UUID sessionId = UUID.randomUUID();
+            AnonymousSession session = mock(AnonymousSession.class);
+            AnonymousGuessList guessList = mock(AnonymousGuessList.class);
+            ClassicGuessAttempt attempt = mock(ClassicGuessAttempt.class);
+            GameMode gameMode = GameMode.QUOTES;
+
+            when(session.getGuessList()).thenReturn(guessList);
+            when(attempt.isCorrect()).thenReturn(true);
+            when(anonymousGuessListService.save(guessList)).thenReturn(guessList);
+            when(anonymousSessionService.save(session)).thenReturn(session);
+            when(session.getId()).thenReturn(sessionId);
+
+            // ACT
+            UUID result = anonymousGuessRegistrationService.registerGuessAndGetSessionId(session, attempt, gameMode);
+
+            // ASSERT
+            assertEquals(sessionId, result);
+            verify(guessList).addGuess(gameMode, attempt);
+            verify(session).markModeAsCompleted(gameMode);
+            verify(session).addScoreTimestamp(eq(gameMode), any());
+            verify(anonymousGuessListService).save(guessList);
+            verify(anonymousSessionService).save(session);
+        }
+    }
+}

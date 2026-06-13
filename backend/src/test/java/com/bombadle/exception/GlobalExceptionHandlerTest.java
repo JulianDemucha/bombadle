@@ -1,5 +1,8 @@
 package com.bombadle.exception;
 
+import com.bombadle.dto.response.error.ErrorResponse;
+import com.bombadle.dto.response.error.ErrorResponseWithEmail;
+import com.bombadle.dto.response.error.RateLimitErrorResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -173,7 +176,7 @@ class GlobalExceptionHandlerTest {
         @Test
         void handleCardAlreadyGuessed_returns409AndCorrectBody() {
             // Arrange
-            CardAlreadyGuessedException exception = new CardAlreadyGuessedException();
+            UserAlreadyGuessedException exception = new UserAlreadyGuessedException();
 
             // Act
             ResponseEntity<ErrorResponse> response = handler.handleCardAlreadyGuessed(exception);
@@ -183,7 +186,7 @@ class GlobalExceptionHandlerTest {
             assertNotNull(response.getBody());
             assertEquals(409, response.getBody().statusCode());
             assertEquals("Card Already Guessed", response.getBody().error());
-            assertEquals("Card already guessed today", response.getBody().message());
+            assertEquals("Card already guessed in that mode today", response.getBody().message());
         }
 
         @Test

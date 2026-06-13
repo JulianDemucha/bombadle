@@ -1,11 +1,11 @@
 package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
-import com.bombadle.dto.AnonymousGuessResponse;
-import com.bombadle.dto.GuessResponse;
-import com.bombadle.service.auth.cookie.CookieService;
-import com.bombadle.service.game.CardMatchingService;
-import com.bombadle.service.game.GuessListService;
+import com.bombadle.dto.response.AnonymousGuessResponse;
+import com.bombadle.dto.response.GuessResponse;
+import com.bombadle.enums.GameMode;
+import com.bombadle.service.auth.cookie.AuthCookiesService;
+import com.bombadle.service.game.GameServiceFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,60 +20,25 @@ import java.util.UUID;
 @RequestMapping("/api/card-guessing")
 @RequiredArgsConstructor
 public class CardGuessingController {
-    private final CardMatchingService cardMatchingService;
-    private final GuessListService guessListService;
-    private final CookieService cookieService;
+    private final AuthCookiesService authCookiesService;
+    private final GameServiceFacade gameServiceFacade;
 
-
-    /// Returns an GuessResponse which has CardField parameters - for example:
-    /// ```json
-    /// "correct": "false",
-    ///{
-    ///     "name": {
-    ///         "value": "Sebastian Bąk",
-    ///         "match": "NOT_MATCH"
-    ///},
-    ///     "gender": {
-    ///         "value": "MALE",
-    ///         "match": "MATCH"
-    ///},
-    ///     "race": {
-    ///         "value": "Czlowiek",
-    ///         "match": "MATCH"
-    ///},
-    ///     "alive": {
-    ///         "value": true,
-    ///         "match": "MATCH"
-    ///},
-    ///     "colors": {
-    ///         "value": [
-    ///             "ZIELONY"
-    ///],
-    ///         "match": "NOT_MATCH"
-    ///},
-    ///     "affiliations": {
-    ///         "value": [
-    ///             "Gwiezdna_Flota",
-    ///             "Szeregowy_Gwiezdnej_Floty"
-    ///],
-    ///         "match": "NOT_FULL_MATCH"
-    ///},
-    ///     "firstAppearanceEpisode": {
-    ///         "value": 1,
-    ///         "match": "MATCH"
-    ///}
-    ///}
-    ///```
-    @PostMapping("/classic/guess/{id}")
+    @PostMapping("/{gameMode}/guess/{id}")
     public GuessResponse compareCard(
+            @PathVariable String gameMode,
             @PathVariable Long id,
             @AuthenticationPrincipal PlayerPrincipal userDetails
     ) {
-        return cardMatchingService.compareCharacterCardClassic(id, userDetails.getPlayerId());
+        return gameServiceFacade.play(
+                id,
+                userDetails.getPlayerId(),
+                GameMode.valueOf(gameMode.toUpperCase())
+        );
     }
 
-    @PostMapping("/classic/anonymous-guess/{id}")
+    @PostMapping("/{gameMode}/anonymous-guess/{id}")
     public ResponseEntity<?> compareCardAnonymous(
+            @PathVariable String gameMode,
             @PathVariable Long id,
             @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
             @AuthenticationPrincipal PlayerPrincipal userDetails
@@ -84,19 +49,23 @@ public class CardGuessingController {
                     .body("Only for non-logged in users");
         }
 
-        AnonymousGuessResponse anonymousGuessResponse = cardMatchingService.compareCharacterCardClassicAnonymous(id, anonymousSessionId);
+        AnonymousGuessResponse anonymousGuessResponse =
+                gameServiceFacade.playAnonymous(
+                        id,
+                        anonymousSessionId,
+                        GameMode.valueOf(gameMode.toUpperCase())
+                );
 
         if (anonymousSessionId == null) {
-            ResponseCookie cookie = cookieService.createCookie(
-                    "ANON_SESSION_ID",
-                    anonymousGuessResponse.anonymousSessionId().toString(),
-                    60 * 60 * 24 //24h
+            ResponseCookie cookie = authCookiesService.createAnonymousSessionCookie(
+                    anonymousGuessResponse.anonymousSessionId().toString()
             );
+
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
                     .body(anonymousGuessResponse.guessResponse());
         }
 
-        return ResponseEntity.ok((anonymousGuessResponse).guessResponse());
+        return ResponseEntity.ok(anonymousGuessResponse.guessResponse());
     }
 }

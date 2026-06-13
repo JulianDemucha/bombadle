@@ -2,6 +2,7 @@ package com.bombadle.service.stats;
 
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.entity.Score;
+import com.bombadle.enums.GameMode;
 import com.bombadle.exception.ScoreNotFoundException;
 import com.bombadle.repository.ScoreRepository;
 import lombok.AllArgsConstructor;
@@ -22,14 +23,14 @@ public class LeaderboardService {
     private final ScoreRepository repo;
 
 
-    @Cacheable(value = "top-3-leaderboard")
-    public List<LeaderboardEntryDto> getTop3Leaderboard(){
-        return repo.findTop3();
+    @Cacheable(value = "top-3-leaderboard", key = "#gameMode.name()")
+    public List<LeaderboardEntryDto> getTop3Leaderboard(GameMode gameMode) {
+        return repo.findTop3(gameMode);
     }
 
-    @Cacheable(value = "classic-leaderboard", key = "#page")
-    public Page<LeaderboardEntryDto> getPagedLeaderboard(int page) {
-        return repo.findPagedLeaderboard(PageRequest.of(page, 10));
+    @Cacheable(value = "classic-leaderboard", key = "#gameMode.name() + '-' + #page")
+    public Page<LeaderboardEntryDto> getPagedLeaderboard(GameMode gameMode, int page) {
+        return repo.findPagedLeaderboard(gameMode, PageRequest.of(page, 10));
     }
 
     public List<Score> getTop10Leaderboard() {
@@ -49,19 +50,19 @@ public class LeaderboardService {
 //        }
 //    }
 
-    public Long getPlayerRankById(Long playerId) {
-        Optional<Score> playerScoreOpt = repo.findByPlayerId(playerId);
+    public Long getPlayerRankById(GameMode gameMode, Long playerId) {
+        Optional<Score> playerScoreOpt = repo.findByPlayerIdAndGameMode(playerId, gameMode);
         if (playerScoreOpt.isEmpty()) {
-            throw new ScoreNotFoundException("Could not find score for player with id " + playerId);
+            throw new ScoreNotFoundException("Could not find score for player with id " + playerId + " in mode " + gameMode);
         }
-        Long rank = repo.findRankByPlayerId(playerId);
-        log.info("Player with ID {} has rank {}", playerId, rank);
+        Long rank = repo.findRankByPlayerId(gameMode, playerId);
+        log.info("Player with ID {} has rank {} in mode {}", playerId, rank, gameMode);
         return rank;
     }
 
-    public LeaderboardEntryDto getRankedEntryByPlayerId(Long playerId) {
-        return repo.findLeaderboardRankedEntryByPlayerId(playerId)
-                .orElseThrow(() -> new ScoreNotFoundException("Could not find score for player with id " + playerId));
+    public LeaderboardEntryDto getRankedEntryByPlayerId(GameMode gameMode, Long playerId) {
+        return repo.findLeaderboardRankedEntryByPlayerId(gameMode, playerId)
+                .orElseThrow(() -> new ScoreNotFoundException("Could not find score for player with id " + playerId + " in mode " + gameMode));
     }
 
     public Optional<Score> getLatestScore() {

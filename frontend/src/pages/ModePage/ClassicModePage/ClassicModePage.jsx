@@ -5,7 +5,6 @@ import Header from "../../../components/Header.jsx";
 import ImgTextBanner from "../../../components/ImgTextBanner.jsx";
 import CharacterSearchBar from "../../../components/CharacterSearchBar.jsx";
 import GuessList from "../../../components/GuessList.jsx";
-import WinAnimation from "../../../components/WinAnimation.jsx";
 import PreviousCharacterCard from './components/PreviousCharacterCard.jsx';
 import GuessLegend from './components/GuessLegend.jsx';
 import ClassicLeaderboard from './components/ClassicLeaderboard.jsx';
@@ -31,13 +30,12 @@ function ClassicModePage() {
 
     return (
         <div className="classic-mode-page">
-            <WinAnimation isVisible={isWon} />
             <Header/>
             <div className="classic-mode-content">
                 <ImgTextBanner text = 'Zgadnij dzisiejszą postać' altText="ok"/>
                 
-                <div style={{ pointerEvents: (isWon || isAnimatingSuccess) ? 'none' : 'auto', opacity: (isWon) ? 0.6 : 1, marginTop: '-30px', position: 'relative', zIndex: 20 }}>
-                    <CharacterSearchBar onSelectCharacterId={handleSelectCharacterId}/>
+                <div style={{ opacity: (isWon) ? 0.6 : 1, marginTop: '-30px', position: 'relative', zIndex: 20 }}>
+                    <CharacterSearchBar onSelectCharacterId={handleSelectCharacterId} disabled={isWon || isAnimatingSuccess} />
                 </div>
 
                 {hasGuesses && <GuessList guesses={guesses}/>} 

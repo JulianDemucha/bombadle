@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.CONFLICT)
-public class CardAlreadyGuessedException extends RuntimeException {
-    public CardAlreadyGuessedException() {
-        super("Card already guessed today");
+public class UserAlreadyGuessedException extends RuntimeException {
+    public UserAlreadyGuessedException() {
+        super("Card already guessed in that mode today");
     }
 }
