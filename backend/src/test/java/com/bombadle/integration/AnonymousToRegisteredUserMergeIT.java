@@ -65,6 +65,7 @@ class AnonymousToRegisteredUserMergeIT extends BaseIT{
     private CharacterCard wrongCard;
     private CharacterCard correctCard;
 
+
     @BeforeEach
     void setUp() {
         wrongCard = CharacterCard.builder()

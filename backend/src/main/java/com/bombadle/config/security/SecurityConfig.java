@@ -70,11 +70,11 @@ public class SecurityConfig {
                                                       StatelessCsrfValidationFilter statelessCsrfFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityMatcher("/api/**", "swagger-ui", "/images/**", "/character_card_avatars/**")
+                .securityMatcher("/api/**", "/test/**", "/swagger-ui/**", "/images/**", "/character_card_avatars/**")
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
+                        .requestMatchers("/api/admin/**", "/test/security/admin").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
                         .requestMatchers("/api/daily-reset/manual-trigger").hasAuthority("ROLE_SUPERADMIN")
                         .requestMatchers("/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate",
                                 "/api/auth/refreshToken", "/api/card-guessing/classic/anonymous-guess/**",

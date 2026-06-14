@@ -20,4 +20,7 @@ public class CurrentCharacterCardWrapper {
     public void set(GameMode mode, CharacterCard newInstance) {
         this.currentCards.put(mode, newInstance);
     }
+    public void clear() {
+        currentCards.clear();
+    }
 }

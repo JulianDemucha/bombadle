@@ -5,7 +5,6 @@ import com.bombadle.entity.CharacterCard;
 import com.bombadle.enums.GameMode;
 import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
-import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.stats.ScoreService;
 import com.bombadle.service.player.PlayerDeletionService;
@@ -30,7 +29,6 @@ public class DailyResetService {
     private final CurrentCharacterCardWrapper currentCharacterCardWrapper;
     private final ScoreService scoreService;
     private final GuessListService guessListService;
-    private final PlayerService playerService;
     private final CacheService cacheService;
     private final PlayerDeletionService playerDeletionService;
     private final AdminChangeQueueService adminChangeQueueService;

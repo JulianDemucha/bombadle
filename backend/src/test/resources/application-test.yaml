@@ -6,15 +6,11 @@ spring:
     enabled: false
   mail:
     host: localhost
-    port: 1025
-    username: test
-    password: test
-    properties:
-      mail:
-        smtp:
-          auth: false
-          starttls:
-            enable: false
+    port: 9999
+    test-connection: false
+
+server:
+  port: 0
 
 bombadle:
   daily-reset:
@@ -23,8 +19,3 @@ bombadle:
     secret: "superkluczdotestownoeloeloopukpukpukpukplakalplakalsigmasigmaboy"
   email:
     from-address: test@bombadle.com
-
-server:
-  port: 0
-
-
