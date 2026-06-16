@@ -24,20 +24,25 @@ public class CardGuessingController {
     private final GameServiceFacade gameServiceFacade;
 
     @PostMapping("/{gameMode}/guess/{id}")
-    public GuessResponse compareCard(
+    public GuessResponse play(
             @PathVariable String gameMode,
             @PathVariable Long id,
             @AuthenticationPrincipal PlayerPrincipal userDetails
     ) {
+        GameMode mode = gameMode.equals("quotes") ?
+                GameMode.QUOTES_STAGE_2
+                :
+                GameMode.valueOf(gameMode.toUpperCase());
+
         return gameServiceFacade.play(
                 id,
                 userDetails.getPlayerId(),
-                GameMode.valueOf(gameMode.toUpperCase())
+                mode
         );
     }
 
     @PostMapping("/{gameMode}/anonymous-guess/{id}")
-    public ResponseEntity<?> compareCardAnonymous(
+    public ResponseEntity<?> playAnonymous(
             @PathVariable String gameMode,
             @PathVariable Long id,
             @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
@@ -49,11 +54,59 @@ public class CardGuessingController {
                     .body("Only for non-logged in users");
         }
 
+        GameMode mode = gameMode.equals("quotes") ?
+                GameMode.QUOTES_STAGE_2
+                :
+                GameMode.valueOf(gameMode.toUpperCase());
+
         AnonymousGuessResponse anonymousGuessResponse =
                 gameServiceFacade.playAnonymous(
                         id,
                         anonymousSessionId,
-                        GameMode.valueOf(gameMode.toUpperCase())
+                        mode
+                );
+
+        if (anonymousSessionId == null) {
+            ResponseCookie cookie = authCookiesService.createAnonymousSessionCookie(
+                    anonymousGuessResponse.anonymousSessionId().toString()
+            );
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(anonymousGuessResponse.guessResponse());
+        }
+
+        return ResponseEntity.ok(anonymousGuessResponse.guessResponse());
+    }
+
+
+    @PostMapping("/quotes/guess")
+    public ResponseEntity<GuessResponse> playQuotesStageOne(
+            @AuthenticationPrincipal PlayerPrincipal userDetails,
+            @RequestParam String guess
+    ) {
+        return ResponseEntity.ok(gameServiceFacade.playQuotesStageOne(
+                guess,
+                userDetails.getPlayerId()
+        ));
+    }
+
+    @PostMapping("/anonymous/quotes/guess")
+    public ResponseEntity<?> playAnonymousQuotesStageOne(
+            @AuthenticationPrincipal PlayerPrincipal userDetails,
+            @RequestParam String guess,
+            @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId
+    ) {
+        if (userDetails != null) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("Only for non-logged in users");
+        }
+
+        AnonymousGuessResponse anonymousGuessResponse =
+                gameServiceFacade.playAnonymousQuotesStageOne(
+                        guess,
+                        anonymousSessionId
                 );
 
         if (anonymousSessionId == null) {

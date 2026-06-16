@@ -1,8 +1,9 @@
 package com.bombadle.service.game;
 
-import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.CurrentCardState;
+import com.bombadle.entity.Quote;
 import com.bombadle.enums.GameMode;
 import com.bombadle.repository.CurrentCardStateRepository;
 import jakarta.annotation.PostConstruct;
@@ -17,13 +18,17 @@ import java.util.Map;
 public class CurrentCardStateService {
 
     private final CurrentCardStateRepository repo;
-    private final CurrentCharacterCardWrapper currentCharacterCardWrapper;
+    private final CurrentGameStateWrapper currentGameStateWrapper;
 
     @PostConstruct
     public void setUpCurrentCardIfStateExists() {
-        repo.findById(1).ifPresent(state ->
-                state.getCurrentCards().forEach(currentCharacterCardWrapper::set)
-        );
+        repo.findById(1).ifPresent(state -> {
+            state.getCurrentCards().forEach(currentGameStateWrapper::set);
+
+            if (state.getCurrentQuote() != null) {
+                currentGameStateWrapper.setQuote(state.getCurrentQuote());
+            }
+        });
     }
 
     public CurrentCardState getCurrentCardState() {
@@ -31,7 +36,7 @@ public class CurrentCardStateService {
     }
 
     @Transactional
-    public void updateCurrentCards(Map<GameMode, CharacterCard> newCards) {
+    public void updateCurrentState(Map<GameMode, CharacterCard> newCards, Quote newQuote) {
         CurrentCardState state = repo.findById(1).orElseGet(() -> {
             CurrentCardState newState = new CurrentCardState();
             newState.setId(1);
@@ -39,8 +44,10 @@ public class CurrentCardStateService {
         });
 
         state.getPreviousCards().putAll(state.getCurrentCards());
+        state.setPreviousQuote(state.getCurrentQuote());
 
         state.getCurrentCards().putAll(newCards);
+        state.setCurrentQuote(newQuote);
 
         repo.save(state);
     }

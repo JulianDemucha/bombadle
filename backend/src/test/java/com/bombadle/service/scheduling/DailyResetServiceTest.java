@@ -1,18 +1,14 @@
 package com.bombadle.service.scheduling;
 
-import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.entity.CharacterCard;
+import com.bombadle.entity.Quote;
 import com.bombadle.enums.GameMode;
 import com.bombadle.service.admin.AdminChangeQueueService;
 import com.bombadle.service.cache.CacheService;
-import com.bombadle.service.game.AnonymousGuessListService;
-import com.bombadle.service.game.CharacterCardService;
-import com.bombadle.service.game.CurrentCardStateService;
-import com.bombadle.service.game.GuessListService;
-import com.bombadle.service.game.ScoreMaintenanceService;
+import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerDeletionService;
-import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.stats.ScoreService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,13 +29,11 @@ class DailyResetServiceTest {
     @Mock
     private CharacterCardService characterCardService;
     @Mock
-    private CurrentCharacterCardWrapper currentCharacterCardWrapper;
+    private CurrentGameStateWrapper currentGameStateWrapper;
     @Mock
     private ScoreService scoreService;
     @Mock
     private GuessListService guessListService;
-    @Mock
-    private PlayerService playerService;
     @Mock
     private CacheService cacheService;
     @Mock
@@ -54,6 +48,8 @@ class DailyResetServiceTest {
     private CurrentCardStateService currentCardStateService;
     @Mock
     private ScoreMaintenanceService scoreMaintenanceService;
+    @Mock
+    private QuoteService quoteService;
 
     @InjectMocks
     private DailyResetService dailyResetService;
@@ -62,13 +58,22 @@ class DailyResetServiceTest {
     class PickNewCharacterCardAndResetScoresTests {
 
         @Test
-        void pickNewCharacterCardAndResetScores_validState_executesResetFlowAndUpdatesCards() {
+        void executeDailyReset_validState_executesResetFlowAndUpdatesCards() {
             // Arrange
-            CharacterCard mockCard = mock(CharacterCard.class);
-            when(characterCardService.findRandomCard()).thenReturn(mockCard);
+            CharacterCard mockRandomCard = mock(CharacterCard.class);
+            when(mockRandomCard.getName()).thenReturn("Random Name");
+
+            CharacterCard mockQuoteCard = mock(CharacterCard.class);
+            when(mockQuoteCard.getName()).thenReturn("Quote Character Name");
+
+            Quote mockQuote = mock(Quote.class);
+            when(mockQuote.getCharacterCard()).thenReturn(mockQuoteCard);
+
+            when(quoteService.findRandomQuote()).thenReturn(mockQuote);
+            when(characterCardService.findRandomCard()).thenReturn(mockRandomCard);
 
             // Act
-            dailyResetService.pickNewCharacterCardAndResetScores();
+            dailyResetService.executeDailyReset();
 
             // Assert
             verify(adminChangeQueueService).applyAll();
@@ -79,31 +84,48 @@ class DailyResetServiceTest {
             verify(scoreService).deleteAllInBatch();
             verify(playerDeletionService).deleteMarkedForDeletion(any(Duration.class));
 
-            verify(characterCardService, times(GameMode.values().length)).findRandomCard();
-            verify(currentCharacterCardWrapper, times(GameMode.values().length)).set(any(GameMode.class), eq(mockCard));
-            verify(currentCardStateService).updateCurrentCards(any());
+            verify(quoteService).findRandomQuote();
+            verify(currentGameStateWrapper).setQuote(mockQuote);
+
+            verify(characterCardService, times(2)).findRandomCard();
+
+            verify(currentGameStateWrapper).set(GameMode.CLASSIC, mockRandomCard);
+            verify(currentGameStateWrapper).set(GameMode.IMAGES, mockRandomCard);
+            verify(currentGameStateWrapper).set(GameMode.QUOTES_STAGE_2, mockQuoteCard);
+
+            verify(currentCardStateService).updateCurrentState(any(), eq(mockQuote));
             verify(cacheService).reloadCardCompareCache();
         }
 
         @Test
-        void pickNewCharacterCardAndResetScores_noCardsInDatabase_throwsIllegalStateException() {
+        void executeDailyReset_noQuotesInDatabase_throwsIllegalStateException() {
             // Arrange
-            when(characterCardService.findRandomCard()).thenReturn(null);
+            when(quoteService.findRandomQuote()).thenReturn(null);
 
-            // Act
-            // Assert
-            assertThrows(IllegalStateException.class, () -> dailyResetService.pickNewCharacterCardAndResetScores());
+            // Act & Assert
+            assertThrows(IllegalStateException.class, () -> dailyResetService.executeDailyReset());
 
             verify(adminChangeQueueService).applyAll();
-            verify(guessListService).truncateTable();
-            verify(anonymousSessionService).truncateTable();
-            verify(anonymousGuessListService).truncateTable();
-            verify(scoreMaintenanceService).resetAllScores();
-            verify(scoreService).deleteAllInBatch();
-            verify(playerDeletionService).deleteMarkedForDeletion(any(Duration.class));
+            verify(scoreService).deleteAllInBatch(); // Wszystko co jest przed wylosowaniem się wykonuje
+            verify(characterCardService, never()).findRandomCard();
+            verify(currentGameStateWrapper, never()).set(any(), any());
+            verify(currentCardStateService, never()).updateCurrentState(any(), any());
+        }
 
-            verify(currentCharacterCardWrapper, never()).set(any(), any());
-            verify(currentCardStateService, never()).updateCurrentCards(any());
+        @Test
+        void executeDailyReset_noCardsInDatabase_throwsIllegalStateException() {
+            // Arrange
+            Quote mockQuote = mock(Quote.class);
+            when(quoteService.findRandomQuote()).thenReturn(mockQuote);
+
+            when(characterCardService.findRandomCard()).thenReturn(null);
+
+            // Act & Assert
+            assertThrows(IllegalStateException.class, () -> dailyResetService.executeDailyReset());
+
+            verify(adminChangeQueueService).applyAll();
+            verify(currentGameStateWrapper).setQuote(mockQuote);
+            verify(currentCardStateService, never()).updateCurrentState(any(), any());
             verifyNoInteractions(cacheService);
         }
     }

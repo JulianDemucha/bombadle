@@ -1,14 +1,17 @@
 package com.bombadle.service.game;
 
-import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.dto.ClassicGuessAttempt;
+import com.bombadle.dto.QuotesStageOneAttempt;
 import com.bombadle.dto.response.AnonymousGuessResponse;
 import com.bombadle.dto.response.GuessResponse;
 import com.bombadle.entity.AnonymousSession;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.Player;
+import com.bombadle.entity.Quote;
 import com.bombadle.enums.GameMode;
 import com.bombadle.exception.AnonymousSessionAlreadyGuessedException;
+import com.bombadle.exception.StageLockedException;
 import com.bombadle.exception.UserAlreadyGuessedException;
 import com.bombadle.service.player.AnonymousSessionService;
 import org.junit.jupiter.api.Nested;
@@ -33,7 +36,10 @@ class GameServiceTest {
     private CardMatchingService classicCardMatchingService;
 
     @Mock
-    private CurrentCharacterCardWrapper currentCharacterCardWrapper;
+    private QuoteMatchingService quoteMatchingService;
+
+    @Mock
+    private CurrentGameStateWrapper currentGameStateWrapper;
 
     @Mock
     private AnonymousSessionService anonymousSessionService;
@@ -65,6 +71,21 @@ class GameServiceTest {
         }
 
         @Test
+        void play_quotesStage2AndStage1NotGuessed_throwsStageLockedException() {
+            // ARRANGE
+            CharacterCard guess = mock(CharacterCard.class);
+            Player player = mock(Player.class);
+            GameMode mode = GameMode.QUOTES_STAGE_2;
+
+            when(player.hasGuessedToday(mode)).thenReturn(false);
+            when(player.hasGuessedToday(GameMode.QUOTES_STAGE_1)).thenReturn(false);
+
+            // ACT & ASSERT
+            assertThrows(StageLockedException.class, () -> gameService.play(guess, player, mode));
+            verifyNoInteractions(classicCardMatchingService, guessRegistrationService);
+        }
+
+        @Test
         void play_validGuess_registersGuessAndReturnsResponse() {
             // ARRANGE
             CharacterCard guess = mock(CharacterCard.class);
@@ -74,7 +95,7 @@ class GameServiceTest {
             GameMode mode = GameMode.CLASSIC;
 
             when(player.hasGuessedToday(mode)).thenReturn(false);
-            when(currentCharacterCardWrapper.get(mode)).thenReturn(target);
+            when(currentGameStateWrapper.getCard(mode)).thenReturn(target);
             when(classicCardMatchingService.compareCharacterCards(guess, target, mode)).thenReturn(guessAttempt);
             when(guessAttempt.isCorrect()).thenReturn(true);
 
@@ -109,6 +130,23 @@ class GameServiceTest {
         }
 
         @Test
+        void playAnonymous_quotesStage2AndStage1NotGuessed_throwsStageLockedException() {
+            // ARRANGE
+            CharacterCard guess = mock(CharacterCard.class);
+            UUID sessionId = UUID.randomUUID();
+            GameMode mode = GameMode.QUOTES_STAGE_2;
+            AnonymousSession session = mock(AnonymousSession.class);
+
+            when(anonymousSessionService.findById(sessionId)).thenReturn(Optional.of(session));
+            when(session.hasGuessedToday(mode)).thenReturn(false);
+            when(session.hasGuessedToday(GameMode.QUOTES_STAGE_1)).thenReturn(false);
+
+            // ACT & ASSERT
+            assertThrows(StageLockedException.class, () -> gameService.playAnonymous(guess, sessionId, mode));
+            verifyNoInteractions(classicCardMatchingService, anonymousGuessRegistrationService);
+        }
+
+        @Test
         void playAnonymous_sessionIdIsNull_createsNewSessionAndReturnsResponse() {
             // ARRANGE
             CharacterCard guess = mock(CharacterCard.class);
@@ -117,7 +155,7 @@ class GameServiceTest {
             GameMode mode = GameMode.CLASSIC;
             UUID newSessionId = UUID.randomUUID();
 
-            when(currentCharacterCardWrapper.get(mode)).thenReturn(target);
+            when(currentGameStateWrapper.getCard(mode)).thenReturn(target);
             when(classicCardMatchingService.compareCharacterCards(guess, target, mode)).thenReturn(guessAttempt);
             when(guessAttempt.isCorrect()).thenReturn(false);
             when(anonymousGuessRegistrationService.registerGuessAndGetSessionId(any(AnonymousSession.class), eq(guessAttempt), eq(mode)))
@@ -145,7 +183,7 @@ class GameServiceTest {
 
             when(anonymousSessionService.findById(sessionId)).thenReturn(Optional.of(session));
             when(session.hasGuessedToday(mode)).thenReturn(false);
-            when(currentCharacterCardWrapper.get(mode)).thenReturn(target);
+            when(currentGameStateWrapper.getCard(mode)).thenReturn(target);
             when(classicCardMatchingService.compareCharacterCards(guess, target, mode)).thenReturn(guessAttempt);
             when(guessAttempt.isCorrect()).thenReturn(true);
             when(anonymousGuessRegistrationService.registerGuessAndGetSessionId(session, guessAttempt, mode))
@@ -159,6 +197,92 @@ class GameServiceTest {
             assertEquals(sessionId, response.anonymousSessionId());
             assertTrue(response.guessResponse().guessAttempt().isCorrect());
             verify(anonymousGuessRegistrationService).registerGuessAndGetSessionId(session, guessAttempt, mode);
+        }
+    }
+
+    @Nested
+    class PlayQuotesStageOneTests {
+
+        @Test
+        void playQuotesStageOne_playerAlreadyGuessed_throwsException() {
+            // ARRANGE
+            String guess = "Some quote option";
+            Player player = mock(Player.class);
+
+            when(player.hasGuessedToday(GameMode.QUOTES_STAGE_1)).thenReturn(true);
+
+            // ACT & ASSERT
+            assertThrows(UserAlreadyGuessedException.class, () -> gameService.playQuotesStageOne(guess, player));
+            verifyNoInteractions(quoteMatchingService, guessRegistrationService);
+        }
+
+        @Test
+        void playQuotesStageOne_validGuess_registersGuessAndReturnsResponse() {
+            // ARRANGE
+            String guess = "Some quote option";
+            Player player = mock(Player.class);
+            Quote currentQuote = mock(Quote.class);
+            QuotesStageOneAttempt attempt = mock(QuotesStageOneAttempt.class);
+
+            when(player.hasGuessedToday(GameMode.QUOTES_STAGE_1)).thenReturn(false);
+            when(currentGameStateWrapper.getQuote()).thenReturn(currentQuote);
+            when(quoteMatchingService.guess(guess, currentQuote)).thenReturn(attempt);
+            when(attempt.isCorrect()).thenReturn(true);
+
+            // ACT
+            GuessResponse response = gameService.playQuotesStageOne(guess, player);
+
+            // ASSERT
+            assertNotNull(response);
+            assertTrue(response.guessAttempt().isCorrect());
+            verify(guessRegistrationService).registerGuess(player, attempt, GameMode.QUOTES_STAGE_1);
+        }
+    }
+
+    @Nested
+    class PlayAnonymousQuotesStageOneTests {
+
+        @Test
+        void playAnonymousQuotesStageOne_sessionAlreadyGuessed_throwsException() {
+            // ARRANGE
+            String guess = "Option";
+            UUID sessionId = UUID.randomUUID();
+            AnonymousSession session = mock(AnonymousSession.class);
+
+            when(anonymousSessionService.findById(sessionId)).thenReturn(Optional.of(session));
+            when(session.hasGuessedToday(GameMode.QUOTES_STAGE_1)).thenReturn(true);
+
+            // ACT & ASSERT
+            assertThrows(AnonymousSessionAlreadyGuessedException.class, () -> gameService.playAnonymousQuotesStageOne(guess, sessionId));
+            verifyNoInteractions(quoteMatchingService, anonymousGuessRegistrationService);
+        }
+
+        @Test
+        void playAnonymousQuotesStageOne_validSession_registersGuessAndReturnsResponse() {
+            // ARRANGE
+            String guess = "Option";
+            UUID sessionId = UUID.randomUUID();
+            AnonymousSession session = mock(AnonymousSession.class);
+            Quote currentQuote = mock(Quote.class);
+            QuotesStageOneAttempt attempt = mock(QuotesStageOneAttempt.class);
+
+            when(anonymousSessionService.findById(sessionId)).thenReturn(Optional.of(session));
+            when(session.hasGuessedToday(GameMode.QUOTES_STAGE_1)).thenReturn(false);
+            when(currentGameStateWrapper.getQuote()).thenReturn(currentQuote);
+            when(quoteMatchingService.guess(guess, currentQuote)).thenReturn(attempt);
+            when(attempt.isCorrect()).thenReturn(true);
+
+            when(anonymousGuessRegistrationService.registerGuessAndGetSessionId(session, attempt, GameMode.QUOTES_STAGE_1))
+                    .thenReturn(sessionId);
+
+            // ACT
+            AnonymousGuessResponse response = gameService.playAnonymousQuotesStageOne(guess, sessionId);
+
+            // ASSERT
+            assertNotNull(response);
+            assertEquals(sessionId, response.anonymousSessionId());
+            assertTrue(response.guessResponse().guessAttempt().isCorrect());
+            verify(anonymousGuessRegistrationService).registerGuessAndGetSessionId(session, attempt, GameMode.QUOTES_STAGE_1);
         }
     }
 }

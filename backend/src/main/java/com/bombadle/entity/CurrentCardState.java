@@ -29,6 +29,10 @@ public class CurrentCardState {
     @MapKeyEnumerated(EnumType.STRING)
     private Map<GameMode, CharacterCard> currentCards = new HashMap<>();
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "current_quote_id")
+    private Quote currentQuote;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "previous_card_mapping",
@@ -38,4 +42,8 @@ public class CurrentCardState {
     @MapKeyColumn(name = "game_mode")
     @MapKeyEnumerated(EnumType.STRING)
     private Map<GameMode, CharacterCard> previousCards = new HashMap<>();
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "previous_quote_id")
+    private Quote previousQuote;
 }

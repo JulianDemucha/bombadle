@@ -1,9 +1,6 @@
 package com.bombadle.service.game;
 
-import com.bombadle.dto.CardField;
-import com.bombadle.dto.ClassicGuessAttempt;
-import com.bombadle.dto.GuessAttempt;
-import com.bombadle.dto.NameOnlyGuessAttempt;
+import com.bombadle.dto.*;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.enums.*;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +17,9 @@ public class CardMatchingService {
     @Cacheable(value = "character-card-compare", key = "#guess.id + '-' + #targetCharacterCard.id + '-' + #gameMode")
     public GuessAttempt compareCharacterCards(CharacterCard guess, CharacterCard targetCharacterCard, GameMode gameMode) {
         return switch (gameMode) {
+            case QUOTES_STAGE_1 -> throw new IllegalArgumentException();
             case CLASSIC -> compareFull(guess, targetCharacterCard);
-            case QUOTES, IMAGES -> compareNameOnly(guess, targetCharacterCard);
+            case QUOTES_STAGE_2, IMAGES -> compareNameOnly(guess, targetCharacterCard);
         };
     }
 

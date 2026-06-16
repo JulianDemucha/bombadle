@@ -14,9 +14,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = NameOnlyGuessAttempt.class, name = "QUOTES"),
         @JsonSubTypes.Type(value = NameOnlyGuessAttempt.class, name = "IMAGES")
 })
-public sealed interface GuessAttempt permits ClassicGuessAttempt, NameOnlyGuessAttempt {
-    CardField<String> name();
-
+public sealed interface GuessAttempt permits ClassicGuessAttempt, NameOnlyGuessAttempt, QuotesStageOneAttempt {
     @JsonIgnore
     boolean isCorrect();
 }

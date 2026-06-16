@@ -85,7 +85,7 @@ class ScoreRegistrationServiceTest {
             // Arrange
             Player player = mock(Player.class);
             int numberOfTries = 4;
-            GameMode gameMode = GameMode.QUOTES;
+            GameMode gameMode = GameMode.QUOTES_STAGE_1;
             Instant timestamp = Instant.now().minusSeconds(3600);
             Score savedScore = mock(Score.class);
 

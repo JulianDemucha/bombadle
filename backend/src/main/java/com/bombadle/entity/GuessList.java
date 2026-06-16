@@ -24,7 +24,6 @@ public class GuessList {
     @JoinColumn(name = "player_id")
     private Player player;
 
-
     @Builder.Default
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")

@@ -32,7 +32,7 @@ class GameServiceFacadeTest {
     private CharacterCardService characterCardService;
 
     @Mock
-    private GameService classicGameService;
+    private GameService gameService;
 
     @InjectMocks
     private GameServiceFacade gameServiceFacade;
@@ -42,7 +42,7 @@ class GameServiceFacadeTest {
 
         @Test
         void play_validData_returnsGuessResponse() {
-            // Arrange
+            // ARRANGE
             long guessCardId = 1L;
             long playerId = 2L;
             GameMode mode = GameMode.CLASSIC;
@@ -50,48 +50,46 @@ class GameServiceFacadeTest {
             CharacterCard guessCard = mock(CharacterCard.class);
             GuessResponse expectedResponse = mock(GuessResponse.class);
 
-            when(playerService.findById(playerId)).thenReturn(Optional.of(player));
+            when(playerService.getPlayerById(playerId)).thenReturn(player);
             when(characterCardService.findCharacterCardById(guessCardId)).thenReturn(Optional.of(guessCard));
-            when(classicGameService.play(guessCard, player, mode)).thenReturn(expectedResponse);
+            when(gameService.play(guessCard, player, mode)).thenReturn(expectedResponse);
 
-            // Act
+            // ACT
             GuessResponse result = gameServiceFacade.play(guessCardId, playerId, mode);
 
-            // Assert
+            // ASSERT
             assertEquals(expectedResponse, result);
-            verify(classicGameService).play(guessCard, player, mode);
+            verify(gameService).play(guessCard, player, mode);
         }
 
         @Test
-        void play_playerNotFound_throwsNoSuchElementException() {
-            // Arrange
+        void play_playerNotFound_throwsException() {
+            // ARRANGE
             long guessCardId = 1L;
             long playerId = 2L;
             GameMode mode = GameMode.CLASSIC;
 
-            when(playerService.findById(playerId)).thenReturn(Optional.empty());
+            when(playerService.getPlayerById(playerId)).thenThrow(new NoSuchElementException());
 
-            // Act
-            // Assert
+            // ACT & ASSERT
             assertThrows(NoSuchElementException.class, () -> gameServiceFacade.play(guessCardId, playerId, mode));
-            verifyNoInteractions(characterCardService, classicGameService);
+            verifyNoInteractions(characterCardService, gameService);
         }
 
         @Test
         void play_cardNotFound_throwsCharacterCardNotFoundException() {
-            // Arrange
+            // ARRANGE
             long guessCardId = 1L;
             long playerId = 2L;
             GameMode mode = GameMode.CLASSIC;
             Player player = mock(Player.class);
 
-            when(playerService.findById(playerId)).thenReturn(Optional.of(player));
+            when(playerService.getPlayerById(playerId)).thenReturn(player);
             when(characterCardService.findCharacterCardById(guessCardId)).thenReturn(Optional.empty());
 
-            // Act
-            // Assert
+            // ACT & ASSERT
             assertThrows(CharacterCardNotFoundException.class, () -> gameServiceFacade.play(guessCardId, playerId, mode));
-            verifyNoInteractions(classicGameService);
+            verifyNoInteractions(gameService);
         }
     }
 
@@ -100,7 +98,7 @@ class GameServiceFacadeTest {
 
         @Test
         void playAnonymous_validData_returnsAnonymousGuessResponse() {
-            // Arrange
+            // ARRANGE
             long guessCardId = 1L;
             UUID sessionId = UUID.randomUUID();
             GameMode mode = GameMode.CLASSIC;
@@ -108,29 +106,85 @@ class GameServiceFacadeTest {
             AnonymousGuessResponse expectedResponse = mock(AnonymousGuessResponse.class);
 
             when(characterCardService.findCharacterCardById(guessCardId)).thenReturn(Optional.of(guessCard));
-            when(classicGameService.playAnonymous(guessCard, sessionId, mode)).thenReturn(expectedResponse);
+            when(gameService.playAnonymous(guessCard, sessionId, mode)).thenReturn(expectedResponse);
 
-            // Act
+            // ACT
             AnonymousGuessResponse result = gameServiceFacade.playAnonymous(guessCardId, sessionId, mode);
 
-            // Assert
+            // ASSERT
             assertEquals(expectedResponse, result);
-            verify(classicGameService).playAnonymous(guessCard, sessionId, mode);
+            verify(gameService).playAnonymous(guessCard, sessionId, mode);
         }
 
         @Test
         void playAnonymous_cardNotFound_throwsCharacterCardNotFoundException() {
-            // Arrange
+            // ARRANGE
             long guessCardId = 1L;
             UUID sessionId = UUID.randomUUID();
             GameMode mode = GameMode.CLASSIC;
 
             when(characterCardService.findCharacterCardById(guessCardId)).thenReturn(Optional.empty());
 
-            // Act
-            // Assert
+            // ACT & ASSERT
             assertThrows(CharacterCardNotFoundException.class, () -> gameServiceFacade.playAnonymous(guessCardId, sessionId, mode));
-            verifyNoInteractions(classicGameService);
+            verifyNoInteractions(gameService);
+        }
+    }
+
+    @Nested
+    class PlayQuotesStageOneTests {
+
+        @Test
+        void playQuotesStageOne_validData_returnsGuessResponse() {
+            // ARRANGE
+            String guess = "Quote option";
+            long playerId = 2L;
+            Player player = mock(Player.class);
+            GuessResponse expectedResponse = mock(GuessResponse.class);
+
+            when(playerService.getPlayerById(playerId)).thenReturn(player);
+            when(gameService.playQuotesStageOne(guess, player)).thenReturn(expectedResponse);
+
+            // ACT
+            GuessResponse result = gameServiceFacade.playQuotesStageOne(guess, playerId);
+
+            // ASSERT
+            assertEquals(expectedResponse, result);
+            verify(gameService).playQuotesStageOne(guess, player);
+        }
+
+        @Test
+        void playQuotesStageOne_playerNotFound_throwsException() {
+            // ARRANGE
+            String guess = "Quote option";
+            long playerId = 2L;
+
+            when(playerService.getPlayerById(playerId)).thenThrow(new NoSuchElementException());
+
+            // ACT & ASSERT
+            assertThrows(NoSuchElementException.class, () -> gameServiceFacade.playQuotesStageOne(guess, playerId));
+            verifyNoInteractions(gameService);
+        }
+    }
+
+    @Nested
+    class PlayAnonymousQuotesStageOneTests {
+
+        @Test
+        void playAnonymousQuotesStageOne_validData_returnsAnonymousGuessResponse() {
+            // ARRANGE
+            String guess = "Quote option";
+            UUID sessionId = UUID.randomUUID();
+            AnonymousGuessResponse expectedResponse = mock(AnonymousGuessResponse.class);
+
+            when(gameService.playAnonymousQuotesStageOne(guess, sessionId)).thenReturn(expectedResponse);
+
+            // ACT
+            AnonymousGuessResponse result = gameServiceFacade.playAnonymousQuotesStageOne(guess, sessionId);
+
+            // ASSERT
+            assertEquals(expectedResponse, result);
+            verify(gameService).playAnonymousQuotesStageOne(guess, sessionId);
         }
     }
 }

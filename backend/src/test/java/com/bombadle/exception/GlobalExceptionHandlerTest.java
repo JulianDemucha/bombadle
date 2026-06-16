@@ -329,6 +329,22 @@ class GlobalExceptionHandlerTest {
             assertEquals("Invalid verification code", response.getBody().error());
             assertEquals("Wrong code", response.getBody().message());
         }
+
+        @Test
+        void handleStageLockedException_returns403AndCorrectBody() {
+            // Arrange
+            StageLockedException exception = new StageLockedException("You must complete Quotes Stage 1 before playing Stage 2.");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleStageLockedException(exception);
+
+            // Assert
+            assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(403, response.getBody().statusCode());
+            assertEquals("STAGE_LOCKED", response.getBody().error());
+            assertEquals("You must complete Quotes Stage 1 before playing Stage 2.", response.getBody().message());
+        }
     }
 
     @Nested

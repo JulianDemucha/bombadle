@@ -1,7 +1,7 @@
 package com.bombadle.service.player;
 
 import com.bombadle.dto.AnonymousSessionDto;
-import com.bombadle.dto.GuessAttempt;
+import com.bombadle.dto.ClassicGuessAttempt;
 import com.bombadle.dto.GuessListDto;
 import com.bombadle.entity.AnonymousGuessList;
 import com.bombadle.entity.AnonymousSession;
@@ -106,7 +106,8 @@ class AnonymousSessionServiceTest {
             // ARRANGE
             UUID sessionId = UUID.randomUUID();
             GameMode gameMode = GameMode.CLASSIC;
-            GuessAttempt mockAttempt = mock(GuessAttempt.class);
+
+            ClassicGuessAttempt mockAttempt = mock(ClassicGuessAttempt.class);
 
             AnonymousGuessList guessList = AnonymousGuessList.builder()
                     .gameMode(gameMode)
@@ -137,7 +138,7 @@ class AnonymousSessionServiceTest {
 
             AnonymousGuessList guessList = AnonymousGuessList.builder()
                     .gameMode(GameMode.CLASSIC)
-                    .guesses(List.of(mock(GuessAttempt.class)))
+                    .guesses(List.of(mock(ClassicGuessAttempt.class)))
                     .build();
 
             AnonymousSession session = AnonymousSession.builder()

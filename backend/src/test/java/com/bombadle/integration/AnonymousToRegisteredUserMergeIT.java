@@ -1,6 +1,6 @@
 package com.bombadle.integration;
 
-import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.dto.request.RegisterRequest;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.Player;
@@ -51,7 +51,7 @@ class AnonymousToRegisteredUserMergeIT extends BaseIT{
     private CharacterCardRepository characterCardRepository;
 
     @Autowired
-    private CurrentCharacterCardWrapper currentCharacterCardWrapper;
+    private CurrentGameStateWrapper currentCharacterCardWrapper;
 
     @Autowired
     private PlayerRepository playerRepository;

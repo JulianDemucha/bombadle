@@ -117,7 +117,7 @@ class DailyResetIT extends BaseIT {
                 .payload("{}")
                 .build());
 
-        entityManager.persist(CharacterCard.builder()
+        CharacterCard card = CharacterCard.builder()
                 .name("Kapitan Bomba")
                 .race(Race.Czlowiek)
                 .alive(true)
@@ -125,7 +125,16 @@ class DailyResetIT extends BaseIT {
                 .affiliations(Set.of(Affiliation.Gwiezdna_Flota))
                 .colors(Set.of(Color.BIALY))
                 .gender(Gender.MALE)
-                .build());
+                .build();
+        entityManager.persist(card);
+
+        Quote quote = Quote.builder()
+                .characterCard(card)
+                .quoteBeginning("Nazywam się...")
+                .options(List.of("Kapitan Bomba", "Chorąży Torpeda"))
+                .correctAnswer("Kapitan Bomba")
+                .build();
+        entityManager.persist(quote);
 
         entityManager.flush();
         entityManager.clear();
@@ -134,7 +143,7 @@ class DailyResetIT extends BaseIT {
     @Test
     void dailyReset_clearsTemporaryDataAndResetsPlayerState() {
         // Act
-        dailyResetService.pickNewCharacterCardAndResetScores();
+        dailyResetService.executeDailyReset();
 
         // Assert
         Player resetActivePlayer = playerRepository.findById(activePlayer.getId()).orElseThrow();
@@ -149,6 +158,8 @@ class DailyResetIT extends BaseIT {
         assertEquals(0, anonymousGuessListRepository.count());
         assertEquals(0, adminPendingChangeRepository.count());
 
-        assertFalse(currentCardStateService.getCurrentCardState().getCurrentCards().isEmpty());
+        CurrentCardState currentState = currentCardStateService.getCurrentCardState();
+        assertFalse(currentState.getCurrentCards().isEmpty());
+        assertNotNull(currentState.getCurrentQuote());
     }
 }

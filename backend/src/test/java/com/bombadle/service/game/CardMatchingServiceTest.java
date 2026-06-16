@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,10 +48,10 @@ class CardMatchingServiceTest {
             GuessAttempt result = cardMatchingService.compareCharacterCards(guess, target, GameMode.CLASSIC);
 
             // Assert
-            assertInstanceOf(ClassicGuessAttempt.class, result);
-            assertEquals(MatchType.MATCH, result.name().match());
-            assertEquals(MatchType.MATCH, ((ClassicGuessAttempt) result).gender().match());
-            assertEquals(MatchType.MATCH, ((ClassicGuessAttempt) result).race().match());
+            ClassicGuessAttempt classicResult = assertInstanceOf(ClassicGuessAttempt.class, result);
+            assertEquals(MatchType.MATCH, classicResult.name().match());
+            assertEquals(MatchType.MATCH, classicResult.gender().match());
+            assertEquals(MatchType.MATCH, classicResult.race().match());
         }
 
         @Test
@@ -68,14 +69,26 @@ class CardMatchingServiceTest {
             GuessAttempt result = cardMatchingService.compareCharacterCards(guess, target, GameMode.CLASSIC);
 
             // Assert
-            assertInstanceOf(ClassicGuessAttempt.class, result);
-            assertEquals(MatchType.NOT_MATCH, result.name().match());
-            assertEquals(MatchType.NOT_MATCH, ((ClassicGuessAttempt) result).gender().match());
-            assertEquals(MatchType.NOT_MATCH, ((ClassicGuessAttempt) result).race().match());
+            ClassicGuessAttempt classicResult = assertInstanceOf(ClassicGuessAttempt.class, result);
+            assertEquals(MatchType.NOT_MATCH, classicResult.name().match());
+            assertEquals(MatchType.NOT_MATCH, classicResult.gender().match());
+            assertEquals(MatchType.NOT_MATCH, classicResult.race().match());
         }
 
         @Test
-        void compareCharacterCards_quotesMode_returnsNameOnlyMatch() {
+        void compareCharacterCards_quotesStage1_throwsIllegalArgumentException() {
+            // Arrange
+            CharacterCard guess = mock(CharacterCard.class);
+            CharacterCard target = mock(CharacterCard.class);
+
+            // Act & Assert
+            assertThrows(IllegalArgumentException.class, () ->
+                    cardMatchingService.compareCharacterCards(guess, target, GameMode.QUOTES_STAGE_1)
+            );
+        }
+
+        @Test
+        void compareCharacterCards_quotesStage2_returnsNameOnlyMatch() {
             // Arrange
             CharacterCard guess = mock(CharacterCard.class);
             CharacterCard target = mock(CharacterCard.class);
@@ -85,11 +98,11 @@ class CardMatchingServiceTest {
             when(guess.getName()).thenReturn("Name");
 
             // Act
-            GuessAttempt result = cardMatchingService.compareCharacterCards(guess, target, GameMode.QUOTES);
+            GuessAttempt result = cardMatchingService.compareCharacterCards(guess, target, GameMode.QUOTES_STAGE_2);
 
             // Assert
-            assertInstanceOf(NameOnlyGuessAttempt.class, result);
-            assertEquals(MatchType.MATCH, result.name().match());
+            NameOnlyGuessAttempt nameOnlyResult = assertInstanceOf(NameOnlyGuessAttempt.class, result);
+            assertEquals(MatchType.MATCH, nameOnlyResult.name().match());
         }
 
         @Test
@@ -106,8 +119,8 @@ class CardMatchingServiceTest {
             GuessAttempt result = cardMatchingService.compareCharacterCards(guess, target, GameMode.IMAGES);
 
             // Assert
-            assertInstanceOf(NameOnlyGuessAttempt.class, result);
-            assertEquals(MatchType.NOT_MATCH, result.name().match());
+            NameOnlyGuessAttempt nameOnlyResult = assertInstanceOf(NameOnlyGuessAttempt.class, result);
+            assertEquals(MatchType.NOT_MATCH, nameOnlyResult.name().match());
         }
     }
 }

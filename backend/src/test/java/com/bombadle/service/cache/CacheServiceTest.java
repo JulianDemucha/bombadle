@@ -1,6 +1,6 @@
 package com.bombadle.service.cache;
 
-import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.enums.GameMode;
 import com.bombadle.repository.CharacterCardRepository;
@@ -35,7 +35,7 @@ class CacheServiceTest {
     private CardMatchingService cardMatchingService;
 
     @Mock
-    private CurrentCharacterCardWrapper currentCharacterCardWrapper;
+    private CurrentGameStateWrapper currentGameStateWrapper;
 
     @Mock
     private CharacterCardService characterCardService;
@@ -47,20 +47,24 @@ class CacheServiceTest {
     class ReloadCardCompareCacheTests {
 
         @Test
-        void reloadCardCompareCache_iteratesOverAllCardsAndModesToCompare() {
-            // Arrange
+        void reloadCardCompareCache_iteratesOverAllCardsAndModesExceptQuotesStage1() {
+            // ARRANGE
             CharacterCard currentCard = CharacterCard.builder().id(1L).name("Current").build();
             CharacterCard card1 = CharacterCard.builder().id(2L).name("Card1").build();
             CharacterCard card2 = CharacterCard.builder().id(3L).name("Card2").build();
 
-            when(currentCharacterCardWrapper.get(any(GameMode.class))).thenReturn(currentCard);
+            when(currentGameStateWrapper.getCard(any(GameMode.class))).thenReturn(currentCard);
             when(characterCardRepository.findAll()).thenReturn(List.of(card1, card2));
 
-            // Act
+            // ACT
             cacheService.reloadCardCompareCache();
 
-            // Assert
+            // ASSERT
             for (GameMode mode : GameMode.values()) {
+                if (mode == GameMode.QUOTES_STAGE_1) {
+                    verify(cardMatchingService, never()).compareCharacterCards(any(), any(), eq(mode));
+                    continue;
+                }
                 verify(cardMatchingService).compareCharacterCards(card1, currentCard, mode);
                 verify(cardMatchingService).compareCharacterCards(card2, currentCard, mode);
             }
@@ -72,11 +76,11 @@ class CacheServiceTest {
 
         @Test
         void reloadSearchIndexCache_callsServiceToGetAllCards() {
-            // Arrange
-            // Act
+            // ARRANGE
+            // ACT
             cacheService.reloadSearchIndexCache();
 
-            // Assert
+            // ASSERT
             verify(characterCardService).getAllCardsForSearch();
         }
     }
@@ -86,62 +90,62 @@ class CacheServiceTest {
 
         @Test
         void evictCache_validCacheNameAndCacheExists_clearsCache() {
-            // Arrange
+            // ARRANGE
             String cacheName = "test-cache";
             when(cacheManager.getCache(cacheName)).thenReturn(cache);
 
-            // Act
+            // ACT
             cacheService.evictCache(cacheName);
 
-            // Assert
+            // ASSERT
             verify(cacheManager).getCache(cacheName);
             verify(cache).clear();
         }
 
         @Test
         void evictCache_validCacheNameButCacheDoesNotExist_doesNothing() {
-            // Arrange
+            // ARRANGE
             String cacheName = "missing-cache";
             when(cacheManager.getCache(cacheName)).thenReturn(null);
 
-            // Act
+            // ACT
             cacheService.evictCache(cacheName);
 
-            // Assert
+            // ASSERT
             verify(cacheManager).getCache(cacheName);
             verifyNoInteractions(cache);
         }
 
         @Test
         void evictCache_cacheNameIsNull_doesNothing() {
-            // Arrange
-            // Act
+            // ARRANGE
+            // ACT
             cacheService.evictCache(null);
 
-            // Assert
+            // ASSERT
             verifyNoInteractions(cacheManager);
         }
 
         @Test
         void evictCache_cacheNameIsBlank_doesNothing() {
-            // Arrange
-            // Act
+            // ARRANGE
+            // ACT
             cacheService.evictCache("   ");
 
-            // Assert
+            // ASSERT
             verifyNoInteractions(cacheManager);
         }
 
         @Test
         void clear_callsEvictCacheSuccessfully() {
-            // Arrange
+            // ARRANGE
             String cacheName = "clear-cache";
             when(cacheManager.getCache(cacheName)).thenReturn(cache);
 
-            // Act
+            // ACT
             cacheService.clear(cacheName);
 
-            // Assert
+            // ASSERT
             verify(cacheManager).getCache(cacheName);
             verify(cache).clear();
         }
@@ -152,51 +156,51 @@ class CacheServiceTest {
 
         @Test
         void evictCacheEntry_validInputsAndCacheExists_evictsKey() {
-            // Arrange
+            // ARRANGE
             String cacheName = "entry-cache";
             String key = "test-key";
             when(cacheManager.getCache(cacheName)).thenReturn(cache);
 
-            // Act
+            // ACT
             cacheService.evictCacheEntry(cacheName, key);
 
-            // Assert
+            // ASSERT
             verify(cacheManager).getCache(cacheName);
             verify(cache).evict(key);
         }
 
         @Test
         void evictCacheEntry_validInputsButCacheDoesNotExist_doesNothing() {
-            // Arrange
+            // ARRANGE
             String cacheName = "missing-entry-cache";
             Object key = 123L;
             when(cacheManager.getCache(cacheName)).thenReturn(null);
 
-            // Act
+            // ACT
             cacheService.evictCacheEntry(cacheName, key);
 
-            // Assert
+            // ASSERT
             verify(cacheManager).getCache(cacheName);
             verifyNoInteractions(cache);
         }
 
         @Test
         void evictCacheEntry_cacheNameIsNull_doesNothing() {
-            // Arrange
-            // Act
+            // ARRANGE
+            // ACT
             cacheService.evictCacheEntry(null, "key");
 
-            // Assert
+            // ASSERT
             verifyNoInteractions(cacheManager);
         }
 
         @Test
         void evictCacheEntry_cacheNameIsBlank_doesNothing() {
-            // Arrange
-            // Act
+            // ARRANGE
+            // ACT
             cacheService.evictCacheEntry("  ", "key");
 
-            // Assert
+            // ASSERT
             verifyNoInteractions(cacheManager);
         }
     }
@@ -206,7 +210,7 @@ class CacheServiceTest {
 
         @Test
         void evictAllCaches_iteratesAndClearsAllExistingCaches() {
-            // Arrange
+            // ARRANGE
             Cache cache1 = mock(Cache.class);
             Cache cache2 = mock(Cache.class);
 
@@ -215,23 +219,23 @@ class CacheServiceTest {
             when(cacheManager.getCache("cache2")).thenReturn(cache2);
             when(cacheManager.getCache("missing-cache")).thenReturn(null);
 
-            // Act
+            // ACT
             cacheService.evictAllCaches();
 
-            // Assert
+            // ASSERT
             verify(cache1).clear();
             verify(cache2).clear();
         }
 
         @Test
         void evictAllCaches_noCachesExist_doesNothing() {
-            // Arrange
+            // ARRANGE
             when(cacheManager.getCacheNames()).thenReturn(List.of());
 
-            // Act
+            // ACT
             cacheService.evictAllCaches();
 
-            // Assert
+            // ASSERT
             verify(cacheManager).getCacheNames();
             verifyNoMoreInteractions(cacheManager);
             verifyNoInteractions(cache);

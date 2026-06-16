@@ -86,6 +86,11 @@ class GlobalExceptionHandlerIT {
         public void throwUnverifiedEmail() {
             throw new UnverifiedEmailException("Account isn't verified", "test@test.com");
         }
+
+        @GetMapping("/test/stage-locked")
+        public void throwStageLocked() {
+            throw new StageLockedException("You must complete Quotes Stage 1 before playing Stage 2.");
+        }
     }
 
     @BeforeEach
@@ -217,6 +222,16 @@ class GlobalExceptionHandlerIT {
                     .andExpect(jsonPath("$.error").value("Unverified Email"))
                     .andExpect(jsonPath("$.message").value("Account isn't verified"))
                     .andExpect(jsonPath("$.email").value("test@test.com"));
+        }
+
+        @Test
+        void whenStageLocked_returns403AndJson() throws Exception {
+            // ACT & ASSERT
+            mockMvc.perform(get("/test/stage-locked"))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.statusCode").value(403))
+                    .andExpect(jsonPath("$.error").value("STAGE_LOCKED"))
+                    .andExpect(jsonPath("$.message").value("You must complete Quotes Stage 1 before playing Stage 2."));
         }
     }
 

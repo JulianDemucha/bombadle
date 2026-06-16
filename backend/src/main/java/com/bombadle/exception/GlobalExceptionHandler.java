@@ -222,4 +222,16 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorDetails);
     }
+
+    @ExceptionHandler(StageLockedException.class)
+    public ResponseEntity<ErrorResponse> handleStageLockedException(StageLockedException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "STAGE_LOCKED",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
 }

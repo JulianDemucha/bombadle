@@ -1,6 +1,6 @@
 package com.bombadle.service.cache;
 
-import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.enums.GameMode;
 import com.bombadle.repository.CharacterCardRepository;
@@ -19,7 +19,7 @@ public class CacheService {
     private final CharacterCardRepository characterCardRepository;
     private final CacheManager cacheManager;
     private final CardMatchingService cardMatchingService;
-    private final CurrentCharacterCardWrapper currentCharacterCardWrapper;
+    private final CurrentGameStateWrapper currentGameStateWrapper;
     private final CharacterCardService characterCardService;
 
     @CacheEvict(value = "character-card-compare", allEntries = true, beforeInvocation = true)
@@ -27,7 +27,11 @@ public class CacheService {
         List<CharacterCard> allCards = characterCardRepository.findAll();
 
         for (GameMode mode : GameMode.values()) {
-            CharacterCard currentCardForMode = currentCharacterCardWrapper.get(mode);
+            if (mode == GameMode.QUOTES_STAGE_1) {
+                continue;
+            }
+
+            CharacterCard currentCardForMode = currentGameStateWrapper.getCard(mode);
 
             allCards.forEach(guessCard -> {
                 cardMatchingService.compareCharacterCards(guessCard, currentCardForMode, mode);

@@ -5,7 +5,6 @@ import com.bombadle.dto.response.GuessResponse;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.GameMode;
-import com.bombadle.exception.UserAlreadyGuessedException;
 import com.bombadle.exception.CharacterCardNotFoundException;
 import com.bombadle.service.player.PlayerService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,7 @@ import java.util.UUID;
 public class GameServiceFacade {
     private final PlayerService playerService;
     private final CharacterCardService characterCardService;
-    private final GameService classicGameService;
+    private final GameService gameService;
 
     @Transactional
     @CacheEvict(value = "guess-list", key = "#playerId+ '-' + #gameMode")
@@ -29,12 +28,12 @@ public class GameServiceFacade {
             long playerId,
             GameMode gameMode
     ) {
-        Player player = playerService.findById(playerId).orElseThrow();
+        Player player = playerService.getPlayerById(playerId);
 
         CharacterCard guess = characterCardService.findCharacterCardById(guessCardId)
                 .orElseThrow(() -> new CharacterCardNotFoundException(guessCardId));
 
-        return classicGameService.play(
+        return gameService.play(
                 guess,
                 player,
                 gameMode
@@ -50,10 +49,22 @@ public class GameServiceFacade {
         CharacterCard guess = characterCardService.findCharacterCardById(guessCardId)
                 .orElseThrow(() -> new CharacterCardNotFoundException(guessCardId));
 
-        return classicGameService.playAnonymous(
+        return gameService.playAnonymous(
                 guess,
                 anonymousSessionId,
                 gameMode
         );
+    }
+
+    @Transactional
+    public GuessResponse playQuotesStageOne(String guess, Long playerId) {
+        Player player = playerService.getPlayerById(playerId);
+
+        return gameService.playQuotesStageOne(guess, player);
+    }
+
+    @Transactional
+    public AnonymousGuessResponse playAnonymousQuotesStageOne(String guess, UUID anonymousSessionId) {
+        return gameService.playAnonymousQuotesStageOne(guess, anonymousSessionId);
     }
 }

@@ -1,12 +1,8 @@
 package com.bombadle.service.game;
 
-import com.bombadle.config.CurrentCharacterCardWrapper;
 import com.bombadle.dto.CardField;
-import com.bombadle.dto.GuessAttempt;
-import com.bombadle.entity.CharacterCard;
 import com.bombadle.enums.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
