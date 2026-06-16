@@ -12,6 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,9 +21,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AnonymousGuessRegistrationServiceTest {
-
-    @Mock
-    private AnonymousGuessListService anonymousGuessListService;
 
     @Mock
     private AnonymousSessionService anonymousSessionService;
@@ -41,9 +40,8 @@ class AnonymousGuessRegistrationServiceTest {
             ClassicGuessAttempt attempt = mock(ClassicGuessAttempt.class);
             GameMode gameMode = GameMode.CLASSIC;
 
-            when(session.getGuessList()).thenReturn(guessList);
+            when(session.getGuessListForMode(gameMode)).thenReturn(Optional.of(guessList));
             when(attempt.isCorrect()).thenReturn(false);
-            when(anonymousGuessListService.save(guessList)).thenReturn(guessList);
             when(anonymousSessionService.save(session)).thenReturn(session);
             when(session.getId()).thenReturn(sessionId);
 
@@ -52,10 +50,10 @@ class AnonymousGuessRegistrationServiceTest {
 
             // ASSERT
             assertEquals(sessionId, result);
-            verify(guessList).addGuess(gameMode, attempt);
+            verify(guessList).addGuess(attempt);
             verify(session, never()).markModeAsCompleted(any());
             verify(session, never()).addScoreTimestamp(any(), any());
-            verify(anonymousGuessListService).save(guessList);
+            verify(session).setLastActiveAt(any(Instant.class));
             verify(anonymousSessionService).save(session);
         }
 
@@ -66,11 +64,10 @@ class AnonymousGuessRegistrationServiceTest {
             AnonymousSession session = mock(AnonymousSession.class);
             AnonymousGuessList guessList = mock(AnonymousGuessList.class);
             ClassicGuessAttempt attempt = mock(ClassicGuessAttempt.class);
-            GameMode gameMode = GameMode.QUOTES;
+            GameMode gameMode = GameMode.QUOTES_STAGE_1;
 
-            when(session.getGuessList()).thenReturn(guessList);
+            when(session.getGuessListForMode(gameMode)).thenReturn(Optional.of(guessList));
             when(attempt.isCorrect()).thenReturn(true);
-            when(anonymousGuessListService.save(guessList)).thenReturn(guessList);
             when(anonymousSessionService.save(session)).thenReturn(session);
             when(session.getId()).thenReturn(sessionId);
 
@@ -79,10 +76,10 @@ class AnonymousGuessRegistrationServiceTest {
 
             // ASSERT
             assertEquals(sessionId, result);
-            verify(guessList).addGuess(gameMode, attempt);
+            verify(guessList).addGuess(attempt);
             verify(session).markModeAsCompleted(gameMode);
-            verify(session).addScoreTimestamp(eq(gameMode), any());
-            verify(anonymousGuessListService).save(guessList);
+            verify(session).addScoreTimestamp(eq(gameMode), any(Instant.class));
+            verify(session).setLastActiveAt(any(Instant.class));
             verify(anonymousSessionService).save(session);
         }
     }

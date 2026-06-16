@@ -1,10 +1,12 @@
 package com.bombadle.dto;
 
+import com.bombadle.entity.AnonymousGuessList;
 import com.bombadle.entity.AnonymousSession;
 import com.bombadle.enums.GameMode;
 import lombok.Builder;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -18,10 +20,13 @@ public record AnonymousSessionDto(
         Map<GameMode, Instant> scoreTimestamps
 ) {
     public static AnonymousSessionDto toDto(AnonymousSession anonymousSession) {
-        Map<GameMode, GuessListDto> mappedGuesses = anonymousSession.getGuessList().getGuesses().entrySet().stream()
+
+        Map<GameMode, GuessListDto> mappedGuesses = anonymousSession.getGuessLists() == null
+                ? Collections.emptyMap()
+                : anonymousSession.getGuessLists().stream()
                 .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> GuessListDto.fromList(entry.getValue())
+                        AnonymousGuessList::getGameMode,
+                        list -> GuessListDto.fromList(list.getGuesses())
                 ));
 
         return AnonymousSessionDto.builder()

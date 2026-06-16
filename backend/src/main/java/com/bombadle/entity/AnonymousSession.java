@@ -7,26 +7,29 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
+@Table(name = "anonymous_session")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AnonymousSession {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "anonymous_guess_list_id")
-    private AnonymousGuessList guessList;
+    @Builder.Default
+    @OneToMany(
+            mappedBy = "session",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<AnonymousGuessList> guessLists = new ArrayList<>();
 
     @Builder.Default
     @Column(name = "lastActiveAt", nullable = false)
@@ -43,36 +46,52 @@ public class AnonymousSession {
     private Map<GameMode, Instant> scoreTimestamps = new HashMap<>();
 
     public boolean hasGuessedToday(GameMode mode) {
+        if (completedModesToday == null) return false;
         return completedModesToday.contains(mode);
     }
 
     public void markModeAsCompleted(GameMode mode) {
+        if (this.completedModesToday == null) {
+            this.completedModesToday = new HashSet<>();
+        }
         this.completedModesToday.add(mode);
     }
 
     public void addScoreTimestamp(GameMode mode, Instant timestamp) {
+        if (this.scoreTimestamps == null) {
+            this.scoreTimestamps = new HashMap<>();
+        }
         this.scoreTimestamps.put(mode, timestamp);
     }
 
     public void resetDailyProgress() {
-        this.completedModesToday.clear();
-        this.scoreTimestamps.clear();
+        if (this.completedModesToday != null) this.completedModesToday.clear();
+        if (this.scoreTimestamps != null) this.scoreTimestamps.clear();
+        if (this.guessLists != null) this.guessLists.clear();
     }
 
-    public AnonymousSession(AnonymousGuessList guessList) {
-        this.guessList = guessList;
-        this.completedModesToday = new HashSet<>();
-        this.scoreTimestamps = new HashMap<>();
+    public void addGuessList(AnonymousGuessList guessList) {
+        if (this.guessLists == null) {
+            this.guessLists = new ArrayList<>();
+        }
+        this.guessLists.add(guessList);
+        guessList.setSession(this);
+    }
+
+    public Optional<AnonymousGuessList> getGuessListForMode(GameMode gameMode) {
+        if (this.guessLists == null) return Optional.empty();
+
+        return this.guessLists.stream()
+                .filter(list -> list.getGameMode() == gameMode)
+                .findFirst();
     }
 
     public static AnonymousSession createEmptySession() {
         return AnonymousSession.builder()
-                .guessList(AnonymousGuessList.builder()
-                        .guesses(new HashMap<>())
-                        .build())
                 .lastActiveAt(Instant.now())
                 .completedModesToday(new HashSet<>())
                 .scoreTimestamps(new HashMap<>())
+                .guessLists(new ArrayList<>())
                 .build();
     }
 }

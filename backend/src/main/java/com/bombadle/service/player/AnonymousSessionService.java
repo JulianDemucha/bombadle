@@ -15,6 +15,7 @@ import java.util.UUID;
 @Service
 @AllArgsConstructor
 public class AnonymousSessionService {
+
     private final AnonymousSessionRepository repo;
 
     public AnonymousSessionDto getAnonymousSession(UUID anonymousSessionId) {
@@ -34,8 +35,10 @@ public class AnonymousSessionService {
         if (anonymousSessionId == null) {
             return new GuessListDto(Collections.emptyList());
         }
+
         return repo.findById(anonymousSessionId)
-                .map(session -> GuessListDto.toDto(session.getGuessList(), gameMode))
+                .flatMap(session -> session.getGuessListForMode(gameMode))
+                .map(guessList -> GuessListDto.fromList(guessList.getGuesses()))
                 .orElse(new GuessListDto(Collections.emptyList()));
     }
 

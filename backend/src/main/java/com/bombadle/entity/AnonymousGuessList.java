@@ -3,33 +3,43 @@ package com.bombadle.entity;
 import com.bombadle.dto.GuessAttempt;
 import com.bombadle.enums.GameMode;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Entity
+@Table(name = "anonymous_guess_list")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AnonymousGuessList {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "anonymous_session_id", nullable = false)
+    private AnonymousSession session;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "game_mode", nullable = false)
+    private GameMode gameMode;
+
+    @Builder.Default
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private Map<GameMode, List<GuessAttempt>> guesses = new HashMap<>();
+    private List<GuessAttempt> guesses = new ArrayList<>();
 
-    public void addGuess(GameMode mode, GuessAttempt attempt) {
-        this.guesses.computeIfAbsent(mode, k -> new ArrayList<>()).add(attempt);
+    public void addGuess(GuessAttempt attempt) {
+        if (this.guesses == null) {
+            this.guesses = new ArrayList<>();
+        }
+        this.guesses.add(attempt);
     }
 }

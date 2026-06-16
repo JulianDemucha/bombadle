@@ -3,7 +3,7 @@ package com.bombadle.service.auth;
 import com.bombadle.entity.AnonymousSession;
 import com.bombadle.entity.GuessList;
 import com.bombadle.entity.Player;
-import com.bombadle.service.game.AnonymousGuessListService;
+import com.bombadle.enums.GameMode;
 import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.game.ScoreRegistrationService;
 import com.bombadle.service.player.AnonymousSessionService;
@@ -17,9 +17,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AnonymousMergeService {
+
     private final AnonymousSessionService anonymousSessionService;
     private final GuessListService guessListService;
-    private final AnonymousGuessListService anonymousGuessListService;
     private final ScoreRegistrationService scoreRegistrationService;
 
     @Transactional
@@ -35,17 +35,20 @@ public class AnonymousMergeService {
 
         AnonymousSession session = sessionOpt.get();
 
-        if (session.getGuessList() == null || session.getGuessList().getGuesses() == null || session.getGuessList().getGuesses().isEmpty()) {
+        if (session.getGuessLists() == null || session.getGuessLists().isEmpty()) {
+            anonymousSessionService.delete(session);
             return;
         }
 
-        session.getGuessList().getGuesses().forEach((gameMode, attempts) -> {
+        session.getGuessLists().forEach(anonGuessList -> {
+            GameMode gameMode = anonGuessList.getGameMode();
+            var attempts = anonGuessList.getGuesses();
 
             if (player.hasGuessedToday(gameMode)) {
                 return;
             }
 
-            if (attempts.isEmpty()) {
+            if (attempts == null || attempts.isEmpty()) {
                 return;
             }
 
@@ -68,7 +71,6 @@ public class AnonymousMergeService {
             }
         });
 
-        anonymousGuessListService.delete(session.getGuessList());
         anonymousSessionService.delete(session);
     }
 

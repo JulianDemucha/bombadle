@@ -81,7 +81,7 @@ class DailyResetIT extends BaseIT {
                 .emailVerified(true)
                 .build();
         activePlayer = playerRepository.save(activePlayer);
-        activePlayer.addTodayScore(GameMode.CLASSIC, activePlayerScore); // POPRAWKA: Przeniesione do dedykowanej metody
+        activePlayer.addTodayScore(GameMode.CLASSIC, activePlayerScore);
         playerRepository.save(activePlayer);
 
         deletedPlayer = playerRepository.save(Player.builder()
@@ -105,10 +105,9 @@ class DailyResetIT extends BaseIT {
                 .build());
 
         AnonymousSession anonSession = AnonymousSession.builder()
-                .guessList(AnonymousGuessList.builder().guesses(Map.of()).build())
                 .lastActiveAt(Instant.now())
                 .build();
-        anonSession.markModeAsCompleted(GameMode.CLASSIC); // POPRAWKA
+        anonSession.markModeAsCompleted(GameMode.CLASSIC);
         anonymousSessionRepository.save(anonSession);
 
         adminPendingChangeRepository.save(AdminPendingChange.builder()
