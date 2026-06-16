@@ -54,14 +54,16 @@ public class AnonymousMergeService {
             GuessList newGuessList = GuessList.builder()
                     .guesses(attempts)
                     .gameMode(gameMode)
+                    .player(player)
                     .build();
             guessListService.save(newGuessList);
 
             if (isCorrect) {
-                scoreRegistrationService.registerPlayerWin(
+                scoreRegistrationService.registerPlayerWinWithTimestamp(
                         player.getId(),
                         attempts.size(),
-                        gameMode
+                        gameMode,
+                        session.getScoreTimestamps().get(gameMode)
                 );
             }
         });
