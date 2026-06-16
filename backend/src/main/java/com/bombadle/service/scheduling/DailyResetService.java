@@ -68,6 +68,7 @@ public class DailyResetService {
         }
         currentCardStateService.updateCurrentCards(newDailyCards);
 
+        cacheService.evictAllCaches();
         cacheService.reloadCardCompareCache();
         log.info("Card comparison caches have been cleared and reloaded.");
     }
