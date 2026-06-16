@@ -56,11 +56,12 @@ class ScoreRegistrationServiceTest {
             GameMode gameMode = GameMode.CLASSIC;
             Score savedScore = mock(Score.class);
 
+            when(playerService.getPlayerById(player.getId())).thenReturn(player);
             when(scoreService.save(any(Score.class))).thenReturn(savedScore);
             when(leaderboardService.getTop3Leaderboard(gameMode)).thenReturn(List.of());
 
             // Act
-            scoreRegistrationService.registerPlayerWin(player, numberOfTries, gameMode);
+            scoreRegistrationService.registerPlayerWin(player.getId(), numberOfTries, gameMode);
 
             // Assert
             verify(scoreService).save(scoreCaptor.capture());
@@ -88,13 +89,14 @@ class ScoreRegistrationServiceTest {
             Instant timestamp = Instant.now().minusSeconds(3600);
             Score savedScore = mock(Score.class);
 
+            when(playerService.getPlayerById(player.getId())).thenReturn(player);
             when(scoreService.save(any(Score.class))).thenReturn(savedScore);
             LeaderboardEntryDto top3Entry = mock(LeaderboardEntryDto.class);
             when(top3Entry.scoreTimeStamp()).thenReturn(timestamp.plusSeconds(100));
             when(leaderboardService.getTop3Leaderboard(gameMode)).thenReturn(List.of(top3Entry, top3Entry, top3Entry));
 
             // Act
-            Score result = scoreRegistrationService.registerPlayerWinWithTimestamp(player, numberOfTries, gameMode, timestamp);
+            Score result = scoreRegistrationService.registerPlayerWinWithTimestamp(player.getId(), numberOfTries, gameMode, timestamp);
 
             // Assert
             assertEquals(savedScore, result);

@@ -115,7 +115,7 @@ public class AnonymousMergeServiceTest {
             assertThat(savedGuessList.getGuesses()).hasSize(2);
             assertThat(savedGuessList.getGameMode()).isEqualTo(GameMode.CLASSIC);
 
-            verify(scoreRegistrationService).registerPlayerWin(player, 2, GameMode.CLASSIC);
+            verify(scoreRegistrationService).registerPlayerWin(player.getId(), 2, GameMode.CLASSIC);
             verify(anonymousGuessListService).delete(anonGuessList);
             verify(anonymousSessionService).delete(session);
         }

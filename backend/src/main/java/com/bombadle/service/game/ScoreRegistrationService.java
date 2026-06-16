@@ -24,7 +24,8 @@ public class ScoreRegistrationService {
     private final LeaderboardService leaderboardService;
 
     @Transactional
-    public void registerPlayerWin(Player player, int numberOfTries, GameMode gameMode) {
+    public void registerPlayerWin(Long playerId, int numberOfTries, GameMode gameMode) {
+        Player player = playerService.getPlayerById(playerId);
 
         Score score = Score.builder()
                 .player(player)
@@ -42,7 +43,8 @@ public class ScoreRegistrationService {
     }
 
     @Transactional
-    public Score registerPlayerWinWithTimestamp(Player player, int numberOfTries, GameMode gameMode, Instant timestamp) {
+    public Score registerPlayerWinWithTimestamp(Long playerId, int numberOfTries, GameMode gameMode, Instant timestamp) {
+        Player player = playerService.getPlayerById(playerId);
 
         Score score = Score.builder()
                 .player(player)

@@ -70,7 +70,7 @@ class GuessRegistrationServiceTest {
 
             // ASSERT
             assertTrue(guesses.contains(attempt));
-            verify(scoreRegistrationService).registerPlayerWin(player, 1, mode);
+            verify(scoreRegistrationService).registerPlayerWin(player.getId(), 1, mode);
             verify(guessListService).save(guessList);
         }
     }

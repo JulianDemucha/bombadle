@@ -58,7 +58,11 @@ public class AnonymousMergeService {
             guessListService.save(newGuessList);
 
             if (isCorrect) {
-                scoreRegistrationService.registerPlayerWin(player, attempts.size(), gameMode);
+                scoreRegistrationService.registerPlayerWin(
+                        player.getId(),
+                        attempts.size(),
+                        gameMode
+                );
             }
         });
 

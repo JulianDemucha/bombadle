@@ -126,17 +126,18 @@ public class Player {
     }
 
     public void addTodayScore(GameMode gameMode, Score score) {
+        if (!score.getGameMode().equals(gameMode)) {
+            throw new IllegalArgumentException(
+                    String.format("Score game mode (%s) does not match the provided mode (%s)", score.getGameMode(), gameMode)
+            );
+        }
+
         markModeAsCompleted(gameMode);
         setTotalSuccessfulGuesses(
                 getTotalSuccessfulGuesses() + 1
         );
 
         score.setPlayer(this);
-        if (!score.getGameMode().equals(gameMode)) {
-            throw new IllegalArgumentException(
-                    String.format("Score game mode (%s) does not match the provided mode (%s)", score.getGameMode(), gameMode)
-            );
-        }
 
         this.todayScores.put(gameMode, score);
     }

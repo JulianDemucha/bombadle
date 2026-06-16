@@ -22,7 +22,7 @@ public class GuessRegistrationService {
         guessList.getGuesses().add(guessAttempt);
 
         if (guessAttempt.isCorrect()) {
-            scoreRegistrationService.registerPlayerWin(player, guessList.getGuesses().size(), gameMode);
+            scoreRegistrationService.registerPlayerWin(player.getId(), guessList.getGuesses().size(), gameMode);
         }
 
         guessListService.save(guessList);
