@@ -133,6 +133,8 @@ class DailyResetIT extends BaseIT {
                 .quoteBeginning("Nazywam się...")
                 .options(List.of("Kapitan Bomba", "Chorąży Torpeda"))
                 .correctAnswer("Kapitan Bomba")
+                .appearanceEpisode(1)
+                .target(QuoteTarget.SPEAKER)
                 .build();
         entityManager.persist(quote);
 

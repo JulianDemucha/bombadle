@@ -1,5 +1,6 @@
 package com.bombadle.entity;
 
+import com.bombadle.enums.QuoteTarget;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,7 +28,7 @@ public class Quote {
     @Column(name = "quote_beginning", nullable = false, length = 1000)
     private String quoteBeginning;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "quote_options", joinColumns = @JoinColumn(name = "quote_id"))
     @Column(name = "option_text", nullable = false)
     @Builder.Default
@@ -35,6 +36,13 @@ public class Quote {
 
     @Column(name = "correct_answer", nullable = false)
     private String correctAnswer;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "quote_target", nullable = false)
+    private QuoteTarget target;
+
+    @Column(name = "appearance_episode", nullable = false)
+    private Integer appearanceEpisode;
 
     @PrePersist
     @PreUpdate
