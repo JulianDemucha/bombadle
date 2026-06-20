@@ -1,5 +1,6 @@
 package com.bombadle.service.game;
 
+import com.bombadle.dto.QuotePromptDto;
 import com.bombadle.dto.response.AnonymousGuessResponse;
 import com.bombadle.dto.response.GuessResponse;
 import com.bombadle.entity.CharacterCard;
@@ -66,5 +67,9 @@ public class GameServiceFacade {
     @Transactional
     public AnonymousGuessResponse playAnonymousQuotesStageOne(String guess, UUID anonymousSessionId) {
         return gameService.playAnonymousQuotesStageOne(guess, anonymousSessionId);
+    }
+
+    public QuotePromptDto getDailyQuotePrompt() {
+        return gameService.getDailyQuotePrompt();
     }
 }

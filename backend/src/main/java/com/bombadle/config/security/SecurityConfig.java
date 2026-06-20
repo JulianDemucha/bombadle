@@ -84,7 +84,9 @@ public class SecurityConfig {
                                 "/api/character-card/*/previous-character-card",
                                 "/character_card_avatars/**", /*dev */
                         "/api/auth/initiate-verify-email", "/api/auth/verify-email", "/api/auth/initiate-reset-password",
-                                "/api/auth/confirm-reset-password"
+                                "/api/auth/confirm-reset-password",
+                                "/api/card-guessing/quotes/prompt",
+                                "/api/card-guessing/anonymous/quotes/guess"
                         ).permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)

@@ -1,6 +1,7 @@
 package com.bombadle.service.game;
 
 import com.bombadle.config.CurrentGameStateWrapper;
+import com.bombadle.dto.QuotePromptDto;
 import com.bombadle.dto.QuotesStageOneAttempt;
 import com.bombadle.dto.response.AnonymousGuessResponse;
 import com.bombadle.dto.GuessAttempt;
@@ -173,6 +174,19 @@ public class GameService {
                                 guessAttempt
                         )
                 ).build();
+    }
+
+    // ----- TODAY'S QUOTE -----
+
+    public QuotePromptDto getDailyQuotePrompt() {
+        Quote currentQuote = currentGameStateWrapper.getQuote();
+        return new QuotePromptDto(
+                currentQuote.getId(),
+                currentQuote.getQuoteBeginning(),
+                currentQuote.getOptions(),
+                currentQuote.getAppearanceEpisode(),
+                currentQuote.getTarget()
+        );
     }
 
 

@@ -1,6 +1,7 @@
 package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
+import com.bombadle.dto.QuotePromptDto;
 import com.bombadle.dto.response.AnonymousGuessResponse;
 import com.bombadle.dto.response.GuessResponse;
 import com.bombadle.enums.GameMode;
@@ -120,5 +121,10 @@ public class CardGuessingController {
         }
 
         return ResponseEntity.ok(anonymousGuessResponse.guessResponse());
+    }
+
+    @GetMapping("/quotes/prompt")
+    public ResponseEntity<QuotePromptDto> getQuotePrompt() {
+        return ResponseEntity.ok(gameServiceFacade.getDailyQuotePrompt());
     }
 }
