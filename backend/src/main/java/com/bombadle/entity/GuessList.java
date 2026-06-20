@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "guess_list", uniqueConstraints = {
+        @UniqueConstraint(name = "uc_guesslist_player_mode", columnNames = {"player_id", "game_mode"})
+})
 @Getter
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
