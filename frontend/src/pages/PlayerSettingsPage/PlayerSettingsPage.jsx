@@ -31,6 +31,13 @@ export default function PlayerSettingsPage() {
     const navigate = useNavigate();
 
     useEffect(() => {
+        document.body.classList.add('scrollable-page');
+        return () => {
+            document.body.classList.remove('scrollable-page');
+        };
+    }, []);
+
+    useEffect(() => {
         if (user) {
             setDisplayName(user.displayName ?? user.login ?? "");
             setAvatar(user.avatarImage ?? null);

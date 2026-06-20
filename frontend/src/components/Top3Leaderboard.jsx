@@ -1,19 +1,22 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import './style/Top3Leaderboard.css';
 
-function ClassicLeaderboard({
-    topThree = [],
-    ctaLabel,
-    className = '',
-    title,
-    currentUserRow,
-    showSeparator = false,
-    dailyCounterText = null,
-    isAnonymousAndWon = false
-}) {
+function Top3Leaderboard({
+                             topThree = [],
+                             ctaLabel,
+                             className = '',
+                             title,
+                             currentUserRow,
+                             showSeparator = false,
+                             dailyCounterText = null,
+                             isAnonymousAndWon = false,
+                             leaderboardPath = '/leaderboard/classic'
+                         }) {
     const navigate = useNavigate();
     const location = useLocation();
-    const containerClassName = `stamped-banner-container leaderboard-wrapper leaderboard-section ${className}`.trim();
+
+    const containerClassName = `leaderboard-wrapper leaderboard-section ${className}`.trim();
 
     const handleLoginRedirect = () => {
         const currentUrl = encodeURIComponent(location.pathname + location.search);
@@ -21,7 +24,7 @@ function ClassicLeaderboard({
     };
 
     const handleFullLeaderboardRedirect = () => {
-        navigate('/leaderboard/classic');
+        navigate(leaderboardPath);
     };
 
     return (
@@ -99,4 +102,4 @@ function ClassicLeaderboard({
     );
 }
 
-export default ClassicLeaderboard;
+export default Top3Leaderboard;

@@ -25,7 +25,7 @@ function MainPage() {
                 />
 
                 <NavImgButton
-                    to="/"
+                    to="/Quotes"
                     imgSrc="src/assets/buttons/button_quote_mode.png"
                     altText="Tryb 'Cytaty'"
                     className="image-button image-button-responsive"

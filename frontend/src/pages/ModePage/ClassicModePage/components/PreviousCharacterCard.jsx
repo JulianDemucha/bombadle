@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../../../api/api';
+import GlobalLoader from '../../../../components/GlobalLoader.jsx';
 
-function PreviousCharacterCard() {
+function PreviousCharacterCard({ endpoint = '/api/character-card/CLASSIC/previous-character-card' }) {
     const [previousCharacter, setPreviousCharacter] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -10,7 +11,7 @@ function PreviousCharacterCard() {
         const fetchPreviousCharacter = async () => {
             try {
                 setLoading(true);
-                const response = await apiFetch('/api/character-card/CLASSIC/previous-character-card');
+                const response = await apiFetch(endpoint);
                 setPreviousCharacter(response.data);
             } catch (err) {
                 setError('Nie udało się załadować poprzedniej postaci.');
@@ -21,12 +22,12 @@ function PreviousCharacterCard() {
         };
 
         fetchPreviousCharacter();
-    }, []);
+    }, [endpoint]);
 
     if (loading) {
         return (
-            <div className="previous-character-slot">
-                <span className="previous-character-label">Ładowanie...</span>
+            <div className="previous-character-slot" style={{ minHeight: '80px', justifyContent: 'center' }}>
+                <GlobalLoader text="Ładowanie..." small />
             </div>
         );
     }
@@ -34,7 +35,7 @@ function PreviousCharacterCard() {
     if (error || !previousCharacter) {
         return (
             <div className="previous-character-slot">
-                <span className="previous-character-label">{error || 'Brak danych o poprzedniej postaci.'}</span>
+                <span className="previous-character-label">{error || 'Brak danych.'}</span>
             </div>
         );
     }

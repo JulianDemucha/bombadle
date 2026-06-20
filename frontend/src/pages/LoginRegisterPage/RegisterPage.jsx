@@ -82,6 +82,13 @@ function RegisterPage() {
         general: ""
     });
 
+    useEffect(() => {
+        document.body.classList.add('scrollable-page');
+        return () => {
+            document.body.classList.remove('scrollable-page');
+        };
+    }, []);
+
     const navigate = useNavigate();
 
     const setUsernameError = useCallback((msg) => {

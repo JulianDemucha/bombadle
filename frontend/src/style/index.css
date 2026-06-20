@@ -34,3 +34,8 @@ body {
     background-attachment: fixed;
 }
 
+body.scrollable-page {
+    overflow-y: auto !important;
+    height: auto !important;
+    background-attachment: scroll !important;
+}

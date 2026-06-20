@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import './style/GuessList.css';
+import GlobalLoader from '../components/GlobalLoader.jsx';
+import './style/ClassicGuessList.css';
 
 const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
     const rowRef = useRef(null);
@@ -25,8 +26,8 @@ const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
                     alt={guess.name}
                 />
             </div>
-            <div 
-                className="tile text-tile name-tile" 
+            <div
+                className="tile text-tile name-tile"
                 onMouseEnter={(e) => onMouseEnter(e, guess.name)}
                 onMouseLeave={onMouseLeave}
             >
@@ -37,7 +38,7 @@ const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
                     </div>
                 </div>
             </div>
-            <div 
+            <div
                 className={`tile text-tile gender-tile ${guess.status.gender}`}
                 onMouseEnter={(e) => onMouseEnter(e, guess.gender)}
                 onMouseLeave={onMouseLeave}
@@ -49,7 +50,7 @@ const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
                     </div>
                 </div>
             </div>
-            <div 
+            <div
                 className={`tile text-tile race-tile ${guess.status.race}`}
                 onMouseEnter={(e) => onMouseEnter(e, guess.race)}
                 onMouseLeave={onMouseLeave}
@@ -61,7 +62,7 @@ const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
                     </div>
                 </div>
             </div>
-            <div 
+            <div
                 className={`tile text-tile alive-tile ${guess.status.isAlive}`}
                 onMouseEnter={(e) => onMouseEnter(e, guess.isAlive)}
                 onMouseLeave={onMouseLeave}
@@ -73,7 +74,7 @@ const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
                     </div>
                 </div>
             </div>
-            <div 
+            <div
                 className={`tile text-tile colors-tile ${guess.status.colors}`}
                 onMouseEnter={(e) => onMouseEnter(e, guess.colors)}
                 onMouseLeave={onMouseLeave}
@@ -85,7 +86,7 @@ const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
                     </div>
                 </div>
             </div>
-            <div 
+            <div
                 className={`tile text-tile affiliation-tile ${guess.status.affiliation}`}
                 onMouseEnter={(e) => onMouseEnter(e, guess.affiliation)}
                 onMouseLeave={onMouseLeave}
@@ -97,7 +98,7 @@ const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
                     </div>
                 </div>
             </div>
-            <div 
+            <div
                 className={`tile text-tile first-appearance-tile ${guess.status.firstAppearance}`}
                 onMouseEnter={(e) => onMouseEnter(e, guess.firstAppearance)}
                 onMouseLeave={onMouseLeave}
@@ -116,7 +117,7 @@ const GuessRow = ({ guess, isNew, onMouseEnter, onMouseLeave }) => {
 };
 
 
-const GuessList = ({ guesses = [] }) => {
+const ClassicGuessList = ({ guesses = [], isLoading = false }) => {
     const [tooltip, setTooltip] = useState({ visible: false, text: '', x: 0, y: 0 });
 
     const handleMouseEnter = (e, text) => {
@@ -134,6 +135,14 @@ const GuessList = ({ guesses = [] }) => {
         setTooltip(prev => ({ ...prev, visible: false }));
     };
 
+    if (isLoading) {
+        return (
+            <div style={{ width: '100%', marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
+                <GlobalLoader text="Wczytywanie historii..." />
+            </div>
+        );
+    }
+
     if (!guesses || guesses.length === 0) {
         return null;
     }
@@ -141,7 +150,7 @@ const GuessList = ({ guesses = [] }) => {
     return (
         <div className="game-wrapper">
             {tooltip.visible && createPortal(
-                <div 
+                <div
                     className="floating-tooltip"
                     style={{ left: tooltip.x, top: tooltip.y }}
                 >
@@ -163,7 +172,7 @@ const GuessList = ({ guesses = [] }) => {
 
                 <div className="guesses-stack">
                     {guesses.map((guess, index) => (
-                        <GuessRow 
+                        <GuessRow
                             key={guess.id || index}
                             guess={guess}
                             isNew={index === 0 && !!guess.isNewAnimation}
@@ -177,4 +186,4 @@ const GuessList = ({ guesses = [] }) => {
     );
 };
 
-export default GuessList;
+export default ClassicGuessList;

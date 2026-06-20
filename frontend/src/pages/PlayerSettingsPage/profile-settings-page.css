@@ -1,6 +1,10 @@
 .settings-panel-wrapper {
     font-family: 'Courier New', monospace;
     padding: 1.5rem;
+    min-height: 100vh;
+
+    background-attachment: scroll !important;
+    background-position: top center;
 }
 
 .settings-panel-wrapper .settings-top-bar {

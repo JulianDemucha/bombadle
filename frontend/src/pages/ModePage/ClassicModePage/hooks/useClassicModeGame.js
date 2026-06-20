@@ -14,7 +14,7 @@ import {
 const WIN_ANIMATION_DELAY_MS = 5900;
 const WIN_SCROLL_DURATION_MS = 700;
 const SEARCH_INDEX_ENDPOINT = '/api/character-card/search-index';
-const GUESS_LIST_ENDPOINT = '/api/guess-list/classic/player/'; // +user.id
+const GUESS_LIST_ENDPOINT = '/api/guess-list/classic/player/';
 const ANONYMOUS_RECOVERY_ENDPOINT = '/api/players/anonymous/me';
 const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
 const ANONYMOUS_GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/anonymous-guess';
@@ -48,7 +48,6 @@ const triggerWinAnimation = () => {
     fire(0.2, { spread: 60, startVelocity: 45, origin: { x: 1, y: 1 }, angle: 135 });
     fire(0.1, { spread: 120, decay: 0.91, scalar: 0.8, origin: { x: 0.5, y: 1 }, startVelocity: 60, angle: 90 });
 };
-
 
 const pickGuessTimestamp = (entry) =>
     entry?.scoreTimeStamp ||
@@ -87,6 +86,9 @@ function useClassicModeGame() {
     const [topThree, setTopThree] = useState([]);
     const [currentUserRow, setCurrentUserRow] = useState(null);
     const [isCurrentUserInTopThree, setIsCurrentUserInTopThree] = useState(false);
+
+    const [isLoading, setIsLoading] = useState(true);
+
     const winSectionRef = useRef(null);
     const scrollAnimationRef = useRef(null);
     const latestGuessesCountRef = useRef(0);
@@ -181,7 +183,7 @@ function useClassicModeGame() {
                                 isCurrentUser: true
                             });
                         } else {
-                             setCurrentUserRow(buildFallbackCurrentUserRow(user, latestGuessesCountRef.current, latestWinTimeLabelRef.current));
+                            setCurrentUserRow(buildFallbackCurrentUserRow(user, latestGuessesCountRef.current, latestWinTimeLabelRef.current));
                         }
                     } catch (error) {
                         console.error('Blad pobierania danych gracza w leaderboardzie:', error);
@@ -226,102 +228,107 @@ function useClassicModeGame() {
 
     useEffect(() => {
         const loadGame = async () => {
-            if (user) {
-                // Logged-in user logic
-                if (user.completedModesToday?.includes('CLASSIC')) {
-                    setIsWon(true);
-                    setIsLeaderboardExpanded(true);
-                    if (user.todayScoresTimestamps?.['CLASSIC']) {
-                        latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['CLASSIC']);
-                    }
-                }
-                try {
-                    const response = await apiFetch(GUESS_LIST_ENDPOINT + user.id);
-                    const items = pickGuessListItems(response.data);
-
-                    const lastGuess = items[items.length - 1];
-                    if (extractGuessAttempt(lastGuess)?.name?.match === 'MATCH') {
-                        latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
+            setIsLoading(true);
+            try {
+                if (user) {
+                    // Logged-in user logic
+                    if (user.completedModesToday?.includes('CLASSIC')) {
                         setIsWon(true);
+                        setIsLeaderboardExpanded(true);
+                        if (user.todayScoresTimestamps?.['CLASSIC']) {
+                            latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['CLASSIC']);
+                        }
+                    }
+                    try {
+                        const response = await apiFetch(GUESS_LIST_ENDPOINT + user.id);
+                        const items = pickGuessListItems(response.data);
+
+                        const lastGuess = items[items.length - 1];
+                        if (extractGuessAttempt(lastGuess)?.name?.match === 'MATCH') {
+                            latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
+                            setIsWon(true);
+                            setIsLeaderboardExpanded(true);
+                        }
+
+                        const mappedRows = items.map((item, index) => {
+                            const guessAttempt = extractGuessAttempt(item);
+                            const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
+
+                            return mapGuessAttemptToRow(
+                                guessAttempt,
+                                selectedCard,
+                                item?.id ?? `${selectedCard?.id || 'guess'}-${index}`
+                            );
+                        });
+
+                        setGuesses(mappedRows.reverse());
+                    } catch (error) {
+                        console.error('Blad pobierania guess-list:', error);
+                    }
+                } else {
+                    // Not-Logged-in user logic
+                    const today = new Date().toISOString().split('T')[0];
+                    const lastPlayed = localStorage.getItem('lastPlayedDate');
+                    const now = new Date();
+
+                    if (lastPlayed !== today && now.getHours() >= 7) {
+                        localStorage.removeItem('anonymousGuessList');
+                        localStorage.removeItem('anonymousWinTime');
+                        localStorage.setItem('lastPlayedDate', today);
+                    }
+
+                    let storedGuesses = JSON.parse(localStorage.getItem('anonymousGuessList') || '[]');
+
+                    if (storedGuesses.length === 0) {
+                        try {
+                            const res = await apiFetch(ANONYMOUS_RECOVERY_ENDPOINT);
+                            const sessionData = res.data;
+
+                            if (sessionData && sessionData.guessLists?.['CLASSIC']?.guessList) {
+                                const recoveredItems = sessionData.guessLists['CLASSIC'].guessList;
+
+                                if (recoveredItems.length > 0) {
+                                    storedGuesses = recoveredItems.map(item => ({
+                                        guessAttempt: item,
+                                        correct: item.correct || item.name?.match === 'MATCH'
+                                    }));
+                                    localStorage.setItem('anonymousGuessList', JSON.stringify(storedGuesses));
+                                }
+
+                                if (sessionData.completedModesToday?.includes('CLASSIC')) {
+                                    setIsWon(true);
+                                    setIsAnonymousAndWon(true);
+                                    setIsLeaderboardExpanded(true);
+
+                                    if (sessionData.scoreTimestamps?.['CLASSIC']) {
+                                        const winTime = new Date(sessionData.scoreTimestamps['CLASSIC']).getTime();
+                                        localStorage.setItem('anonymousWinTime', winTime.toString());
+                                        latestWinTimeLabelRef.current = formatTimeLabel(winTime);
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Brak anonimowej sesji na serwerze lub błąd pobierania', error);
+                        }
+                    }
+
+                    const lastGuess = storedGuesses[storedGuesses.length - 1];
+                    if (lastGuess && lastGuess.correct) {
+                        setIsWon(true);
+                        setIsAnonymousAndWon(true);
                         setIsLeaderboardExpanded(true);
                     }
 
-                    const mappedRows = items.map((item, index) => {
-                        const guessAttempt = extractGuessAttempt(item);
+                    const mappedRows = storedGuesses.map((item, index) => {
+                        const guessAttempt = item.guessAttempt;
                         const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
-
-                        return mapGuessAttemptToRow(
-                            guessAttempt,
-                            selectedCard,
-                            item?.id ?? `${selectedCard?.id || 'guess'}-${index}`
-                        );
+                        return mapGuessAttemptToRow(guessAttempt, selectedCard, `${selectedCard?.id || 'guess'}-${index}`);
                     });
 
                     setGuesses(mappedRows.reverse());
-                } catch (error) {
-                    console.error('Blad pobierania guess-list:', error);
                 }
-            } else {
-                // Not-Logged-in user logic
-                const today = new Date().toISOString().split('T')[0];
-                const lastPlayed = localStorage.getItem('lastPlayedDate');
-                const now = new Date();
-
-                if (lastPlayed !== today && now.getHours() >= 7) {
-                    localStorage.removeItem('anonymousGuessList');
-                    localStorage.removeItem('anonymousWinTime');
-                    localStorage.setItem('lastPlayedDate', today);
-                }
-
-                let storedGuesses = JSON.parse(localStorage.getItem('anonymousGuessList') || '[]');
-
-                if (storedGuesses.length === 0) {
-                    try {
-                        const res = await apiFetch(ANONYMOUS_RECOVERY_ENDPOINT);
-                        const sessionData = res.data;
-
-                        if (sessionData && sessionData.guessLists?.['CLASSIC']?.guessList) {
-                            const recoveredItems = sessionData.guessLists['CLASSIC'].guessList;
-
-                            if (recoveredItems.length > 0) {
-                                storedGuesses = recoveredItems.map(item => ({
-                                    guessAttempt: item,
-                                    correct: item.correct || item.name?.match === 'MATCH'
-                                }));
-                                localStorage.setItem('anonymousGuessList', JSON.stringify(storedGuesses));
-                            }
-
-                            if (sessionData.completedModesToday?.includes('CLASSIC')) {
-                                setIsWon(true);
-                                setIsAnonymousAndWon(true);
-                                setIsLeaderboardExpanded(true);
-
-                                if (sessionData.scoreTimestamps?.['CLASSIC']) {
-                                    const winTime = new Date(sessionData.scoreTimestamps['CLASSIC']).getTime();
-                                    localStorage.setItem('anonymousWinTime', winTime.toString());
-                                    latestWinTimeLabelRef.current = formatTimeLabel(winTime);
-                                 }
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Brak anonimowej sesji na serwerze lub błąd pobierania', error);
-                    }
-                }
-
-                const lastGuess = storedGuesses[storedGuesses.length - 1];
-                if (lastGuess && lastGuess.correct) {
-                    setIsWon(true);
-                    setIsAnonymousAndWon(true);
-                    setIsLeaderboardExpanded(true);
-                }
-
-                const mappedRows = storedGuesses.map((item, index) => {
-                    const guessAttempt = item.guessAttempt;
-                    const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
-                    return mapGuessAttemptToRow(guessAttempt, selectedCard, `${selectedCard?.id || 'guess'}-${index}`);
-                });
-
-                setGuesses(mappedRows.reverse());
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -402,7 +409,8 @@ function useClassicModeGame() {
         currentUserRow,
         isCurrentUserInTopThree,
         handleSelectCharacterId,
-        winSectionRef
+        winSectionRef,
+        isLoading
     };
 }
 
