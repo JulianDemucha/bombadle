@@ -1,7 +1,9 @@
 package com.bombadle.service.game;
 
+import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.dto.*;
 import com.bombadle.entity.Player;
+import com.bombadle.entity.Quote;
 import com.bombadle.enums.GameMode;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
@@ -19,8 +21,9 @@ public class PlayerGameStateService {
     private final PlayerService playerService;
     private final GuessListService guessListService;
     private final AnonymousSessionService anonymousSessionService;
-    private final GameService gameService;
+    private final CurrentGameStateWrapper currentGameStateWrapper;
 
+    // QUOTES GAME MODE
 
     public QuotesGameStateDto getQuotesStateForPlayer(long playerId) {
         Player player = playerService.getPlayerById(playerId);
@@ -29,6 +32,7 @@ public class PlayerGameStateService {
                 player,
                 GameMode.QUOTES_STAGE_1
         ).getGuesses();
+
         List<GuessAttempt> rawStageTwo = guessListService.findByPlayerAndGameModeOrElseCreateNew(
                 player,
                 GameMode.QUOTES_STAGE_2
@@ -36,7 +40,6 @@ public class PlayerGameStateService {
 
         return buildQuotesStateDto(rawStageOne, rawStageTwo);
     }
-
 
     public QuotesGameStateDto getQuotesStateForAnonymous(UUID sessionId) {
         AnonymousSessionDto session = anonymousSessionService.getAnonymousSessionReadOnly(sessionId);
@@ -47,9 +50,7 @@ public class PlayerGameStateService {
         return buildQuotesStateDto(rawStageOne, rawStageTwo);
     }
 
-
     private QuotesGameStateDto buildQuotesStateDto(List<GuessAttempt> rawStageOne, List<GuessAttempt> rawStageTwo) {
-
         List<QuotesStageOneAttempt> stageOneGuesses = rawStageOne.stream()
                 .filter(attempt -> attempt instanceof QuotesStageOneAttempt)
                 .map(attempt -> (QuotesStageOneAttempt) attempt)
@@ -60,24 +61,30 @@ public class PlayerGameStateService {
                 .map(attempt -> (NameOnlyGuessAttempt) attempt)
                 .toList();
 
-        boolean isStageOnePassed =
-                !stageOneGuesses.isEmpty()
-                &&
-                stageOneGuesses.getLast().isCorrect();
-
-        boolean isStageTwoPassed =
-                !stageTwoGuesses.isEmpty()
-                &&
-                stageTwoGuesses.getLast().isCorrect();
+        boolean isStageOnePassed = !stageOneGuesses.isEmpty() && stageOneGuesses.getLast().isCorrect();
+        boolean isStageTwoPassed = !stageTwoGuesses.isEmpty() && stageTwoGuesses.getLast().isCorrect();
 
         return new QuotesGameStateDto(
-                gameService.getDailyQuotePrompt(),
+                getDailyQuotePrompt(),
                 stageOneGuesses,
                 stageTwoGuesses,
                 isStageOnePassed,
                 isStageTwoPassed
         );
     }
+
+    private QuotePromptDto getDailyQuotePrompt() {
+        Quote currentQuote = currentGameStateWrapper.getQuote();
+        return new QuotePromptDto(
+                currentQuote.getId(),
+                currentQuote.getQuoteBeginning(),
+                currentQuote.getOptions(),
+                currentQuote.getAppearanceEpisode(),
+                currentQuote.getTarget()
+        );
+    }
+
+    // UTILS
 
     private List<GuessAttempt> getGuessesFromSession(AnonymousSessionDto session, GameMode mode) {
         if (session.guessLists() == null || !session.guessLists().containsKey(mode)) {

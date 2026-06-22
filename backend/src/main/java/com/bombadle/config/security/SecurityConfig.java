@@ -88,7 +88,8 @@ public class SecurityConfig {
                                 "/api/auth/confirm-reset-password",
                                 "/api/card-guessing/*/guess/**", // classic, images, quotes_stage_2
                                 "/api/card-guessing/quotes/guess", // quotes stage 1
-                                "/api/card-guessing/quotes/prompt"
+                                "/api/card-guessing/quotes/prompt",
+                                "/api/card-guessing/images/current"
                         ).permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)

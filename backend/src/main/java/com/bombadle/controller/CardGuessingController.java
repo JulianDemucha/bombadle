@@ -7,7 +7,9 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.service.auth.cookie.AuthCookiesService;
 import com.bombadle.service.game.GameServiceFacade;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -97,5 +99,23 @@ public class CardGuessingController {
         return ResponseEntity.ok(
                 gameServiceFacade.getQuotesGameStateForAnonymous(anonymousSessionId)
         );
+    }
+
+    @GetMapping(value = "/images/current", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<Resource> getCurrentImage(
+            @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
+            @AuthenticationPrincipal PlayerPrincipal userDetails
+    ) {
+        Long playerId = (userDetails != null) ? userDetails.getPlayerId() : null;
+
+        Resource resource = gameServiceFacade.getImagesModeCurrentResource(playerId, anonymousSessionId);
+
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                .body(resource);
     }
 }

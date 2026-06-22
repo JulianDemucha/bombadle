@@ -139,7 +139,7 @@ class AdminCharacterCardProcessorTest {
         @Test
         void processUpdate_newNameAlreadyExists_throwsIllegalArgumentException() {
             // Arrange
-            CharacterCard existingCard = CharacterCard.create();
+            CharacterCard existingCard = CharacterCard.createNewEmpty();
             existingCard.setName("beta_name");
             AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", null, null,
                     null, null, null, null, null);
@@ -160,7 +160,7 @@ class AdminCharacterCardProcessorTest {
         @Test
         void processUpdate_validPayloadWithTempImage_updatesCardAndAppliesImage() throws IOException {
             // Arrange
-            CharacterCard existingCard = CharacterCard.create();
+            CharacterCard existingCard = CharacterCard.createNewEmpty();
             existingCard.setName("beta_name");
             AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", "FEMALE", null,
                     null, null, null, null, null);
@@ -186,7 +186,7 @@ class AdminCharacterCardProcessorTest {
         @Test
         void processUpdate_nameChangedWithoutTempImage_updatesCardAndRenamesImage() throws IOException {
             // Arrange
-            CharacterCard existingCard = CharacterCard.create();
+            CharacterCard existingCard = CharacterCard.createNewEmpty();
             existingCard.setName("beta_name");
             AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", null, null,
                     null, null, null, null, null);
@@ -208,7 +208,7 @@ class AdminCharacterCardProcessorTest {
         @Test
         void processUpdate_nameNotProvided_keepsOldNameAndUpdatesOtherFields() throws IOException {
             // Arrange
-            CharacterCard existingCard = CharacterCard.create();
+            CharacterCard existingCard = CharacterCard.createNewEmpty();
             existingCard.setName("sigma_name");
             AdminCharacterCardRequest req = new AdminCharacterCardRequest(" ", "MALE", null,
                     null, null, null, null, null);

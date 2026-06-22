@@ -77,7 +77,7 @@ public class CharacterCard {
     @Column(name = "aliases", nullable = false)
     Set<String> aliases = new HashSet<>();
 
-    public static CharacterCard create() {
+    public static CharacterCard createNewEmpty() {
         return new CharacterCard();
     }
 }

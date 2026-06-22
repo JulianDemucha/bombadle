@@ -38,7 +38,7 @@ public class AdminCharacterCardProcessor {
             throw new IllegalArgumentException("Character card name already exists: " + req.name());
         }
 
-        CharacterCard card = CharacterCard.create();
+        CharacterCard card = CharacterCard.createNewEmpty();
         finalizeCardProcessing(card, req, req.name(), payload.tempImagePath(), null);
 
         log.info("Successfully processed pending creation for card: {}", req.name());

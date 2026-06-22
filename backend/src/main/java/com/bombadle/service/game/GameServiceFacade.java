@@ -12,6 +12,7 @@ import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class GameServiceFacade {
     private final CharacterCardService characterCardService;
     private final GameService gameService;
     private final PlayerGameStateService playerGameStateService;
+    private final GameImageService gameImageService;
 
     @Transactional
     @CacheEvict(value = "guess-list", key = "#playerId+ '-' + #gameMode")
@@ -80,6 +82,10 @@ public class GameServiceFacade {
 
     public QuotesGameStateDto getQuotesGameStateForAnonymous(UUID anonymousSessionId) {
         return playerGameStateService.getQuotesStateForAnonymous(anonymousSessionId);
+    }
+
+    public Resource getImagesModeCurrentResource(Long playerId, UUID anonymousSessionId) {
+        return gameImageService.getCurrentImageResource(playerId, anonymousSessionId);
     }
 
 }

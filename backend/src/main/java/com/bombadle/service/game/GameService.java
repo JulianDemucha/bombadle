@@ -176,18 +176,5 @@ public class GameService {
                 ).build();
     }
 
-    // ----- TODAY'S QUOTE -----
-
-    public QuotePromptDto getDailyQuotePrompt() {
-        Quote currentQuote = currentGameStateWrapper.getQuote();
-        return new QuotePromptDto(
-                currentQuote.getId(),
-                currentQuote.getQuoteBeginning(),
-                currentQuote.getOptions(),
-                currentQuote.getAppearanceEpisode(),
-                currentQuote.getTarget()
-        );
-    }
-
 
 }
