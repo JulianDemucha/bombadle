@@ -78,8 +78,7 @@ public class GameServiceFacade {
         return playerGameStateService.getQuotesStateForPlayer(playerId);
     }
 
-
-    public AnonymousQuoteGameStateDto getQuotesGameStateForAnonymous(UUID anonymousSessionId) {
+    public QuotesGameStateDto getQuotesGameStateForAnonymous(UUID anonymousSessionId) {
         return playerGameStateService.getQuotesStateForAnonymous(anonymousSessionId);
     }
 

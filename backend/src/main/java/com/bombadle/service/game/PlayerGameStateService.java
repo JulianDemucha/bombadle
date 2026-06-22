@@ -38,15 +38,13 @@ public class PlayerGameStateService {
     }
 
 
-    public AnonymousQuoteGameStateDto getQuotesStateForAnonymous(UUID sessionId) {
-        AnonymousSessionDto session = anonymousSessionService.getAnonymousSession(sessionId);
+    public QuotesGameStateDto getQuotesStateForAnonymous(UUID sessionId) {
+        AnonymousSessionDto session = anonymousSessionService.getAnonymousSessionReadOnly(sessionId);
 
         List<GuessAttempt> rawStageOne = getGuessesFromSession(session, GameMode.QUOTES_STAGE_1);
         List<GuessAttempt> rawStageTwo = getGuessesFromSession(session, GameMode.QUOTES_STAGE_2);
 
-        QuotesGameStateDto gameState = buildQuotesStateDto(rawStageOne, rawStageTwo);
-
-        return new AnonymousQuoteGameStateDto(gameState, session.id());
+        return buildQuotesStateDto(rawStageOne, rawStageTwo);
     }
 
 

@@ -18,7 +18,7 @@ public class AnonymousSessionService {
 
     private final AnonymousSessionRepository repo;
 
-    public AnonymousSessionDto getAnonymousSession(UUID anonymousSessionId) {
+    public AnonymousSessionDto getAnonymousSessionOrCreateNew(UUID anonymousSessionId) {
         AnonymousSession anonymousSession;
 
         if (anonymousSessionId == null) {
@@ -29,6 +29,16 @@ public class AnonymousSessionService {
         }
 
         return AnonymousSessionDto.toDto(save(anonymousSession));
+    }
+
+    public AnonymousSessionDto getAnonymousSessionReadOnly(UUID anonymousSessionId) {
+        if (anonymousSessionId == null) {
+            return AnonymousSessionDto.toDto(AnonymousSession.createEmptySession());
+        }
+
+        return repo.findById(anonymousSessionId)
+                .map(AnonymousSessionDto::toDto)
+                .orElse(AnonymousSessionDto.toDto(AnonymousSession.createEmptySession()));
     }
 
     public GuessListDto getGuessList(UUID anonymousSessionId, GameMode gameMode) {

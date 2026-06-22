@@ -64,7 +64,7 @@ public class PlayerController {
             @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId
     ) {
 
-        AnonymousSessionDto anonymousSessionDto = anonymousSessionService.getAnonymousSession(anonymousSessionId);
+        AnonymousSessionDto anonymousSessionDto = anonymousSessionService.getAnonymousSessionOrCreateNew(anonymousSessionId);
         if(anonymousSessionId == null || !anonymousSessionId.equals(anonymousSessionDto.id())){
             ResponseCookie cookie = cookieService.createCookie(
                     "ANON_SESSION_ID",

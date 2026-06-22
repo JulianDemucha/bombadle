@@ -40,7 +40,7 @@ class AnonymousSessionServiceTest {
             when(repo.save(any(AnonymousSession.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             // ACT
-            AnonymousSessionDto result = anonymousSessionService.getAnonymousSession(null);
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionOrCreateNew(null);
 
             // ASSERT
             assertNotNull(result);
@@ -58,7 +58,7 @@ class AnonymousSessionServiceTest {
             when(repo.save(existingSession)).thenReturn(existingSession);
 
             // ACT
-            AnonymousSessionDto result = anonymousSessionService.getAnonymousSession(sessionId);
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionOrCreateNew(sessionId);
 
             // ASSERT
             assertNotNull(result);
@@ -75,7 +75,7 @@ class AnonymousSessionServiceTest {
             when(repo.save(any(AnonymousSession.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             // ACT
-            AnonymousSessionDto result = anonymousSessionService.getAnonymousSession(sessionId);
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionOrCreateNew(sessionId);
 
             // ASSERT
             assertNotNull(result);

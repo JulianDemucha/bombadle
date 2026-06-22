@@ -1,10 +1,8 @@
 package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
-import com.bombadle.dto.AnonymousQuoteGameStateDto;
 import com.bombadle.dto.QuotesGameStateDto;
 import com.bombadle.dto.response.AnonymousGuessResponse;
-import com.bombadle.dto.response.GuessResponse;
 import com.bombadle.enums.GameMode;
 import com.bombadle.service.auth.cookie.AuthCookiesService;
 import com.bombadle.service.game.GameServiceFacade;
@@ -86,7 +84,7 @@ public class CardGuessingController {
     }
 
     @GetMapping("/quotes/prompt")
-    public ResponseEntity<?> getQuotePrompt(
+    public ResponseEntity<QuotesGameStateDto> getQuotePrompt(
             @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
             @AuthenticationPrincipal PlayerPrincipal userDetails
     ) {
@@ -96,19 +94,8 @@ public class CardGuessingController {
             );
         }
 
-        AnonymousQuoteGameStateDto gameState =
-                gameServiceFacade.getQuotesGameStateForAnonymous(anonymousSessionId);
-
-        if (anonymousSessionId == null) {
-            ResponseCookie cookie = authCookiesService.createAnonymousSessionCookie(
-                    gameState.anonymousSessionId().toString()
-            );
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(gameState);
-        }
-
-        return ResponseEntity.ok(gameState);
+        return ResponseEntity.ok(
+                gameServiceFacade.getQuotesGameStateForAnonymous(anonymousSessionId)
+        );
     }
 }
