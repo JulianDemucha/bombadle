@@ -1,18 +1,22 @@
 package com.bombadle.service.game;
 
-import com.bombadle.dto.QuotePromptDto;
+import com.bombadle.dto.*;
 import com.bombadle.dto.response.AnonymousGuessResponse;
 import com.bombadle.dto.response.GuessResponse;
+import com.bombadle.entity.AnonymousSession;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.GameMode;
 import com.bombadle.exception.CharacterCardNotFoundException;
+import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -21,6 +25,7 @@ public class GameServiceFacade {
     private final PlayerService playerService;
     private final CharacterCardService characterCardService;
     private final GameService gameService;
+    private final PlayerGameStateService playerGameStateService;
 
     @Transactional
     @CacheEvict(value = "guess-list", key = "#playerId+ '-' + #gameMode")
@@ -69,7 +74,13 @@ public class GameServiceFacade {
         return gameService.playAnonymousQuotesStageOne(guess, anonymousSessionId);
     }
 
-    public QuotePromptDto getDailyQuotePrompt() {
-        return gameService.getDailyQuotePrompt();
+    public QuotesGameStateDto getQuotesGameStateForPlayer(long playerId) {
+        return playerGameStateService.getQuotesStateForPlayer(playerId);
     }
+
+
+    public AnonymousQuoteGameStateDto getQuotesGameStateForAnonymous(UUID anonymousSessionId) {
+        return playerGameStateService.getQuotesStateForAnonymous(anonymousSessionId);
+    }
+
 }

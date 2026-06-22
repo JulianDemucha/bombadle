@@ -18,10 +18,6 @@ import java.util.Optional;
 public class GuessListService {
     private final GuessListRepository guessListRepository;
 
-    public Optional<GuessList> findByPlayerId(long playerId) {
-        return guessListRepository.findById(playerId);
-    }
-
     @Cacheable(value = "guess-list", key = "#playerId + '-' + #gameMode")
     public GuessListDto getGuessListByPlayerId(long playerId, GameMode gameMode) {
         return new GuessListDto(

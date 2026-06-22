@@ -1,7 +1,9 @@
 package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
+import com.bombadle.dto.AnonymousQuoteGameStateDto;
 import com.bombadle.dto.QuotePromptDto;
+import com.bombadle.dto.QuotesGameStateDto;
 import com.bombadle.dto.response.AnonymousGuessResponse;
 import com.bombadle.dto.response.GuessResponse;
 import com.bombadle.enums.GameMode;
@@ -42,6 +44,7 @@ public class CardGuessingController {
         );
     }
 
+    // todo merge play and playAnonymous into one endpoint
     @PostMapping("/{gameMode}/anonymous-guess/{id}")
     public ResponseEntity<?> playAnonymous(
             @PathVariable String gameMode,
@@ -124,7 +127,29 @@ public class CardGuessingController {
     }
 
     @GetMapping("/quotes/prompt")
-    public ResponseEntity<QuotePromptDto> getQuotePrompt() {
-        return ResponseEntity.ok(gameServiceFacade.getDailyQuotePrompt());
+    public ResponseEntity<?> getQuotePrompt(
+            @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
+            @AuthenticationPrincipal PlayerPrincipal userDetails
+    ) {
+        if (userDetails != null) {
+            return ResponseEntity.ok(
+                    gameServiceFacade.getQuotesGameStateForPlayer(userDetails.getPlayerId())
+            );
+        }
+
+        AnonymousQuoteGameStateDto gameState =
+                gameServiceFacade.getQuotesGameStateForAnonymous(anonymousSessionId);
+
+        if (anonymousSessionId == null) {
+            ResponseCookie cookie = authCookiesService.createAnonymousSessionCookie(
+                    gameState.anonymousSessionId().toString()
+            );
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(gameState);
+        }
+
+        return ResponseEntity.ok(gameState);
     }
 }

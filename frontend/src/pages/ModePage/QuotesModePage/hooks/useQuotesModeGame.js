@@ -21,8 +21,8 @@ const DELAY_LEADERBOARD_MS = 450;
 // --------------------------------
 
 const SEARCH_INDEX_ENDPOINT = '/api/character-card/search-index';
-const ANONYMOUS_RECOVERY_ENDPOINT = '/api/players/anonymous/me';
-const QUOTE_PROMPT_ENDPOINT = '/api/card-guessing/quotes/prompt';
+const QUOTE_GAME_STATE_ENDPOINT = '/api/card-guessing/quotes/prompt'; // Zwraca QuotesGameStateDto lub AnonymousQuoteGameStateDto
+
 const STAGE_1_GUESS_ENDPOINT = '/api/card-guessing/quotes/guess';
 const STAGE_1_ANON_ENDPOINT = '/api/card-guessing/anonymous/quotes/guess';
 const STAGE_2_GUESS_ENDPOINT = '/api/card-guessing/quotes/guess';
@@ -64,7 +64,7 @@ const triggerWinAnimation = () => {
 const findSelectedCard = ({ item, guessAttempt, cardsById, cardsByName }) => {
     const cardId = item?.characterCardId ?? item?.cardId ?? guessAttempt?.characterCardId;
     const cardFromId = cardId ? cardsById[cardId] : null;
-    const guessName = guessAttempt?.name?.value;
+    const guessName = guessAttempt?.name?.value || item?.name?.value;
     const cardFromName = guessName ? cardsByName[normalizeKey(guessName)] : null;
     return cardFromId || cardFromName || null;
 };
@@ -76,7 +76,7 @@ const extractStageTwoCorrect = (item, guessAttempt) => {
 const extractStageOneText = (item) => {
     if (typeof item === 'string') return item;
     if (item && typeof item === 'object') {
-        return item.guess?.value;
+        return item.guess?.value || item.guess;
     }
     return null;
 };
@@ -101,7 +101,7 @@ function useQuotesModeGame() {
     const [isCurrentUserInTopThree, setIsCurrentUserInTopThree] = useState(false);
 
     const winSectionRef = useRef(null);
-    const stageTwoRef = useRef(null); // NOWA REFERENCJA DLA ETAPU 2
+    const stageTwoRef = useRef(null);
     const latestGuessesCountRef = useRef(0);
     const latestWinTimeLabelRef = useRef('--:--');
 
@@ -174,109 +174,70 @@ function useQuotesModeGame() {
         loadLeaderboard();
     }, [isStageTwoWon, loadLeaderboard]);
 
-
     useEffect(() => {
-        const fetchInitialData = async () => {
+        const initGame = async () => {
             try {
-                const [cardsRes, promptRes] = await Promise.all([
+                const [cardsRes, stateRes] = await Promise.all([
                     apiFetch(SEARCH_INDEX_ENDPOINT),
-                    apiFetch(QUOTE_PROMPT_ENDPOINT)
+                    apiFetch(QUOTE_GAME_STATE_ENDPOINT)
                 ]);
-                setCharacterCards(cardsRes.data || []);
-                setPrompt(promptRes.data || null);
-            } catch (error) {
-                console.error('Błąd pobierania danych startowych:', error);
-            }
-        };
-        fetchInitialData();
-    }, []);
 
-    useEffect(() => {
-        const loadGameState = async () => {
-            if (characterCards.length === 0) return;
+                const fetchedCards = cardsRes.data || [];
+                setCharacterCards(fetchedCards);
 
-            try {
-                let sessionData = null;
+                const localCardsById = Object.fromEntries(fetchedCards.map((c) => [c.id, c]));
+                const localCardsByName = Object.fromEntries(fetchedCards.map((c) => [normalizeKey(c.name), c]));
 
-                if (user) {
-                    const completedModes = user.completedModesToday || [];
-                    if (completedModes.includes('QUOTES_STAGE_1')) setIsStageOneWon(true);
-                    if (completedModes.includes('QUOTES_STAGE_2')) {
-                        setIsStageTwoWon(true);
-                        setIsLeaderboardExpanded(true);
-                        if (user.todayScoresTimestamps?.['QUOTES_STAGE_2']) {
-                            latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['QUOTES_STAGE_2']);
-                        }
-                    }
+                const responseData = stateRes.data || {};
+                const gameState = responseData.gameState || responseData;
 
-                    const [s1Res, s2Res] = await Promise.all([
-                        apiFetch(`/api/guess-list/quotes_stage_1/player/${user.id}`).catch(() => ({ data: { guessList: [] } })),
-                        apiFetch(`/api/guess-list/quotes_stage_2/player/${user.id}`).catch(() => ({ data: { guessList: [] } }))
-                    ]);
-
-                    const s1List = s1Res.data?.guessList || [];
-                    if (s1List.length > 0) {
-                        setStageOneGuesses(s1List.map(extractStageOneText).filter(Boolean));
-                    }
-
-                    const s2List = s2Res.data?.guessList || [];
-                    if (s2List.length > 0) {
-                        const mappedS2 = s2List.map((item, index) => {
-                            const guessAttempt = extractGuessAttempt(item);
-                            const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
-                            return {
-                                ...mapGuessAttemptToRow(guessAttempt, selectedCard, `${selectedCard?.id || 's2guess'}-${index}`),
-                                correct: extractStageTwoCorrect(item, guessAttempt),
-                                isNewAnimation: false
-                            };
-                        });
-                        setStageTwoGuesses(mappedS2.reverse());
-                    }
-                } else {
-                    const res = await apiFetch(ANONYMOUS_RECOVERY_ENDPOINT);
-                    sessionData = res.data;
+                if (gameState.prompt) {
+                    setPrompt(gameState.prompt);
                 }
 
-                if (sessionData) {
-                    const completedModes = sessionData.completedModesToday || [];
-                    if (completedModes.includes('QUOTES_STAGE_1')) setIsStageOneWon(true);
-                    if (completedModes.includes('QUOTES_STAGE_2')) {
-                        setIsStageTwoWon(true);
-                        setIsLeaderboardExpanded(true);
-                        if (!user) setIsAnonymousAndWon(true);
-                        if (sessionData.scoreTimestamps?.['QUOTES_STAGE_2']) {
-                            const winTime = new Date(sessionData.scoreTimestamps['QUOTES_STAGE_2']).getTime();
-                            localStorage.setItem('anonymousWinTime_QUOTES', winTime.toString());
-                            latestWinTimeLabelRef.current = formatTimeLabel(winTime);
+                setIsStageOneWon(!!gameState.isStageOnePassed);
+                if (gameState.stageOneGuesses && gameState.stageOneGuesses.length > 0) {
+                    const mappedS1 = gameState.stageOneGuesses.map(extractStageOneText).filter(Boolean);
+                    setStageOneGuesses(mappedS1);
+                }
+
+                setIsStageTwoWon(!!gameState.isStageTwoPassed);
+                if (gameState.stageTwoGuesses && gameState.stageTwoGuesses.length > 0) {
+                    const mappedS2 = gameState.stageTwoGuesses.map((item, index) => {
+                        // Backend zwraca już NameOnlyGuessAttempt, możemy traktować item jako guessAttempt
+                        const guessAttempt = extractGuessAttempt(item);
+                        const selectedCard = findSelectedCard({ item, guessAttempt, cardsById: localCardsById, cardsByName: localCardsByName });
+
+                        return {
+                            ...mapGuessAttemptToRow(guessAttempt, selectedCard, `${selectedCard?.id || 's2guess'}-${index}`),
+                            correct: extractStageTwoCorrect(item, guessAttempt),
+                            isNewAnimation: false
+                        };
+                    });
+
+                    setStageTwoGuesses(mappedS2.reverse());
+                }
+
+                if (gameState.isStageTwoPassed) {
+                    setIsLeaderboardExpanded(true);
+                    if (!user) {
+                        setIsAnonymousAndWon(true);
+                        const winTime = localStorage.getItem('anonymousWinTime_QUOTES');
+                        if (winTime) {
+                            latestWinTimeLabelRef.current = formatTimeLabel(parseInt(winTime, 10));
                         }
-                    }
-
-                    const s1List = sessionData.guessLists?.['QUOTES_STAGE_1']?.guessList || sessionData.guessLists?.['QUOTES_STAGE_1']?.guesses || [];
-                    if (s1List.length > 0) {
-                        setStageOneGuesses(s1List.map(extractStageOneText).filter(Boolean));
-                    }
-
-                    const s2List = sessionData.guessLists?.['QUOTES_STAGE_2']?.guessList || sessionData.guessLists?.['QUOTES_STAGE_2']?.guesses || [];
-                    if (s2List.length > 0) {
-                        const mappedS2 = s2List.map((item, index) => {
-                            const guessAttempt = extractGuessAttempt(item);
-                            const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
-                            return {
-                                ...mapGuessAttemptToRow(guessAttempt, selectedCard, `${selectedCard?.id || 's2guess'}-${index}`),
-                                correct: extractStageTwoCorrect(item, guessAttempt),
-                                isNewAnimation: false
-                            };
-                        });
-                        setStageTwoGuesses(mappedS2.reverse());
+                    } else if (user && user.todayScoresTimestamps?.['QUOTES_STAGE_2']) {
+                        latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['QUOTES_STAGE_2']);
                     }
                 }
+
             } catch (error) {
-                console.error('Błąd przywracania sesji:', error);
+                console.error('Błąd pobierania zunifikowanego stanu gry Quotes:', error);
             }
         };
 
-        loadGameState();
-    }, [user, characterCards, cardsById, cardsByName]);
+        initGame();
+    }, [user]);
 
     const handleGuessStageOne = useCallback(async (selectedText) => {
         if (isStageOneWon) return;
