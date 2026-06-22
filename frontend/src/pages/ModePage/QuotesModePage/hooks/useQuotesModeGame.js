@@ -13,20 +13,15 @@ import {
 // ----- WIN ANIMATION CONFIG -----
 const DELAY_CONFETTI_MS_STAGE_ONE = 100;
 const DELAY_SCROLL_MS_STAGE_ONE = 300;
-
 const DELAY_CONFETTI_MS_STAGE_TWO = 100;
 const DELAY_SCROLL_MS_STAGE_TWO = 400;
-
 const DELAY_LEADERBOARD_MS = 450;
 // --------------------------------
 
 const SEARCH_INDEX_ENDPOINT = '/api/character-card/search-index';
-const QUOTE_GAME_STATE_ENDPOINT = '/api/card-guessing/quotes/prompt'; // Zwraca QuotesGameStateDto lub AnonymousQuoteGameStateDto
-
+const QUOTE_GAME_STATE_ENDPOINT = '/api/card-guessing/quotes/prompt';
 const STAGE_1_GUESS_ENDPOINT = '/api/card-guessing/quotes/guess';
-const STAGE_1_ANON_ENDPOINT = '/api/card-guessing/anonymous/quotes/guess';
 const STAGE_2_GUESS_ENDPOINT = '/api/card-guessing/quotes/guess';
-const STAGE_2_ANON_ENDPOINT = '/api/card-guessing/quotes/anonymous-guess';
 
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/QUOTES_STAGE_2/top3';
 const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/QUOTES_STAGE_2/player';
@@ -94,7 +89,6 @@ function useQuotesModeGame() {
     const [isAnonymousAndWon, setIsAnonymousAndWon] = useState(false);
     const [isAnimatingSuccess, setIsAnimatingSuccess] = useState(false);
 
-    // Leaderboard States
     const [isLeaderboardExpanded, setIsLeaderboardExpanded] = useState(false);
     const [topThree, setTopThree] = useState([]);
     const [currentUserRow, setCurrentUserRow] = useState(null);
@@ -204,7 +198,6 @@ function useQuotesModeGame() {
                 setIsStageTwoWon(!!gameState.isStageTwoPassed);
                 if (gameState.stageTwoGuesses && gameState.stageTwoGuesses.length > 0) {
                     const mappedS2 = gameState.stageTwoGuesses.map((item, index) => {
-                        // Backend zwraca już NameOnlyGuessAttempt, możemy traktować item jako guessAttempt
                         const guessAttempt = extractGuessAttempt(item);
                         const selectedCard = findSelectedCard({ item, guessAttempt, cardsById: localCardsById, cardsByName: localCardsByName });
 
@@ -243,8 +236,7 @@ function useQuotesModeGame() {
         if (isStageOneWon) return;
 
         try {
-            const endpoint = user ? STAGE_1_GUESS_ENDPOINT : STAGE_1_ANON_ENDPOINT;
-            const res = await apiFetch(`${endpoint}?guess=${encodeURIComponent(selectedText)}`, { method: 'POST' });
+            const res = await apiFetch(`${STAGE_1_GUESS_ENDPOINT}?guess=${encodeURIComponent(selectedText)}`, { method: 'POST' });
             const isCorrect = res.data?.correct || res.data?.guessResponse?.correct;
 
             setStageOneGuesses(prev => [...prev, selectedText]);
@@ -263,7 +255,7 @@ function useQuotesModeGame() {
         } catch (error) {
             console.error('Błąd w Etapie 1:', error);
         }
-    }, [isStageOneWon, user]);
+    }, [isStageOneWon]);
 
     const handleGuessStageTwo = useCallback(async (cardId) => {
         if (!isStageOneWon || isStageTwoWon || isAnimatingSuccess) return;
@@ -272,8 +264,7 @@ function useQuotesModeGame() {
         if (!selectedCard) return;
 
         try {
-            const endpointBase = user ? STAGE_2_GUESS_ENDPOINT : STAGE_2_ANON_ENDPOINT;
-            const res = await apiFetch(`${endpointBase}/${cardId}`, { method: 'POST' });
+            const res = await apiFetch(`${STAGE_2_GUESS_ENDPOINT}/${cardId}`, { method: 'POST' });
 
             const dataToExtract = res.data?.guessResponse || res.data;
             const guessAttempt = dataToExtract?.guessAttempt;

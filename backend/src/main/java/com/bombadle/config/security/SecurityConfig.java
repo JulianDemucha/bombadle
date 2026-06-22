@@ -76,17 +76,19 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/admin/**", "/test/security/admin").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
                         .requestMatchers("/api/daily-reset/manual-trigger").hasAuthority("ROLE_SUPERADMIN")
-                        .requestMatchers("/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate",
-                                "/api/auth/refreshToken", "/api/card-guessing/*/anonymous-guess/**",
+                        .requestMatchers(
+                                "/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate",
+                                "/api/auth/refreshToken",
                                 "/api/character-card/search-index", "/api/leaderboard/**", "/images/**",
                                 "/api/guess-list/**",
                                 "/api/players/anonymous/me",
                                 "/api/character-card/*/previous-character-card",
                                 "/character_card_avatars/**", /*dev */
-                        "/api/auth/initiate-verify-email", "/api/auth/verify-email", "/api/auth/initiate-reset-password",
+                                "/api/auth/initiate-verify-email", "/api/auth/verify-email", "/api/auth/initiate-reset-password",
                                 "/api/auth/confirm-reset-password",
-                                "/api/card-guessing/quotes/prompt",
-                                "/api/card-guessing/anonymous/quotes/guess"
+                                "/api/card-guessing/*/guess/**", // classic, images, quotes_stage_2
+                                "/api/card-guessing/quotes/guess", // quotes stage 1
+                                "/api/card-guessing/quotes/prompt"
                         ).permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
@@ -97,9 +99,7 @@ public class SecurityConfig {
                 .addFilterAfter(activityTrackingFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(accountLockedFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(csrfCookieFilter, AccountLockedFilter.class)
-                .addFilterAfter(statelessCsrfFilter, CsrfCookieInjectionFilter.class)
-        ;
-
+                .addFilterAfter(statelessCsrfFilter, CsrfCookieInjectionFilter.class);
 
         return http.build();
     }

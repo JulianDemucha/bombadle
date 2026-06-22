@@ -11,13 +11,17 @@ import {
     pickLeaderboardItems
 } from '../utils/classicModeMappers.js';
 
+// ----- ANIMATION CONFIG -----
 const WIN_ANIMATION_DELAY_MS = 5900;
 const WIN_SCROLL_DURATION_MS = 700;
+// ----------------------------
+
 const SEARCH_INDEX_ENDPOINT = '/api/character-card/search-index';
 const GUESS_LIST_ENDPOINT = '/api/guess-list/classic/player/';
 const ANONYMOUS_RECOVERY_ENDPOINT = '/api/players/anonymous/me';
+
 const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
-const ANONYMOUS_GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/anonymous-guess';
+
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/CLASSIC/top3';
 const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/CLASSIC/player';
 
@@ -231,7 +235,6 @@ function useClassicModeGame() {
             setIsLoading(true);
             try {
                 if (user) {
-                    // Logged-in user logic
                     if (user.completedModesToday?.includes('CLASSIC')) {
                         setIsWon(true);
                         setIsLeaderboardExpanded(true);
@@ -266,7 +269,6 @@ function useClassicModeGame() {
                         console.error('Blad pobierania guess-list:', error);
                     }
                 } else {
-                    // Not-Logged-in user logic
                     const today = new Date().toISOString().split('T')[0];
                     const lastPlayed = localStorage.getItem('lastPlayedDate');
                     const now = new Date();
@@ -344,15 +346,11 @@ function useClassicModeGame() {
         if (!selectedCard) return;
 
         try {
-            let response;
-            if (user) {
-                response = await apiFetch(`${GUESS_ENDPOINT_BASE}/${cardId}`, { method: 'POST' });
-            } else {
-                response = await apiFetch(`${ANONYMOUS_GUESS_ENDPOINT_BASE}/${cardId}`, { method: 'POST' });
-            }
+            const response = await apiFetch(`${GUESS_ENDPOINT_BASE}/${cardId}`, { method: 'POST' });
 
-            const guessAttempt = response.data?.guessAttempt;
-            const correct = response.data?.correct || guessAttempt?.name?.match === 'MATCH';
+            const dataToExtract = response.data?.guessResponse || response.data;
+            const guessAttempt = dataToExtract?.guessAttempt;
+            const correct = dataToExtract?.correct || guessAttempt?.name?.match === 'MATCH';
 
             const newRow = {
                 ...mapGuessAttemptToRow(
@@ -366,7 +364,7 @@ function useClassicModeGame() {
 
             if (!user) {
                 const anonymousGuesses = JSON.parse(localStorage.getItem('anonymousGuessList') || '[]');
-                anonymousGuesses.push({ ...response.data, characterCardId: cardId });
+                anonymousGuesses.push({ ...dataToExtract, characterCardId: cardId });
                 localStorage.setItem('anonymousGuessList', JSON.stringify(anonymousGuesses));
             }
 
