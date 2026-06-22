@@ -17,9 +17,7 @@ const WIN_SCROLL_DURATION_MS = 700;
 // ----------------------------
 
 const SEARCH_INDEX_ENDPOINT = '/api/character-card/search-index';
-const GUESS_LIST_ENDPOINT = '/api/guess-list/classic/player/';
-const ANONYMOUS_RECOVERY_ENDPOINT = '/api/players/anonymous/me';
-
+const GET_GUESS_LIST_ENDPOINT = '/api/guess-list/classic';
 const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
 
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/CLASSIC/top3';
@@ -34,10 +32,7 @@ const formatTimeLabel = (value) => {
 
 const triggerWinAnimation = () => {
     const count = 200;
-    const defaults = {
-        origin: { y: 0.7 }
-    };
-
+    const defaults = { origin: { y: 0.7 } };
     const fire = (particleRatio, opts) => {
         confetti({
             ...defaults,
@@ -54,12 +49,7 @@ const triggerWinAnimation = () => {
 };
 
 const pickGuessTimestamp = (entry) =>
-    entry?.scoreTimeStamp ||
-    entry?.timestamp ||
-    entry?.timeStamp ||
-    entry?.createdAt ||
-    entry?.guessAttempt?.scoreTimeStamp ||
-    null;
+    entry?.scoreTimeStamp || entry?.timestamp || entry?.timeStamp || entry?.createdAt || entry?.guessAttempt?.scoreTimeStamp || null;
 
 const buildFallbackCurrentUserRow = (user, attempts, timeLabel) => ({
     rank: '-',
@@ -90,7 +80,6 @@ function useClassicModeGame() {
     const [topThree, setTopThree] = useState([]);
     const [currentUserRow, setCurrentUserRow] = useState(null);
     const [isCurrentUserInTopThree, setIsCurrentUserInTopThree] = useState(false);
-
     const [isLoading, setIsLoading] = useState(true);
 
     const winSectionRef = useRef(null);
@@ -114,9 +103,7 @@ function useClassicModeGame() {
 
     useEffect(() => {
         return () => {
-            if (scrollAnimationRef.current) {
-                cancelAnimationFrame(scrollAnimationRef.current);
-            }
+            if (scrollAnimationRef.current) cancelAnimationFrame(scrollAnimationRef.current);
         };
     }, []);
 
@@ -136,9 +123,7 @@ function useClassicModeGame() {
         const distance = targetY - startY;
         const startTime = performance.now();
 
-        const easeInOutCubic = (t) => (t < 0.5
-            ? 4 * t * t * t
-            : 1 - Math.pow(-2 * t + 2, 3) / 2);
+        const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
         const step = (now) => {
             const elapsed = now - startTime;
@@ -154,9 +139,7 @@ function useClassicModeGame() {
             }
         };
 
-        if (scrollAnimationRef.current) {
-            cancelAnimationFrame(scrollAnimationRef.current);
-        }
+        if (scrollAnimationRef.current) cancelAnimationFrame(scrollAnimationRef.current);
         scrollAnimationRef.current = requestAnimationFrame(step);
     }, []);
 
@@ -195,8 +178,6 @@ function useClassicModeGame() {
                     }
                 }
             } else if (isWon && !user) {
-                const winTime = localStorage.getItem('anonymousWinTime');
-                latestWinTimeLabelRef.current = formatTimeLabel(winTime ? parseInt(winTime, 10) : null);
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
                 fallbackRow.wins = '?';
                 setCurrentUserRow(fallbackRow);
@@ -234,101 +215,46 @@ function useClassicModeGame() {
         const loadGame = async () => {
             setIsLoading(true);
             try {
-                if (user) {
-                    if (user.completedModesToday?.includes('CLASSIC')) {
+                const response = await apiFetch(GET_GUESS_LIST_ENDPOINT);
+                const items = pickGuessListItems(response.data);
+
+                if (user && user.completedModesToday?.includes('CLASSIC')) {
+                    setIsWon(true);
+                    setIsLeaderboardExpanded(true);
+                    if (user.todayScoresTimestamps?.['CLASSIC']) {
+                        latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['CLASSIC']);
+                    }
+                }
+
+                if (items.length > 0) {
+                    const lastGuess = items[items.length - 1];
+                    const isLastGuessCorrect = extractGuessAttempt(lastGuess)?.name?.match === 'MATCH';
+
+                    if (isLastGuessCorrect) {
+                        // Bierzemy czas z ostatniego zgadnięcia bezpośrednio z backendu!
+                        latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
                         setIsWon(true);
                         setIsLeaderboardExpanded(true);
-                        if (user.todayScoresTimestamps?.['CLASSIC']) {
-                            latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['CLASSIC']);
-                        }
-                    }
-                    try {
-                        const response = await apiFetch(GUESS_LIST_ENDPOINT + user.id);
-                        const items = pickGuessListItems(response.data);
-
-                        const lastGuess = items[items.length - 1];
-                        if (extractGuessAttempt(lastGuess)?.name?.match === 'MATCH') {
-                            latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
-                            setIsWon(true);
-                            setIsLeaderboardExpanded(true);
-                        }
-
-                        const mappedRows = items.map((item, index) => {
-                            const guessAttempt = extractGuessAttempt(item);
-                            const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
-
-                            return mapGuessAttemptToRow(
-                                guessAttempt,
-                                selectedCard,
-                                item?.id ?? `${selectedCard?.id || 'guess'}-${index}`
-                            );
-                        });
-
-                        setGuesses(mappedRows.reverse());
-                    } catch (error) {
-                        console.error('Blad pobierania guess-list:', error);
-                    }
-                } else {
-                    const today = new Date().toISOString().split('T')[0];
-                    const lastPlayed = localStorage.getItem('lastPlayedDate');
-                    const now = new Date();
-
-                    if (lastPlayed !== today && now.getHours() >= 7) {
-                        localStorage.removeItem('anonymousGuessList');
-                        localStorage.removeItem('anonymousWinTime');
-                        localStorage.setItem('lastPlayedDate', today);
+                        if (!user) setIsAnonymousAndWon(true);
                     }
 
-                    let storedGuesses = JSON.parse(localStorage.getItem('anonymousGuessList') || '[]');
-
-                    if (storedGuesses.length === 0) {
-                        try {
-                            const res = await apiFetch(ANONYMOUS_RECOVERY_ENDPOINT);
-                            const sessionData = res.data;
-
-                            if (sessionData && sessionData.guessLists?.['CLASSIC']?.guessList) {
-                                const recoveredItems = sessionData.guessLists['CLASSIC'].guessList;
-
-                                if (recoveredItems.length > 0) {
-                                    storedGuesses = recoveredItems.map(item => ({
-                                        guessAttempt: item,
-                                        correct: item.correct || item.name?.match === 'MATCH'
-                                    }));
-                                    localStorage.setItem('anonymousGuessList', JSON.stringify(storedGuesses));
-                                }
-
-                                if (sessionData.completedModesToday?.includes('CLASSIC')) {
-                                    setIsWon(true);
-                                    setIsAnonymousAndWon(true);
-                                    setIsLeaderboardExpanded(true);
-
-                                    if (sessionData.scoreTimestamps?.['CLASSIC']) {
-                                        const winTime = new Date(sessionData.scoreTimestamps['CLASSIC']).getTime();
-                                        localStorage.setItem('anonymousWinTime', winTime.toString());
-                                        latestWinTimeLabelRef.current = formatTimeLabel(winTime);
-                                    }
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Brak anonimowej sesji na serwerze lub błąd pobierania', error);
-                        }
-                    }
-
-                    const lastGuess = storedGuesses[storedGuesses.length - 1];
-                    if (lastGuess && lastGuess.correct) {
-                        setIsWon(true);
-                        setIsAnonymousAndWon(true);
-                        setIsLeaderboardExpanded(true);
-                    }
-
-                    const mappedRows = storedGuesses.map((item, index) => {
-                        const guessAttempt = item.guessAttempt;
+                    const mappedRows = items.map((item, index) => {
+                        const guessAttempt = extractGuessAttempt(item);
                         const selectedCard = findSelectedCard({ item, guessAttempt, cardsById, cardsByName });
-                        return mapGuessAttemptToRow(guessAttempt, selectedCard, `${selectedCard?.id || 'guess'}-${index}`);
+
+                        return mapGuessAttemptToRow(
+                            guessAttempt,
+                            selectedCard,
+                            item?.id ?? `${selectedCard?.id || 'guess'}-${index}`
+                        );
                     });
 
                     setGuesses(mappedRows.reverse());
+                } else {
+                    setGuesses([]);
                 }
+            } catch (error) {
+                console.error('Blad ladowania stanu gry Classic:', error);
             } finally {
                 setIsLoading(false);
             }
@@ -362,17 +288,11 @@ function useClassicModeGame() {
             };
             setGuesses((prev) => [newRow, ...prev]);
 
-            if (!user) {
-                const anonymousGuesses = JSON.parse(localStorage.getItem('anonymousGuessList') || '[]');
-                anonymousGuesses.push({ ...dataToExtract, characterCardId: cardId });
-                localStorage.setItem('anonymousGuessList', JSON.stringify(anonymousGuesses));
-            }
-
             if (correct) {
                 const winTimestamp = Date.now();
                 latestWinTimeLabelRef.current = formatTimeLabel(winTimestamp);
+
                 if (!user) {
-                    localStorage.setItem('anonymousWinTime', winTimestamp);
                     setIsAnonymousAndWon(true);
                 }
                 setIsAnimatingSuccess(true);
