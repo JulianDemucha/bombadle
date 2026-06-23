@@ -52,9 +52,9 @@ public class GameImageService {
                 .map(attempt -> (NameOnlyGuessAttempt) attempt)
                 .anyMatch(NameOnlyGuessAttempt::isCorrect);
 
-        if (isGuessed) return 8;
+        if (isGuessed) return 9;
 
-        return Math.min(guesses.size() + 1, 8);
+        return Math.min(guesses.size() + 1, 9);
     }
 
     private List<GuessAttempt> getGuessesFromSession(AnonymousSessionDto session) {

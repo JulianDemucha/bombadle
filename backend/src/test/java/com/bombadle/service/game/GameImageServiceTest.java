@@ -128,7 +128,7 @@ class GameImageServiceTest {
         }
 
         @Test
-        void getCurrentImageResource_playerGuessedCorrectly_returnsLevelEightResource() {
+        void getCurrentImageResource_playerGuessedCorrectly_returnsLevelNineResource() {
             // ARRANGE
             long playerId = 1L;
             Long expectedCardId = 42L;
@@ -155,11 +155,11 @@ class GameImageServiceTest {
             // ASSERT
             assertNotNull(resource);
             assertInstanceOf(ClassPathResource.class, resource);
-            assertEquals("static/images/images_mode/42/lvl_8.jpg", ((ClassPathResource) resource).getPath());
+            assertEquals("static/images/images_mode/42/lvl_9.jpg", ((ClassPathResource) resource).getPath());
         }
 
         @Test
-        void getCurrentImageResource_anonymousTenIncorrectGuesses_maxesOutAtLevelEightResource() {
+        void getCurrentImageResource_anonymousTenIncorrectGuesses_maxesOutAtLevelNineResource() {
             // ARRANGE
             UUID sessionId = UUID.randomUUID();
             Long expectedCardId = 7L;
@@ -186,7 +186,7 @@ class GameImageServiceTest {
             // ASSERT
             assertNotNull(resource);
             assertInstanceOf(ClassPathResource.class, resource);
-            assertEquals("static/images/images_mode/7/lvl_8.jpg", ((ClassPathResource) resource).getPath());
+            assertEquals("static/images/images_mode/7/lvl_9.jpg", ((ClassPathResource) resource).getPath());
         }
 
         @Test
