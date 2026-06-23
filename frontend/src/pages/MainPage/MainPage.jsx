@@ -1,5 +1,4 @@
-import
-    React from 'react';
+import React from 'react';
 import '../../style/img-buttons.css';
 import NavImgButton from "../../components/NavImgButton.jsx";
 import Footer from "../../components/Footer.jsx";
@@ -33,13 +32,12 @@ function MainPage() {
                 />
 
                 <NavImgButton
-                    to="/"
+                    to="/Images"
                     imgSrc="src/assets/buttons/button_training_mode.png"
-                    altText="Tryb 'Trening"
+                    altText="Tryb 'Zdjęcia'"
                     className="image-button image-button-responsive"
                     onError={handleImageError}
                 />
-
 
                 <NavImgButton
                     to="/login"
