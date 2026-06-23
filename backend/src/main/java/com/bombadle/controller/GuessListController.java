@@ -30,7 +30,7 @@ public class GuessListController {
 
         if (userDetails != null) {
             return ResponseEntity.ok(
-                    guessListService.getGuessListByPlayerId(userDetails.getPlayerId(), mode)
+                    guessListService.getByPlayerId(userDetails.getPlayerId(), mode)
             );
         }
 
@@ -49,7 +49,7 @@ public class GuessListController {
             @PathVariable String gameMode
     ) {
         return ResponseEntity.ok(
-                guessListService.getGuessListByPlayerId(playerId, GameMode.valueOf(gameMode.toUpperCase()))
+                guessListService.getByPlayerId(playerId, GameMode.valueOf(gameMode.toUpperCase()))
         );
     }
 }

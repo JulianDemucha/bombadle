@@ -104,7 +104,7 @@ class AnonymousToRegisteredUserMergeIT extends BaseIT{
         String csrfToken = "sigma-csrf-token-123";
         Cookie csrfCookie = new Cookie("XSRF-TOKEN", csrfToken);
 
-        MvcResult firstGuessResult = mockMvc.perform(post("/api/card-guessing/classic/anonymous-guess/" + wrongCard.getId())
+        MvcResult firstGuessResult = mockMvc.perform(post("/api/card-guessing/classic/guess/" + wrongCard.getId())
                         .cookie(csrfCookie)
                         .header("X-XSRF-TOKEN", csrfToken))
                 .andExpect(status().isOk())
@@ -114,7 +114,7 @@ class AnonymousToRegisteredUserMergeIT extends BaseIT{
         assertNotNull(anonSessionCookie);
         String sessionId = anonSessionCookie.getValue();
 
-        mockMvc.perform(post("/api/card-guessing/classic/anonymous-guess/" + correctCard.getId())
+        mockMvc.perform(post("/api/card-guessing/classic/guess/" + correctCard.getId())
                         .cookie(anonSessionCookie, csrfCookie)
                         .header("X-XSRF-TOKEN", csrfToken))
                 .andExpect(status().isOk())

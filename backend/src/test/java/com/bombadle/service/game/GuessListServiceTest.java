@@ -30,42 +30,10 @@ class GuessListServiceTest {
     private GuessListService guessListService;
 
     @Nested
-    class FindByPlayerIdTests {
+    class GetByPlayerIdTests {
 
         @Test
-        void findByPlayerId_listFound_returnsGuessListOptional() {
-            // ARRANGE
-            long playerId = 1L;
-            GuessList guessList = mock(GuessList.class);
-            when(guessListRepository.findById(playerId)).thenReturn(Optional.of(guessList));
-
-            // ACT
-            Optional<GuessList> result = guessListService.findByPlayerId(playerId);
-
-            // ASSERT
-            assertTrue(result.isPresent());
-            assertEquals(guessList, result.get());
-        }
-
-        @Test
-        void findByPlayerId_listNotFound_returnsEmptyOptional() {
-            // ARRANGE
-            long playerId = 1L;
-            when(guessListRepository.findById(playerId)).thenReturn(Optional.empty());
-
-            // ACT
-            Optional<GuessList> result = guessListService.findByPlayerId(playerId);
-
-            // ASSERT
-            assertTrue(result.isEmpty());
-        }
-    }
-
-    @Nested
-    class GetGuessListByPlayerIdTests {
-
-        @Test
-        void getGuessListByPlayerId_listExists_returnsDtoWithGuesses() {
+        void getByPlayerId_listExists_returnsDtoWithGuesses() {
             // ARRANGE
             long playerId = 1L;
             GameMode mode = GameMode.CLASSIC;
@@ -77,7 +45,7 @@ class GuessListServiceTest {
             when(guessList.getGuesses()).thenReturn(guesses);
 
             // ACT
-            GuessListDto result = guessListService.getGuessListByPlayerId(playerId, mode);
+            GuessListDto result = guessListService.getByPlayerId(playerId, mode);
 
             // ASSERT
             assertNotNull(result);
@@ -86,14 +54,14 @@ class GuessListServiceTest {
         }
 
         @Test
-        void getGuessListByPlayerId_listDoesNotExist_returnsDtoWithEmptyList() {
+        void getByPlayerId_listDoesNotExist_returnsDtoWithEmptyList() {
             // ARRANGE
             long playerId = 1L;
             GameMode mode = GameMode.CLASSIC;
             when(guessListRepository.findByPlayerIdAndGameMode(playerId, mode)).thenReturn(Optional.empty());
 
             // ACT
-            GuessListDto result = guessListService.getGuessListByPlayerId(playerId, mode);
+            GuessListDto result = guessListService.getByPlayerId(playerId, mode);
 
             // ASSERT
             assertNotNull(result);
@@ -110,6 +78,7 @@ class GuessListServiceTest {
             Player player = mock(Player.class);
             GameMode mode = GameMode.CLASSIC;
             GuessList guessList = mock(GuessList.class);
+
             when(player.getId()).thenReturn(1L);
             when(guessListRepository.findByPlayerIdAndGameMode(1L, mode)).thenReturn(Optional.of(guessList));
 
@@ -125,6 +94,7 @@ class GuessListServiceTest {
             // ARRANGE
             Player player = mock(Player.class);
             GameMode mode = GameMode.CLASSIC;
+
             when(player.getId()).thenReturn(1L);
             when(guessListRepository.findByPlayerIdAndGameMode(1L, mode)).thenReturn(Optional.empty());
 
@@ -142,14 +112,16 @@ class GuessListServiceTest {
     class SaveTests {
 
         @Test
-        void save_validList_callsRepositorySave() {
+        void save_validList_returnsSavedList() {
             // ARRANGE
             GuessList guessList = mock(GuessList.class);
+            when(guessListRepository.save(guessList)).thenReturn(guessList);
 
             // ACT
-            guessListService.save(guessList);
+            GuessList result = guessListService.save(guessList);
 
             // ASSERT
+            assertEquals(guessList, result);
             verify(guessListRepository).save(guessList);
         }
     }

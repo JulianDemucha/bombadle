@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +18,7 @@ public class GuessListService {
     private final GuessListRepository guessListRepository;
 
     @Cacheable(value = "guess-list", key = "#playerId + '-' + #gameMode")
-    public GuessListDto getGuessListByPlayerId(long playerId, GameMode gameMode) {
+    public GuessListDto getByPlayerId(long playerId, GameMode gameMode) {
         return new GuessListDto(
                 guessListRepository.findByPlayerIdAndGameMode(playerId, gameMode)
                         .map(GuessList::getGuesses)

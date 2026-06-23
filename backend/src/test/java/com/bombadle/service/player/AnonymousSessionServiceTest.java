@@ -32,10 +32,10 @@ class AnonymousSessionServiceTest {
     private AnonymousSessionService anonymousSessionService;
 
     @Nested
-    class GetAnonymousSessionTests {
+    class GetAnonymousSessionOrCreateNewTests {
 
         @Test
-        void getAnonymousSession_sessionIdIsNull_createsAndSavesNewSession() {
+        void getAnonymousSessionOrCreateNew_sessionIdIsNull_createsAndSavesNewSession() {
             // ARRANGE
             when(repo.save(any(AnonymousSession.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -49,7 +49,7 @@ class AnonymousSessionServiceTest {
         }
 
         @Test
-        void getAnonymousSession_sessionExists_returnsExistingSessionDto() {
+        void getAnonymousSessionOrCreateNew_sessionExists_returnsExistingSessionDto() {
             // ARRANGE
             UUID sessionId = UUID.randomUUID();
             AnonymousSession existingSession = AnonymousSession.createEmptySession();
@@ -68,7 +68,7 @@ class AnonymousSessionServiceTest {
         }
 
         @Test
-        void getAnonymousSession_sessionNotFound_createsAndSavesNewSession() {
+        void getAnonymousSessionOrCreateNew_sessionNotFound_createsAndSavesNewSession() {
             // ARRANGE
             UUID sessionId = UUID.randomUUID();
             when(repo.findById(sessionId)).thenReturn(Optional.empty());
@@ -81,6 +81,54 @@ class AnonymousSessionServiceTest {
             assertNotNull(result);
             verify(repo).findById(sessionId);
             verify(repo).save(any(AnonymousSession.class));
+        }
+    }
+
+    @Nested
+    class GetAnonymousSessionReadOnlyTests {
+
+        @Test
+        void getAnonymousSessionReadOnly_sessionIdIsNull_returnsEmptySessionDto() {
+            // ARRANGE & ACT
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionReadOnly(null);
+
+            // ASSERT
+            assertNotNull(result);
+            verifyNoInteractions(repo);
+        }
+
+        @Test
+        void getAnonymousSessionReadOnly_sessionExists_returnsExistingSessionDto() {
+            // ARRANGE
+            UUID sessionId = UUID.randomUUID();
+            AnonymousSession existingSession = AnonymousSession.createEmptySession();
+            existingSession.setId(sessionId);
+            when(repo.findById(sessionId)).thenReturn(Optional.of(existingSession));
+
+            // ACT
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionReadOnly(sessionId);
+
+            // ASSERT
+            assertNotNull(result);
+            assertEquals(sessionId, result.id());
+            verify(repo).findById(sessionId);
+            verify(repo, never()).save(any());
+        }
+
+        @Test
+        void getAnonymousSessionReadOnly_sessionNotFound_returnsEmptySessionDto() {
+            // ARRANGE
+            UUID sessionId = UUID.randomUUID();
+            when(repo.findById(sessionId)).thenReturn(Optional.empty());
+
+            // ACT
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionReadOnly(sessionId);
+
+            // ASSERT
+            assertNotNull(result);
+            assertNull(result.id()); // ID should be null for the freshly created empty unpersisted session
+            verify(repo).findById(sessionId);
+            verify(repo, never()).save(any());
         }
     }
 
