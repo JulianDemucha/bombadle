@@ -52,8 +52,9 @@ public class GameImageService {
                 .map(attempt -> (NameOnlyGuessAttempt) attempt)
                 .anyMatch(NameOnlyGuessAttempt::isCorrect);
 
-        if (isGuessed) return 10;
-        return Math.min(guesses.size() + 1, 10);
+        if (isGuessed) return 8;
+
+        return Math.min(guesses.size() + 1, 8);
     }
 
     private List<GuessAttempt> getGuessesFromSession(AnonymousSessionDto session) {
