@@ -1,4 +1,4 @@
-package com.bombadle.service.game;
+package com.bombadle.service.game.core;
 
 import com.bombadle.dto.*;
 import com.bombadle.entity.CharacterCard;

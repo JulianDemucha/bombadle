@@ -1,4 +1,4 @@
-package com.bombadle.service.game;
+package com.bombadle.service.game.core;
 
 import com.bombadle.dto.CardField;
 import com.bombadle.dto.ClassicGuessAttempt;

@@ -1,4 +1,4 @@
-package com.bombadle.service.game;
+package com.bombadle.service.game.core;
 
 import com.bombadle.dto.QuotesGameStateDto;
 import com.bombadle.dto.response.AnonymousGuessResponse;
@@ -7,6 +7,7 @@ import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.GameMode;
 import com.bombadle.exception.CharacterCardNotFoundException;
+import com.bombadle.service.game.CharacterCardService;
 import com.bombadle.service.player.PlayerService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

@@ -1,14 +1,13 @@
-package com.bombadle.service.game;
+package com.bombadle.service.game.core;
 
 import com.bombadle.dto.*;
 import com.bombadle.dto.response.AnonymousGuessResponse;
 import com.bombadle.dto.response.GuessResponse;
-import com.bombadle.entity.AnonymousSession;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.GameMode;
 import com.bombadle.exception.CharacterCardNotFoundException;
-import com.bombadle.service.player.AnonymousSessionService;
+import com.bombadle.service.game.CharacterCardService;
 import com.bombadle.service.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -16,8 +15,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service

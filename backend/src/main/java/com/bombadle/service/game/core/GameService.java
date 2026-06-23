@@ -1,7 +1,6 @@
-package com.bombadle.service.game;
+package com.bombadle.service.game.core;
 
 import com.bombadle.config.CurrentGameStateWrapper;
-import com.bombadle.dto.QuotePromptDto;
 import com.bombadle.dto.QuotesStageOneAttempt;
 import com.bombadle.dto.response.AnonymousGuessResponse;
 import com.bombadle.dto.GuessAttempt;
@@ -11,6 +10,7 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.exception.AnonymousSessionAlreadyGuessedException;
 import com.bombadle.exception.StageLockedException;
 import com.bombadle.exception.UserAlreadyGuessedException;
+import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -5,7 +5,7 @@ import com.bombadle.dto.QuotesGameStateDto;
 import com.bombadle.dto.response.AnonymousGuessResponse;
 import com.bombadle.enums.GameMode;
 import com.bombadle.service.auth.cookie.AuthCookiesService;
-import com.bombadle.service.game.GameServiceFacade;
+import com.bombadle.service.game.core.GameServiceFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;

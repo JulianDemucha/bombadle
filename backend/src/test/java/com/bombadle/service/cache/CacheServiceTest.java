@@ -4,7 +4,7 @@ import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.enums.GameMode;
 import com.bombadle.repository.CharacterCardRepository;
-import com.bombadle.service.game.CardMatchingService;
+import com.bombadle.service.game.core.CardMatchingService;
 import com.bombadle.service.game.CharacterCardService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

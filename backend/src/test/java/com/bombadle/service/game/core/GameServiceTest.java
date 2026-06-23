@@ -1,4 +1,4 @@
-package com.bombadle.service.game;
+package com.bombadle.service.game.core;
 
 import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.dto.ClassicGuessAttempt;
@@ -13,6 +13,7 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.exception.AnonymousSessionAlreadyGuessedException;
 import com.bombadle.exception.StageLockedException;
 import com.bombadle.exception.UserAlreadyGuessedException;
+import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

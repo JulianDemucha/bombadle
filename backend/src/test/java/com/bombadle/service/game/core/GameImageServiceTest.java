@@ -1,4 +1,4 @@
-package com.bombadle.service.game;
+package com.bombadle.service.game.core;
 
 import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.dto.AnonymousSessionDto;
@@ -10,6 +10,7 @@ import com.bombadle.entity.GuessList;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.GameMode;
 import com.bombadle.enums.MatchType;
+import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import org.junit.jupiter.api.Nested;
