@@ -282,17 +282,12 @@
 @media (max-width: 500px) {
     .leaderboard-wrapper {
         width: calc(100% - 16px) !important;
-        padding: 8px 4px !important;
+        padding: 8px 8px !important;
     }
 
     .leaderboard-row, .leaderboard-header {
         column-gap: 2px;
         font-size: 14px;
-        padding: 6px 2px;
-    }
-
-    .leaderboard-player {
-        padding: 2px 2px;
-        gap: 4px;
+        padding: 6px 2px !important;
     }
 }

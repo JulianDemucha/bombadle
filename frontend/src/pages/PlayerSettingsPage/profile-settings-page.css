@@ -30,6 +30,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    margin-left: 0;
     cursor: pointer;
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
