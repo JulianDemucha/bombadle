@@ -32,9 +32,9 @@ function QuotesModePage() {
 
     return (
         <div className="quotes-mode-page classic-mode-page">
-            <Header />
+            <Header/>
             <div className="classic-mode-content">
-                <ImgTextBanner text="Dokończ dzisiejszy cytat!" altText="Dokończ Cytat" />
+                <ImgTextBanner text="Dokończ dzisiejszy cytat!" altText="Dokończ Cytat"/>
 
                 <QuoteStageOne
                     prompt={prompt}
@@ -44,7 +44,7 @@ function QuotesModePage() {
                 />
 
                 {isStageOneWon && (
-                    <div ref={stageTwoRef} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <div ref={stageTwoRef} style={{width: '100%', display: 'flex', justifyContent: 'center'}}>
                         <QuoteStageTwo
                             prompt={prompt}
                             stageTwoGuesses={stageTwoGuesses}
@@ -55,7 +55,8 @@ function QuotesModePage() {
                     </div>
                 )}
 
-                <div ref={winSectionRef} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div ref={winSectionRef}
+                     style={{width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                     {isLeaderboardExpanded ? (
                         <Top3Leaderboard
                             topThree={topThree}
@@ -75,14 +76,12 @@ function QuotesModePage() {
                         />
 
                     )}
-                    {isLeaderboardExpanded && (
-                        <div style={{ marginTop: '20px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                            <PreviousCharacterCard endpoint="/api/character-card/QUOTES_STAGE_2/previous-character-card" />
-                        </div>
-                    )}
+                    <div style={{marginTop: '20px', width: '100%', display: 'flex', justifyContent: 'center'}}>
+                        <PreviousCharacterCard endpoint="/api/character-card/QUOTES_STAGE_2/previous-character-card"/>
+                    </div>
                 </div>
             </div>
-            <Footer />
+            <Footer/>
         </div>
     );
 }

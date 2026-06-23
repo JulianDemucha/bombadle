@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import './ImagesModePage.css';
 import Header from "../../../components/Header.jsx";
 import Footer from "../../../components/Footer.jsx";
@@ -55,14 +55,14 @@ function ImagesModePage() {
 
     return (
         <div className="images-mode-page classic-mode-page">
-            <Header />
+            <Header/>
             <div className="classic-mode-content">
-                <ImgTextBanner text="Zgadnij postać ze zdjęcia!" altText="Zgadnij ze zdjęcia" />
+                <ImgTextBanner text="Zgadnij postać ze zdjęcia!" altText="Zgadnij ze zdjęcia"/>
 
                 <div className="images-mode-picture-container">
                     {isFirstLoad && isImageLoading && (
                         <div className="images-mode-loader-overlay">
-                            <GlobalLoader text="Ładowanie obrazu..." small={true} />
+                            <GlobalLoader text="Ładowanie obrazu..." small={true}/>
                         </div>
                     )}
 
@@ -77,7 +77,7 @@ function ImagesModePage() {
                     )}
                 </div>
 
-                <div className="images-mode-search-container" style={{ opacity: isWon ? 0.6 : 1 }}>
+                <div className="images-mode-search-container" style={{opacity: isWon ? 0.6 : 1}}>
                     <CharacterSearchBar
                         onSelectCharacterId={handleSelectCharacterId}
                         disabled={isWon || isAnimatingSuccess}
@@ -87,7 +87,7 @@ function ImagesModePage() {
                 {(hasGuesses || isLoading) && (
                     <div className="images-stage-guesses">
                         {isLoading ? (
-                            <GlobalLoader text="Ładowanie prób..." small={true} />
+                            <GlobalLoader text="Ładowanie prób..." small={true}/>
                         ) : (
                             guesses.map((guess, idx) => {
                                 const isCorrect = Boolean(guess.correct);
@@ -104,7 +104,7 @@ function ImagesModePage() {
 
                                 return (
                                     <div key={guess.id || idx} className={rowClass}>
-                                        <img src={imageSrc} alt={charName} className="stage-two-guess-avatar" />
+                                        <img src={imageSrc} alt={charName} className="stage-two-guess-avatar"/>
                                         <span className="stage-two-guess-name">{charName}</span>
                                     </div>
                                 );
@@ -133,14 +133,12 @@ function ImagesModePage() {
                         />
                     )}
 
-                    {isLeaderboardExpanded && (
-                        <div className="images-mode-previous-character">
-                            <PreviousCharacterCard endpoint="/api/character-card/IMAGES/previous-character-card" />
-                        </div>
-                    )}
+                    <div className="images-mode-previous-character">
+                        <PreviousCharacterCard endpoint="/api/character-card/IMAGES/previous-character-card"/>
+                    </div>
                 </div>
             </div>
-            <Footer />
+            <Footer/>
         </div>
     );
 }
