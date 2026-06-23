@@ -33,7 +33,7 @@ function MainPage() {
 
                 <NavImgButton
                     to="/Images"
-                    imgSrc="src/assets/buttons/button_training_mode.png"
+                    imgSrc="src/assets/buttons/button_images_mode.png"
                     altText="Tryb 'Zdjęcia'"
                     className="image-button image-button-responsive"
                     onError={handleImageError}
