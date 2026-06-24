@@ -1,13 +1,7 @@
 package com.bombadle.service.game;
 
-import com.bombadle.dto.CardField;
-import com.bombadle.dto.GuessAttempt;
 import com.bombadle.entity.AnonymousGuessList;
-import com.bombadle.entity.AnonymousSession;
-import com.bombadle.enums.MatchType;
 import com.bombadle.repository.AnonymousGuessListRepository;
-import com.bombadle.service.player.AnonymousSessionService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,132 +9,30 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AnonymousGuessListServiceTest {
 
-    @InjectMocks
-    private AnonymousGuessListService service;
-
     @Mock
     private AnonymousGuessListRepository repo;
 
-    @Mock
-    private AnonymousSessionService anonymousSessionService;
-
-    private AnonymousSession session;
-    private AnonymousGuessList guessList;
-    private final UUID sessionId = UUID.randomUUID();
-
-    @BeforeEach
-    void setUp() {
-        guessList = AnonymousGuessList.builder()
-                .guesses(new ArrayList<>())
-                .build();
-
-        session = AnonymousSession.builder()
-                .id(sessionId)
-                .hasGuessedToday(false)
-                .guessList(guessList)
-                .build();
-    }
-
-    @Nested
-    class RegisterGuessAndGetSessionIdTests {
-
-        @Test
-        void registerGuessAndGetSessionId_incorrectGuess_addsGuessAndReturnsId() {
-            // Arrange
-            GuessAttempt attempt = GuessAttempt.builder().name(new CardField<>("sigma_card", MatchType.NOT_MATCH)).build();
-            when(repo.save(guessList)).thenReturn(guessList);
-            when(anonymousSessionService.save(session)).thenReturn(session);
-
-            // Act
-            UUID resultId = service.registerGuessAndGetSessionId(session, attempt);
-
-            // Assert
-            assertEquals(sessionId, resultId);
-            assertTrue(guessList.getGuesses().contains(attempt));
-            assertFalse(session.isHasGuessedToday());
-            assertNull(session.getScoreTimestamp());
-
-            verify(repo).save(guessList);
-            verify(anonymousSessionService).save(session);
-        }
-
-        @Test
-        void registerGuessAndGetSessionId_correctGuess_addsGuessSetsTimestampAndReturnsId() {
-            // Arrange
-            GuessAttempt attempt = GuessAttempt.builder().name(new CardField<>("sigma_card", MatchType.MATCH)).build();
-            when(repo.save(guessList)).thenReturn(guessList);
-            when(anonymousSessionService.save(session)).thenReturn(session);
-
-            // Act
-            UUID resultId = service.registerGuessAndGetSessionId(session, attempt);
-
-            // Assert
-            assertEquals(sessionId, resultId);
-            assertTrue(guessList.getGuesses().contains(attempt));
-            assertTrue(session.isHasGuessedToday());
-            assertNotNull(session.getScoreTimestamp());
-
-            verify(repo).save(guessList);
-            verify(anonymousSessionService).save(session);
-        }
-    }
-
-    @Nested
-    class RegisterGuessTests {
-
-        @Test
-        void registerGuess_incorrectGuess_addsGuessWithoutSettingTimestamp() {
-            // Arrange
-            GuessAttempt attempt = GuessAttempt.builder().name(new CardField<>("sigma_card", MatchType.NOT_MATCH)).build();
-            when(repo.save(guessList)).thenReturn(guessList);
-
-            // Act
-            service.registerGuess(session, attempt);
-
-            // Assert
-            assertTrue(guessList.getGuesses().contains(attempt));
-            assertFalse(session.isHasGuessedToday());
-            assertNull(session.getScoreTimestamp());
-
-            verify(repo).save(guessList);
-            verify(anonymousSessionService).save(session);
-        }
-
-        @Test
-        void registerGuess_correctGuess_addsGuessAndSetsTimestamp() {
-            // Arrange
-            GuessAttempt attempt = GuessAttempt.builder().name(new CardField<>("sigma_card", MatchType.MATCH)).build();
-            when(repo.save(guessList)).thenReturn(guessList);
-
-            // Act
-            service.registerGuess(session, attempt);
-
-            // Assert
-            assertTrue(guessList.getGuesses().contains(attempt));
-            assertTrue(session.isHasGuessedToday());
-            assertNotNull(session.getScoreTimestamp());
-
-            verify(repo).save(guessList);
-            verify(anonymousSessionService).save(session);
-        }
-    }
+    @InjectMocks
+    private AnonymousGuessListService anonymousGuessListService;
 
     @Nested
     class DeleteTests {
 
         @Test
-        void delete_callsRepositoryDelete() {
+        void delete_validList_callsRepositoryDelete() {
+            // Arrange
+            AnonymousGuessList guessList = mock(AnonymousGuessList.class);
+
             // Act
-            service.delete(guessList);
+            anonymousGuessListService.delete(guessList);
 
             // Assert
             verify(repo).delete(guessList);
@@ -151,12 +43,31 @@ class AnonymousGuessListServiceTest {
     class TruncateTableTests {
 
         @Test
-        void truncateTable_callsRepositoryTruncate() {
+        void truncateTable_called_callsRepositoryTruncate() {
+            // Arrange
             // Act
-            service.truncateTable();
+            anonymousGuessListService.truncateTable();
 
             // Assert
             verify(repo).truncateTable();
+        }
+    }
+
+    @Nested
+    class SaveTests {
+
+        @Test
+        void save_validList_savesAndReturnsList() {
+            // Arrange
+            AnonymousGuessList guessList = mock(AnonymousGuessList.class);
+            when(repo.save(guessList)).thenReturn(guessList);
+
+            // Act
+            AnonymousGuessList result = anonymousGuessListService.save(guessList);
+
+            // Assert
+            assertEquals(guessList, result);
+            verify(repo).save(guessList);
         }
     }
 }

@@ -1,12 +1,12 @@
 package com.bombadle.service.auth;
 
+import com.bombadle.dto.ClassicGuessAttempt;
 import com.bombadle.dto.GuessAttempt;
 import com.bombadle.entity.*;
-import com.bombadle.service.game.AnonymousGuessListService;
+import com.bombadle.enums.GameMode;
 import com.bombadle.service.game.GuessListService;
+import com.bombadle.service.game.ScoreRegistrationService;
 import com.bombadle.service.player.AnonymousSessionService;
-import com.bombadle.service.player.PlayerService;
-import com.bombadle.service.stats.ScoreService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,119 +34,113 @@ public class AnonymousMergeServiceTest {
     private AnonymousSessionService anonymousSessionService;
 
     @Mock
-    private ScoreService scoreService;
-
-    @Mock
-    private PlayerService playerService;
-
-    @Mock
     private GuessListService guessListService;
 
     @Mock
-    private AnonymousGuessListService anonymousGuessListService;
-
-    private final UUID dummyUUID = UUID.randomUUID();
+    private ScoreRegistrationService scoreRegistrationService;
 
     @Nested
     class HandleAnonymousSessionMergeTests {
 
         @Test
         void handleAnonymousSessionMerge_anonymousSessionIdIsNull_doesNothing() {
-            anonymousMergeService.handleAnonymousSessionMerge(Player.builder().build(), null, null);
-            verifyNoInteractions(anonymousSessionService, scoreService, playerService, guessListService, anonymousGuessListService);
-        }
+            // ARRANGE
+            Player player = Player.builder().build();
 
-        @Test
-        void handleAnonymousSessionMerge_triggerMergeIdIsNull_doesNothing() {
-            anonymousMergeService.handleAnonymousSessionMerge(Player.builder().build(), dummyUUID, null);
-            verifyNoInteractions(anonymousSessionService, scoreService, playerService, guessListService, anonymousGuessListService);
+            // ACT
+            anonymousMergeService.handleAnonymousSessionMerge(player, null, true);
+
+            // ASSERT
+            verifyNoInteractions(anonymousSessionService, guessListService, scoreRegistrationService);
         }
 
         @Test
         void handleAnonymousSessionMerge_triggerMergeIdIsFalse_doesNothing() {
-            anonymousMergeService.handleAnonymousSessionMerge(Player.builder().build(), dummyUUID, false);
-            verifyNoInteractions(anonymousSessionService, scoreService, playerService, guessListService, anonymousGuessListService);
-        }
+            // ARRANGE
+            Player player = Player.builder().build();
+            UUID dummyUUID = UUID.randomUUID();
 
-        @Test
-        void handleAnonymousSessionMerge_playerHasGuessedToday_doesNothing() {
-            anonymousMergeService.handleAnonymousSessionMerge(Player.builder().hasGuessedToday(true).build(), dummyUUID, true);
-            verifyNoInteractions(anonymousSessionService, scoreService, playerService, guessListService, anonymousGuessListService);
+            // ACT
+            anonymousMergeService.handleAnonymousSessionMerge(player, dummyUUID, false);
+
+            // ASSERT
+            verifyNoInteractions(anonymousSessionService, guessListService, scoreRegistrationService);
         }
 
         @Test
         void handleAnonymousSessionMerge_sessionDoesntExist_doesNothing() {
+            // ARRANGE
+            Player player = Player.builder().build();
+            UUID dummyUUID = UUID.randomUUID();
             when(anonymousSessionService.findById(dummyUUID)).thenReturn(Optional.empty());
-            anonymousMergeService.handleAnonymousSessionMerge(Player.builder().hasGuessedToday(false).build(), dummyUUID, true);
-            verifyNoInteractions(scoreService, playerService, guessListService, anonymousGuessListService);
-        }
 
-        @Test
-        void handleAnonymousSessionMerge_anonymousHasNotGuessedToday_doesNothing() {
-            when(anonymousSessionService.findById(dummyUUID)).thenReturn(Optional.of(AnonymousSession.builder().hasGuessedToday(false).build()));
-            anonymousMergeService.handleAnonymousSessionMerge(Player.builder().hasGuessedToday(false).build(), dummyUUID, true);
-            verifyNoInteractions(scoreService, playerService, guessListService, anonymousGuessListService);
-        }
-
-        @Test
-        void handleAnonymousSessionMerge_everythingIsValid_mergeSuccess() {
-            // Arrange
-            Instant scoreTimeStamp = Instant.now().minusSeconds(60);
-            Player player = Player.builder().hasGuessedToday(false).build();
-
-            AnonymousGuessList anonGuessList = AnonymousGuessList.builder()
-                    .guesses(List.of(GuessAttempt.builder().build(), GuessAttempt.builder().build())) // size 2
-                    .build();
-
-            AnonymousSession session = AnonymousSession.builder()
-                    .scoreTimestamp(scoreTimeStamp)
-                    .hasGuessedToday(true)
-                    .guessList(anonGuessList)
-                    .build();
-
-            Score generatedScore = Score.builder().numberOfTries(2).scoreTimestamp(scoreTimeStamp).player(player).build();
-
-            when(anonymousSessionService.findById(dummyUUID)).thenReturn(Optional.of(session));
-            when(scoreService.registerScoreWithTimestamp(player, 2, scoreTimeStamp)).thenReturn(generatedScore);
-
-            // Act
+            // ACT
             anonymousMergeService.handleAnonymousSessionMerge(player, dummyUUID, true);
 
-            // Assert
-            verify(scoreService).registerScoreWithTimestamp(player, 2, scoreTimeStamp);
+            // ASSERT
+            verifyNoInteractions(guessListService, scoreRegistrationService);
+        }
 
+        @Test
+        void handleAnonymousSessionMerge_everythingIsValidAndGuessCorrect_mergeSuccessAndScoreRegistered() {
+            // ARRANGE
+            UUID dummyUUID = UUID.randomUUID();
+            Player player = mock(Player.class);
+            when(player.hasGuessedToday(GameMode.CLASSIC)).thenReturn(false);
+
+            ClassicGuessAttempt attempt1 = mock(ClassicGuessAttempt.class);
+            ClassicGuessAttempt attempt2 = mock(ClassicGuessAttempt.class);
+            when(attempt2.isCorrect()).thenReturn(true);
+
+            AnonymousGuessList anonGuessList = AnonymousGuessList.builder()
+                    .gameMode(GameMode.CLASSIC)
+                    .guesses(List.of(attempt1, attempt2))
+                    .build();
+
+            Map<GameMode, Instant> timestamps = Map.of(GameMode.CLASSIC, Instant.now());
+            AnonymousSession session = AnonymousSession.builder()
+                    .guessLists(List.of(anonGuessList))
+                    .scoreTimestamps(timestamps)
+                    .build();
+
+            when(anonymousSessionService.findById(dummyUUID)).thenReturn(Optional.of(session));
+
+            // ACT
+            anonymousMergeService.handleAnonymousSessionMerge(player, dummyUUID, true);
+
+            // ASSERT
             ArgumentCaptor<GuessList> guessListCaptor = ArgumentCaptor.forClass(GuessList.class);
-            verify(guessListService).manualSave(guessListCaptor.capture());
+            verify(guessListService).save(guessListCaptor.capture());
 
             GuessList savedGuessList = guessListCaptor.getValue();
             assertThat(savedGuessList.getGuesses()).hasSize(2);
-            assertThat(savedGuessList.getPlayer()).isEqualTo(player);
+            assertThat(savedGuessList.getGameMode()).isEqualTo(GameMode.CLASSIC);
 
-            verify(playerService).registerScore(player, generatedScore);
-
-            verify(anonymousGuessListService).delete(anonGuessList);
+            verify(scoreRegistrationService).registerPlayerWinWithTimestamp(
+                    player.getId(),
+                    2,
+                    GameMode.CLASSIC,
+                    session.getScoreTimestamps().get(GameMode.CLASSIC)
+            );
             verify(anonymousSessionService).delete(session);
         }
 
         @Test
-        void handleAnonymousSessionMerge_guessListIsNull_doesNothing() {
-            // Arrange
+        void handleAnonymousSessionMerge_guessListsIsNull_deletesSessionAndDoesNothingElse() {
+            // ARRANGE
+            UUID dummyUUID = UUID.randomUUID();
             AnonymousSession sessionWithoutGuessList = AnonymousSession.builder()
-                    .hasGuessedToday(true)
-                    .guessList(null)
+                    .guessLists(null)
                     .build();
 
             when(anonymousSessionService.findById(dummyUUID)).thenReturn(Optional.of(sessionWithoutGuessList));
 
-            // Act
-            anonymousMergeService.handleAnonymousSessionMerge(
-                    Player.builder().hasGuessedToday(false).build(),
-                    dummyUUID,
-                    true
-            );
+            // ACT
+            anonymousMergeService.handleAnonymousSessionMerge(Player.builder().build(), dummyUUID, true);
 
-            // Assert
-            verifyNoInteractions(scoreService, guessListService, playerService, anonymousGuessListService);
+            // ASSERT
+            verify(anonymousSessionService).delete(sessionWithoutGuessList);
+            verifyNoInteractions(guessListService, scoreRegistrationService);
         }
     }
 }

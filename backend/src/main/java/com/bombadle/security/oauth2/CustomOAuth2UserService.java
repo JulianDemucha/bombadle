@@ -4,7 +4,7 @@ import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
-import com.bombadle.service.auth.AuthenticationService;
+import com.bombadle.service.player.PlayerCredentialsService;
 import com.bombadle.service.player.PlayerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +24,7 @@ import java.time.Instant;
 public class CustomOAuth2UserService extends OidcUserService {
     private final PlayerService playerService;
     private static final Logger log = LoggerFactory.getLogger(CustomOAuth2UserService.class);
+    private final PlayerCredentialsService playerCredentialsService;
 
     @Override
     @Transactional
@@ -51,7 +52,7 @@ public class CustomOAuth2UserService extends OidcUserService {
 
         if (!player.getEmailVerified()) {
             log.info("Player {} logged in via OAuth2. Auto-verifying unverified LOCAL account email.", player.getLogin());
-            playerService.activateAccount(player.getId());
+            playerCredentialsService.activateAccount(player.getId());
         }
 
         return new CustomOAuth2PlayerUser(oidcUser, player);
@@ -63,14 +64,13 @@ public class CustomOAuth2UserService extends OidcUserService {
         String uniqueLogin = generateUniqueLogin(cleanName);
 
         Player newPlayer = Player.builder()
-                .displayName(cleanName)
+                .displayName(uniqueLogin)
                 .login(uniqueLogin)
                 .email(email.toLowerCase())
                 .passwordHash("")
                 .role(Role.ROLE_USER)
                 .createdAt(Instant.now())
                 .lastActiveAt(Instant.now())
-                .hasGuessedToday(false)
                 .accountLocked(false)
                 .emailVerified(true)
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
@@ -82,11 +82,22 @@ public class CustomOAuth2UserService extends OidcUserService {
 
     private String generateUniqueLogin(String baseName) {
         String login = baseName.toLowerCase();
+
+        if (login.length() > 16) {
+            login = login.substring(0, 16);
+        }
+
         int counter = 1;
         while (playerService.existsByLogin(login)) {
-            login = baseName.toLowerCase() + counter;
+            String suffix = String.valueOf(counter);
+
+            int allowedBaseLength = 16 - suffix.length();
+            String base = login.substring(0, Math.min(login.length(), allowedBaseLength));
+
+            login = base + suffix;
             counter++;
         }
+
         return login;
     }
 }

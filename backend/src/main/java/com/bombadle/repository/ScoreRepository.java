@@ -2,6 +2,7 @@ package com.bombadle.repository;
 
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.entity.Score;
+import com.bombadle.enums.GameMode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -38,10 +39,11 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
             )
             FROM Score s
             JOIN s.player p
+            WHERE s.gameMode = :gameMode 
             ORDER BY s.scoreTimestamp ASC
             LIMIT 3
             """)
-    List<LeaderboardEntryDto> findTop3();
+    List<LeaderboardEntryDto> findTop3(@Param("gameMode") GameMode gameMode);
 
     @Query("""
             SELECT new com.bombadle.dto.LeaderboardEntryDto(
@@ -49,7 +51,7 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                 (
                     SELECT COUNT(s2) + 1
                     FROM Score s2
-                    WHERE s2.scoreTimestamp < s.scoreTimestamp
+                    WHERE s2.gameMode = :gameMode AND s2.scoreTimestamp < s.scoreTimestamp
                 ),
                 p.displayName,
                 p.avatarImage,
@@ -59,9 +61,22 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
             )
             FROM Score s
             JOIN s.player p
-            WHERE p.id = :playerId
+            WHERE p.id = :playerId AND s.gameMode = :gameMode
             """)
-    Optional<LeaderboardEntryDto> findLeaderboardRankedEntryByPlayerId(Long playerId);
+    Optional<LeaderboardEntryDto> findLeaderboardRankedEntryByPlayerId(@Param("gameMode") GameMode gameMode, @Param("playerId") Long playerId);
+
+    @Query("""
+                SELECT COUNT(s) + 1
+                FROM Score s 
+                WHERE s.gameMode = :gameMode AND s.scoreTimestamp < (
+                    SELECT playerScore.scoreTimestamp 
+                    FROM Score playerScore 
+                    WHERE playerScore.player.id = :playerId AND playerScore.gameMode = :gameMode
+                )
+            """)
+    Long findRankByPlayerId(@Param("gameMode") GameMode gameMode, @Param("playerId") Long playerId);
+
+    Optional<Score> findByPlayerIdAndGameMode(Long playerId, GameMode gameMode);
 
     @Query("""
                 SELECT COUNT(s) + 1
@@ -86,13 +101,15 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
             )
             FROM Score s
             JOIN s.player p
+            WHERE s.gameMode = :gameMode
             ORDER BY s.scoreTimestamp ASC
             """,
             countQuery = """
                     SELECT COUNT(s.id)
                     FROM Score s
+                    WHERE s.gameMode = :gameMode
                     """)
-    Page<LeaderboardEntryDto> findPagedLeaderboard(Pageable pageable);
+    Page<LeaderboardEntryDto> findPagedLeaderboard(@Param("gameMode") GameMode gameMode, Pageable pageable);
 
     @EntityGraph(attributePaths = "player")
     Page<Score> findAll(Pageable pageable);

@@ -20,7 +20,7 @@ class GlobalExceptionHandlerIT {
     private MockMvc mockMvc;
 
     @RestController
-    private static class DummyController {
+    private static class DummyController extends BaseIT {
 
         @GetMapping("/test/illegal-argument")
         public void throwIllegalArgument() {
@@ -69,7 +69,7 @@ class GlobalExceptionHandlerIT {
 
         @GetMapping("/test/card-already-guessed")
         public void throwCardAlreadyGuessed() {
-            throw new CardAlreadyGuessedException();
+            throw new UserAlreadyGuessedException();
         }
 
         @GetMapping("/test/anonymous-session-already-guessed")
@@ -86,6 +86,11 @@ class GlobalExceptionHandlerIT {
         public void throwUnverifiedEmail() {
             throw new UnverifiedEmailException("Account isn't verified", "test@test.com");
         }
+
+        @GetMapping("/test/stage-locked")
+        public void throwStageLocked() {
+            throw new StageLockedException("You must complete Quotes Stage 1 before playing Stage 2.");
+        }
     }
 
     @BeforeEach
@@ -100,6 +105,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenIllegalArgument_returns400AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/illegal-argument"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.statusCode").value(400))
@@ -109,6 +115,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenOtpNotFound_returns404AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/otp-not-found"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.statusCode").value(404))
@@ -118,6 +125,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenExpiredOtp_returns410AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/expired-otp"))
                     .andExpect(status().isGone())
                     .andExpect(jsonPath("$.statusCode").value(410))
@@ -127,6 +135,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenEmailRateLimit_returns429AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/email-rate-limit"))
                     .andExpect(status().isTooManyRequests())
                     .andExpect(jsonPath("$.statusCode").value(429))
@@ -136,6 +145,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenUsernameNotFound_returns404AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/404"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.statusCode").value(404))
@@ -145,6 +155,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenCharacterCardNotFound_returns404AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/character-card-not-found"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.statusCode").value(404))
@@ -154,6 +165,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenRegistrationConflict_returns409AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/409"))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.statusCode").value(409))
@@ -163,15 +175,17 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenCardAlreadyGuessed_returns409AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/card-already-guessed"))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.statusCode").value(409))
                     .andExpect(jsonPath("$.error").value("Card Already Guessed"))
-                    .andExpect(jsonPath("$.message").value("Card already guessed today"));
+                    .andExpect(jsonPath("$.message").value("Card already guessed in that mode today"));
         }
 
         @Test
         void whenAnonymousSessionAlreadyGuessed_returns409AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/anonymous-session-already-guessed"))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.statusCode").value(409))
@@ -181,6 +195,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenInvalidCredentials_returns401AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/401"))
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.statusCode").value(401))
@@ -190,6 +205,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenAccessDenied_returns403AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/403"))
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.statusCode").value(403))
@@ -199,12 +215,23 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenUnverifiedEmail_returns403AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/unverified-email"))
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.statusCode").value(403))
                     .andExpect(jsonPath("$.error").value("Unverified Email"))
                     .andExpect(jsonPath("$.message").value("Account isn't verified"))
                     .andExpect(jsonPath("$.email").value("test@test.com"));
+        }
+
+        @Test
+        void whenStageLocked_returns403AndJson() throws Exception {
+            // ACT & ASSERT
+            mockMvc.perform(get("/test/stage-locked"))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.statusCode").value(403))
+                    .andExpect(jsonPath("$.error").value("STAGE_LOCKED"))
+                    .andExpect(jsonPath("$.message").value("You must complete Quotes Stage 1 before playing Stage 2."));
         }
     }
 
@@ -213,6 +240,7 @@ class GlobalExceptionHandlerIT {
 
         @Test
         void whenGlobalException_returns500AndJson() throws Exception {
+            // ACT & ASSERT
             mockMvc.perform(get("/test/500"))
                     .andExpect(status().isInternalServerError())
                     .andExpect(jsonPath("$.statusCode").value(500))

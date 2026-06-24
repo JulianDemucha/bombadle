@@ -98,23 +98,25 @@ public class AdminUserService {
             }
         }
 
-
         if (changed) {
             playerRepository.save(target);
             adminAuditService.logAction(actorId, actionType.toString(), null);
             if (profileChanged) {
-                cacheService.clear("classic-leaderboard");
+                cacheService.clear("paged-leaderboard"); // ZMIANA NAZWY CACHE
                 cacheService.clear("top-3-leaderboard");
             }
         }
     }
 
     private boolean clearTodayScore(Player target) {
-        if (Boolean.TRUE.equals(target.getHasGuessedToday())) {
-            target.setHasGuessedToday(false);
-            target.setTodayScore(null);
-            int wins = target.getTotalSuccessfulGuesses();
-            target.setTotalSuccessfulGuesses(Math.max(0, wins - 1));
+        int todayWinsCount = target.getCompletedModesToday().size();
+
+        if (todayWinsCount > 0) {
+            target.resetDailyProgress();
+
+            int totalWins = target.getTotalSuccessfulGuesses();
+            target.setTotalSuccessfulGuesses(Math.max(0, totalWins - todayWinsCount));
+
             return true;
         }
         return false;

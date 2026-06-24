@@ -52,7 +52,6 @@ public class AuthenticationService {
                 .lastActiveAt(Instant.now())
                 .avatarImage(AvatarImage.AVATAR_DEFAULT)
                 .authProvider(PlayerAuthProvider.LOCAL)
-                .hasGuessedToday(false)
                 .accountLocked(false)
                 .emailVerified(emailConfig.autoActivateAccount())
                 .build();

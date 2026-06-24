@@ -6,6 +6,7 @@ import com.bombadle.dto.request.VerificationCodeRequest;
 import com.bombadle.dto.request.VerificationCodeWithEmailRequest;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.EmailVerificationType;
+import com.bombadle.service.player.PlayerCredentialsService;
 import com.bombadle.service.player.PlayerDeletionService;
 import com.bombadle.service.player.PlayerService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class EmailConfirmationService {
     private final VerificationTokenService verificationTokenService;
     private final PlayerDeletionService playerDeletionService;
     private final PlayerService playerService;
+    private final PlayerCredentialsService playerCredentialsService;
 
     public void confirmEmailVerification(VerificationCodeWithEmailRequest request) {
         Player player = playerService.findByEmail(request.email()).orElseThrow(
@@ -29,7 +31,7 @@ public class EmailConfirmationService {
         );
 
         verificationTokenService.verifyAndConsume(player.getId(), EmailVerificationType.ACCOUNT_ACTIVATION, request.code());
-        playerService.activateAccount(player.getId());
+        playerCredentialsService.activateAccount(player.getId());
         log.info("Account for player: {} has been successfully activated.", player.getEmail());
     }
 
@@ -39,7 +41,7 @@ public class EmailConfirmationService {
         );
 
         verificationTokenService.verifyAndConsume(player.getId(), EmailVerificationType.PASSWORD_RESET, request.code());
-        playerService.changePassword(player.getId(), request.newPassword());
+        playerCredentialsService.changePassword(player.getId(), request.newPassword());
         log.info("Password has been successfully reset for player {}", player.getEmail());
     }
 

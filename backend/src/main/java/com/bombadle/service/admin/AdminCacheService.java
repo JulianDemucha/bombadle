@@ -2,7 +2,9 @@ package com.bombadle.service.admin;
 
 import com.bombadle.config.ApplicationConfigProperties;
 import com.bombadle.dto.request.AdminCacheFlushRequest;
-import com.bombadle.dto.queue.PendingCacheFlushPayload;
+// Pamiętaj o imporcie odpowiedniej klasy/interfejsu CacheService,
+// który posiada metody evictAllCaches() oraz evictCache()
+import com.bombadle.service.cache.CacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,9 +13,10 @@ import org.springframework.stereotype.Service;
 public class AdminCacheService {
     private final ApplicationConfigProperties.CacheConfig cacheConfig;
     private final AdminAuditService adminAuditService;
-    private final AdminChangeQueueService changeQueueService;
 
-    public void enqueueFlush(long actorId, AdminCacheFlushRequest request) {
+    private final CacheService cacheService;
+
+    public void flushCache(long actorId, AdminCacheFlushRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Request is required");
         }
@@ -27,10 +30,14 @@ public class AdminCacheService {
             throw new IllegalArgumentException("Unknown cache name: " + cacheName);
         }
 
-        PendingCacheFlushPayload payload = new PendingCacheFlushPayload(cacheName, flushAll);
+        if (flushAll) {
+            cacheService.evictAllCaches();
+        } else {
+            cacheService.evictCache(cacheName);
+        }
+
         String actionType = flushAll ? "flush_cache_all" : "flush_cache_" + cacheName;
-        String actionKey = flushAll ? "cache:all" : "cache:" + cacheName;
-        changeQueueService.enqueue(actionType, actionKey, payload);
+
         adminAuditService.logAction(actorId, actionType, null);
     }
 }

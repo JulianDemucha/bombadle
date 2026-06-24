@@ -23,3 +23,10 @@
     stroke-linejoin: round;
     filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.2));
 }
+
+@media (max-width: 500px) {
+    .back-arrow-button {
+        padding-left: 0;
+        margin-left: -50px;
+    }
+}

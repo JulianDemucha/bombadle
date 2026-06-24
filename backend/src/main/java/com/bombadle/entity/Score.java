@@ -1,5 +1,6 @@
 package com.bombadle.entity;
 
+import com.bombadle.enums.GameMode;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +18,8 @@ public class Score {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(mappedBy = "todayScore", fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id")
     private Player player;
 
     @Column(name = "score_time_stamp", nullable = false)
@@ -26,10 +28,15 @@ public class Score {
     @Column(name = "number_of_tries", nullable = false)
     private int numberOfTries;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "game_mode")
+    private GameMode gameMode;
+
     @Builder
-    public Score(Player player, Instant scoreTimestamp, int numberOfTries) {
+    public Score(Player player, Instant scoreTimestamp, int numberOfTries, GameMode gameMode) {
         this.player = player;
         this.scoreTimestamp = scoreTimestamp;
         this.numberOfTries = numberOfTries;
+        this.gameMode = gameMode;
     }
 }

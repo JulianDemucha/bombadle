@@ -12,7 +12,9 @@ import com.bombadle.service.auth.cookie.CookieService;
 import com.bombadle.service.auth.email.EmailActionInitiator;
 import com.bombadle.service.auth.email.EmailConfirmationService;
 import com.bombadle.service.player.AnonymousSessionService;
+import com.bombadle.service.player.PlayerCredentialsService;
 import com.bombadle.service.player.PlayerService;
+import com.bombadle.service.player.PlayerUpdateService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -35,6 +37,8 @@ public class PlayerController {
     private final CookieService cookieService;
     private final EmailActionInitiator emailActionInitiator;
     private final EmailConfirmationService emailConfirmationService;
+    private final PlayerUpdateService playerUpdateService;
+    private final PlayerCredentialsService playerCredentialsService;
 
     @GetMapping("/all")
     public Page<PlayerDto> getAllPlayers(Pageable pageable) {
@@ -43,7 +47,7 @@ public class PlayerController {
 
     @GetMapping("/me")
     public ResponseEntity<PlayerDto> getAuthenticatedPlayer(@AuthenticationPrincipal PlayerPrincipal userDetails) {
-        return ResponseEntity.ok(playerService.getAuthenticatedPlayer(userDetails.getPlayerId()));
+        return ResponseEntity.ok(playerService.getAuthenticatedPlayerDto(userDetails.getPlayerId()));
     }
 
     @PutMapping("/me")
@@ -52,7 +56,7 @@ public class PlayerController {
             @AuthenticationPrincipal PlayerPrincipal userDetails
     ) {
 
-        return ResponseEntity.ok(playerService.updatePlayer(playerUpdateRequest, userDetails.getPlayerId()));
+        return ResponseEntity.ok(playerUpdateService.updatePlayer(playerUpdateRequest, userDetails.getPlayerId()));
     }
 
     @GetMapping("/anonymous/me")
@@ -60,7 +64,7 @@ public class PlayerController {
             @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId
     ) {
 
-        AnonymousSessionDto anonymousSessionDto = anonymousSessionService.getAnonymousSession(anonymousSessionId);
+        AnonymousSessionDto anonymousSessionDto = anonymousSessionService.getAnonymousSessionOrCreateNew(anonymousSessionId);
         if(anonymousSessionId == null || !anonymousSessionId.equals(anonymousSessionDto.id())){
             ResponseCookie cookie = cookieService.createCookie(
                     "ANON_SESSION_ID",
@@ -80,7 +84,7 @@ public class PlayerController {
             @Valid @RequestBody ChangePasswordRequest request,
             @AuthenticationPrincipal PlayerPrincipal principal) {
 
-        playerService.changePasswordWithVerification(
+        playerCredentialsService.changePasswordWithVerification(
                 principal.getPlayerId(),
                 request
         );
@@ -92,7 +96,7 @@ public class PlayerController {
             @RequestBody @Valid SetPasswordRequest request,
             @AuthenticationPrincipal PlayerPrincipal principal
     ){
-        playerService.setPasswordIfBlank(principal.getPlayerId(), request.password());
+        playerCredentialsService.setPasswordIfBlank(principal.getPlayerId(), request.password());
         return ResponseEntity.ok().build();
     }
 

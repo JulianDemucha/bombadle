@@ -1,14 +1,15 @@
 package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
-import com.bombadle.dto.AnonymousGuessResponse;
-import com.bombadle.dto.GuessResponse;
-import com.bombadle.service.auth.cookie.CookieService;
-import com.bombadle.service.game.CardMatchingService;
-import com.bombadle.service.game.GuessListService;
+import com.bombadle.dto.QuotesGameStateDto;
+import com.bombadle.dto.response.AnonymousGuessResponse;
+import com.bombadle.enums.GameMode;
+import com.bombadle.service.auth.cookie.AuthCookiesService;
+import com.bombadle.service.game.core.GameServiceFacade;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,83 +21,101 @@ import java.util.UUID;
 @RequestMapping("/api/card-guessing")
 @RequiredArgsConstructor
 public class CardGuessingController {
-    private final CardMatchingService cardMatchingService;
-    private final GuessListService guessListService;
-    private final CookieService cookieService;
+    private final AuthCookiesService authCookiesService;
+    private final GameServiceFacade gameServiceFacade;
 
-
-    /// Returns an GuessResponse which has CardField parameters - for example:
-    /// ```json
-    /// "correct": "false",
-    ///{
-    ///     "name": {
-    ///         "value": "Sebastian Bąk",
-    ///         "match": "NOT_MATCH"
-    ///},
-    ///     "gender": {
-    ///         "value": "MALE",
-    ///         "match": "MATCH"
-    ///},
-    ///     "race": {
-    ///         "value": "Czlowiek",
-    ///         "match": "MATCH"
-    ///},
-    ///     "alive": {
-    ///         "value": true,
-    ///         "match": "MATCH"
-    ///},
-    ///     "colors": {
-    ///         "value": [
-    ///             "ZIELONY"
-    ///],
-    ///         "match": "NOT_MATCH"
-    ///},
-    ///     "affiliations": {
-    ///         "value": [
-    ///             "Gwiezdna_Flota",
-    ///             "Szeregowy_Gwiezdnej_Floty"
-    ///],
-    ///         "match": "NOT_FULL_MATCH"
-    ///},
-    ///     "firstAppearanceEpisode": {
-    ///         "value": 1,
-    ///         "match": "MATCH"
-    ///}
-    ///}
-    ///```
-    @PostMapping("/classic/guess/{id}")
-    public GuessResponse compareCard(
-            @PathVariable Long id,
-            @AuthenticationPrincipal PlayerPrincipal userDetails
-    ) {
-        return cardMatchingService.compareCharacterCardClassic(id, userDetails.getPlayerId());
-    }
-
-    @PostMapping("/classic/anonymous-guess/{id}")
-    public ResponseEntity<?> compareCardAnonymous(
+    // (Classic, Images, Quotes Stage 2)
+    @PostMapping("/{gameMode}/guess/{id}")
+    public ResponseEntity<?> play(
+            @PathVariable String gameMode,
             @PathVariable Long id,
             @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
             @AuthenticationPrincipal PlayerPrincipal userDetails
     ) {
+        GameMode mode = gameMode.equals("quotes") ?
+                GameMode.QUOTES_STAGE_2 : GameMode.valueOf(gameMode.toUpperCase());
+
         if (userDetails != null) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body("Only for non-logged in users");
+            return ResponseEntity.ok(
+                    gameServiceFacade.play(id, userDetails.getPlayerId(), mode)
+            );
         }
 
-        AnonymousGuessResponse anonymousGuessResponse = cardMatchingService.compareCharacterCardClassicAnonymous(id, anonymousSessionId);
+        AnonymousGuessResponse anonymousGuessResponse =
+                gameServiceFacade.playAnonymous(id, anonymousSessionId, mode);
 
         if (anonymousSessionId == null) {
-            ResponseCookie cookie = cookieService.createCookie(
-                    "ANON_SESSION_ID",
-                    anonymousGuessResponse.anonymousSessionId().toString(),
-                    60 * 60 * 24 //24h
+            ResponseCookie cookie = authCookiesService.createAnonymousSessionCookie(
+                    anonymousGuessResponse.anonymousSessionId().toString()
             );
+
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
                     .body(anonymousGuessResponse.guessResponse());
         }
 
-        return ResponseEntity.ok((anonymousGuessResponse).guessResponse());
+        return ResponseEntity.ok(anonymousGuessResponse.guessResponse());
+    }
+
+    @PostMapping("/quotes/guess")
+    public ResponseEntity<?> playQuotesStageOne(
+            @RequestParam String guess,
+            @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
+            @AuthenticationPrincipal PlayerPrincipal userDetails
+    ) {
+        if (userDetails != null) {
+            return ResponseEntity.ok(
+                    gameServiceFacade.playQuotesStageOne(guess, userDetails.getPlayerId())
+            );
+        }
+
+        AnonymousGuessResponse anonymousGuessResponse =
+                gameServiceFacade.playAnonymousQuotesStageOne(guess, anonymousSessionId);
+
+        if (anonymousSessionId == null) {
+            ResponseCookie cookie = authCookiesService.createAnonymousSessionCookie(
+                    anonymousGuessResponse.anonymousSessionId().toString()
+            );
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(anonymousGuessResponse.guessResponse());
+        }
+
+        return ResponseEntity.ok(anonymousGuessResponse.guessResponse());
+    }
+
+    @GetMapping("/quotes/prompt")
+    public ResponseEntity<QuotesGameStateDto> getQuotePrompt(
+            @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
+            @AuthenticationPrincipal PlayerPrincipal userDetails
+    ) {
+        if (userDetails != null) {
+            return ResponseEntity.ok(
+                    gameServiceFacade.getQuotesGameStateForPlayer(userDetails.getPlayerId())
+            );
+        }
+
+        return ResponseEntity.ok(
+                gameServiceFacade.getQuotesGameStateForAnonymous(anonymousSessionId)
+        );
+    }
+
+    @GetMapping(value = "/images/current", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<Resource> getCurrentImage(
+            @CookieValue(value = "ANON_SESSION_ID", required = false) UUID anonymousSessionId,
+            @AuthenticationPrincipal PlayerPrincipal userDetails
+    ) {
+        Long playerId = (userDetails != null) ? userDetails.getPlayerId() : null;
+
+        Resource resource = gameServiceFacade.getImagesModeCurrentResource(playerId, anonymousSessionId);
+
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                .body(resource);
     }
 }

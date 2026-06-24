@@ -1,30 +1,42 @@
 package com.bombadle.service.cache;
 
-import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.entity.CharacterCard;
+import com.bombadle.enums.GameMode;
 import com.bombadle.repository.CharacterCardRepository;
+import com.bombadle.service.game.core.CardMatchingService;
 import com.bombadle.service.game.CharacterCardService;
-import com.bombadle.service.game.MatchUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CacheService {
     private final CharacterCardRepository characterCardRepository;
     private final CacheManager cacheManager;
-    private final MatchUtils matchUtils;
-    private final CurrentCharacterCardWrapper currentCharacterCardWrapper;
+    private final CardMatchingService cardMatchingService;
+    private final CurrentGameStateWrapper currentGameStateWrapper;
     private final CharacterCardService characterCardService;
 
     @CacheEvict(value = "character-card-compare", allEntries = true, beforeInvocation = true)
     public void reloadCardCompareCache() {
-        CharacterCard currentCharacterCard = currentCharacterCardWrapper.get();
-        characterCardRepository.findAll().forEach(cc -> {
-            matchUtils.compareCharacterCards(cc, currentCharacterCard);
-        });
+        List<CharacterCard> allCards = characterCardRepository.findAll();
+
+        for (GameMode mode : GameMode.values()) {
+            if (mode == GameMode.QUOTES_STAGE_1) {
+                continue;
+            }
+
+            CharacterCard currentCardForMode = currentGameStateWrapper.getCard(mode);
+
+            allCards.forEach(guessCard -> {
+                cardMatchingService.compareCharacterCards(guessCard, currentCardForMode, mode);
+            });
+        }
     }
 
     @CacheEvict(value = "search-index")

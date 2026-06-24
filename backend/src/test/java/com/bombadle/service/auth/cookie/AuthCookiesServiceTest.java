@@ -183,4 +183,30 @@ class AuthCookiesServiceTest {
             }
         }
     }
+
+    @Nested
+    class CreateAnonymousSessionCookieTests {
+
+        @Test
+        void createAnonymousSessionCookie_sessionIdIsNull_throwsNullPointerException() {
+            assertThrows(NullPointerException.class, () -> authCookiesService.createAnonymousSessionCookie(null));
+        }
+
+        @Test
+        void createAnonymousSessionCookie_sessionIdIsValid_createsAndReturnsCookie() {
+            // Arrange
+            String sessionId = "anon-session-123";
+            long expirationSeconds = 60 * 60 * 24L; // 24h
+            ResponseCookie expectedCookie = ResponseCookie.from("ANON_SESSION_ID", sessionId).build();
+
+            when(cookieService.createCookie("ANON_SESSION_ID", sessionId, expirationSeconds)).thenReturn(expectedCookie);
+
+            // Act
+            ResponseCookie actualCookie = authCookiesService.createAnonymousSessionCookie(sessionId);
+
+            // Assert
+            assertThat(actualCookie).isEqualTo(expectedCookie);
+            verify(cookieService).createCookie("ANON_SESSION_ID", sessionId, expirationSeconds);
+        }
+    }
 }

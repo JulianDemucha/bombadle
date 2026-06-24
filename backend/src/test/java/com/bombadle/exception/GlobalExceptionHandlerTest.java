@@ -1,5 +1,8 @@
 package com.bombadle.exception;
 
+import com.bombadle.dto.response.error.ErrorResponse;
+import com.bombadle.dto.response.error.ErrorResponseWithEmail;
+import com.bombadle.dto.response.error.RateLimitErrorResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -173,7 +176,7 @@ class GlobalExceptionHandlerTest {
         @Test
         void handleCardAlreadyGuessed_returns409AndCorrectBody() {
             // Arrange
-            CardAlreadyGuessedException exception = new CardAlreadyGuessedException();
+            UserAlreadyGuessedException exception = new UserAlreadyGuessedException();
 
             // Act
             ResponseEntity<ErrorResponse> response = handler.handleCardAlreadyGuessed(exception);
@@ -183,7 +186,7 @@ class GlobalExceptionHandlerTest {
             assertNotNull(response.getBody());
             assertEquals(409, response.getBody().statusCode());
             assertEquals("Card Already Guessed", response.getBody().error());
-            assertEquals("Card already guessed today", response.getBody().message());
+            assertEquals("Card already guessed in that mode today", response.getBody().message());
         }
 
         @Test
@@ -325,6 +328,22 @@ class GlobalExceptionHandlerTest {
             assertEquals(403, response.getBody().statusCode());
             assertEquals("Invalid verification code", response.getBody().error());
             assertEquals("Wrong code", response.getBody().message());
+        }
+
+        @Test
+        void handleStageLockedException_returns403AndCorrectBody() {
+            // Arrange
+            StageLockedException exception = new StageLockedException("You must complete Quotes Stage 1 before playing Stage 2.");
+
+            // Act
+            ResponseEntity<ErrorResponse> response = handler.handleStageLockedException(exception);
+
+            // Assert
+            assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals(403, response.getBody().statusCode());
+            assertEquals("STAGE_LOCKED", response.getBody().error());
+            assertEquals("You must complete Quotes Stage 1 before playing Stage 2.", response.getBody().message());
         }
     }
 

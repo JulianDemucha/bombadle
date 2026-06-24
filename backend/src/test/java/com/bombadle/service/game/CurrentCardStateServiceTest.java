@@ -1,8 +1,10 @@
 package com.bombadle.service.game;
 
-import com.bombadle.config.CurrentCharacterCardWrapper;
+import com.bombadle.config.CurrentGameStateWrapper;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.CurrentCardState;
+import com.bombadle.entity.Quote;
+import com.bombadle.enums.GameMode;
 import com.bombadle.repository.CurrentCardStateRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,10 +14,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.NoSuchElementException;
+import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,94 +28,122 @@ class CurrentCardStateServiceTest {
     private CurrentCardStateRepository repo;
 
     @Mock
-    private CurrentCharacterCardWrapper currentCharacterCardWrapper;
+    private CurrentGameStateWrapper currentGameStateWrapper;
 
     @InjectMocks
     private CurrentCardStateService currentCardStateService;
 
     @Nested
-    class SetUpCurrentCardIfStateExists {
+    class SetUpCurrentCardIfStateExistsTests {
 
         @Test
-        void stateExists_setsCard() {
-            CharacterCard card = CharacterCard.builder().build();
+        void setUpCurrentCardIfStateExists_stateExists_setsCardsAndQuoteInWrapper() {
+            // ARRANGE
             CurrentCardState state = new CurrentCardState();
-            state.setCurrentCharacter(card);
+            CharacterCard card = mock(CharacterCard.class);
+            Quote quote = mock(Quote.class);
+            state.getCurrentCards().put(GameMode.CLASSIC, card);
+            state.setCurrentQuote(quote);
 
             when(repo.findById(1)).thenReturn(Optional.of(state));
 
+            // ACT
             currentCardStateService.setUpCurrentCardIfStateExists();
 
-            verify(currentCharacterCardWrapper, times(1)).set(card);
+            // ASSERT
+            verify(currentGameStateWrapper).set(GameMode.CLASSIC, card);
+            verify(currentGameStateWrapper).setQuote(quote);
         }
 
         @Test
-        void stateDoesNotExist_doesNothing() {
+        void setUpCurrentCardIfStateExists_stateDoesNotExist_doesNothing() {
+            // ARRANGE
             when(repo.findById(1)).thenReturn(Optional.empty());
 
+            // ACT
             currentCardStateService.setUpCurrentCardIfStateExists();
 
-            verify(currentCharacterCardWrapper, never()).set(any());
+            // ASSERT
+            verifyNoInteractions(currentGameStateWrapper);
         }
     }
 
     @Nested
-    class GetCurrentCardState {
+    class GetCurrentCardStateTests {
 
         @Test
-        void stateExists_returnsState() {
+        void getCurrentCardState_stateExists_returnsState() {
+            // ARRANGE
             CurrentCardState expectedState = new CurrentCardState();
             when(repo.findById(1)).thenReturn(Optional.of(expectedState));
 
+            // ACT
             CurrentCardState actualState = currentCardStateService.getCurrentCardState();
 
+            // ASSERT
             assertEquals(expectedState, actualState);
         }
 
         @Test
-        void stateDoesNotExist_throwsException() {
+        void getCurrentCardState_stateDoesNotExist_throwsException() {
+            // ARRANGE
             when(repo.findById(1)).thenReturn(Optional.empty());
 
-            assertThrows(NoSuchElementException.class, () -> currentCardStateService.getCurrentCardState());
+            // ACT & ASSERT
+            assertThrows(IllegalStateException.class, () -> currentCardStateService.getCurrentCardState());
         }
     }
 
     @Nested
-    class UpdateCurrentCard {
+    class UpdateCurrentStateTests {
 
         @Test
-        void stateExists_updatesExistingState() {
-            CharacterCard oldCard = CharacterCard.builder().build();
-            CharacterCard newCard = CharacterCard.builder().build();
+        void updateCurrentState_stateExists_updatesAndSavesState() {
+            // ARRANGE
+            CharacterCard oldCard = mock(CharacterCard.class);
+            CharacterCard newCard = mock(CharacterCard.class);
+            Map<GameMode, CharacterCard> newCards = Map.of(GameMode.CLASSIC, newCard);
+
+            Quote oldQuote = mock(Quote.class);
+            Quote newQuote = mock(Quote.class);
 
             CurrentCardState existingState = new CurrentCardState();
-            existingState.setCurrentCharacter(oldCard);
+            existingState.getCurrentCards().put(GameMode.CLASSIC, oldCard);
+            existingState.setCurrentQuote(oldQuote);
 
             when(repo.findById(1)).thenReturn(Optional.of(existingState));
 
-            currentCardStateService.updateCurrentCard(newCard);
+            // ACT
+            currentCardStateService.updateCurrentState(newCards, newQuote);
 
-            assertEquals(oldCard, existingState.getPreviousCharacter());
-            assertEquals(newCard, existingState.getCurrentCharacter());
-
-            // Verify dirty checking is used (no explicit save)
-            verify(repo, never()).save(any());
+            // ASSERT
+            assertEquals(oldCard, existingState.getPreviousCards().get(GameMode.CLASSIC));
+            assertEquals(newCard, existingState.getCurrentCards().get(GameMode.CLASSIC));
+            assertEquals(oldQuote, existingState.getPreviousQuote());
+            assertEquals(newQuote, existingState.getCurrentQuote());
+            verify(repo).save(existingState);
         }
 
         @Test
-        void stateDoesNotExist_createsAndSavesNewState() {
-            CharacterCard newCard = CharacterCard.builder().build();
+        void updateCurrentState_stateDoesNotExist_createsNewAndSavesState() {
+            // ARRANGE
+            CharacterCard newCard = mock(CharacterCard.class);
+            Map<GameMode, CharacterCard> newCards = Map.of(GameMode.CLASSIC, newCard);
+            Quote newQuote = mock(Quote.class);
+
             when(repo.findById(1)).thenReturn(Optional.empty());
 
-            currentCardStateService.updateCurrentCard(newCard);
+            // ACT
+            currentCardStateService.updateCurrentState(newCards, newQuote);
 
+            // ASSERT
             ArgumentCaptor<CurrentCardState> stateCaptor = ArgumentCaptor.forClass(CurrentCardState.class);
-            verify(repo, times(1)).save(stateCaptor.capture());
+            verify(repo).save(stateCaptor.capture());
 
             CurrentCardState savedState = stateCaptor.getValue();
             assertEquals(1, savedState.getId());
-            assertEquals(newCard, savedState.getCurrentCharacter());
-            assertEquals(newCard, savedState.getPreviousCharacter());
+            assertEquals(newCard, savedState.getCurrentCards().get(GameMode.CLASSIC));
+            assertEquals(newQuote, savedState.getCurrentQuote());
         }
     }
 }

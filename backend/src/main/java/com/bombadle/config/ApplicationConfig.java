@@ -91,8 +91,8 @@ public class ApplicationConfig {
 
 
     @Bean
-    public CurrentCharacterCardWrapper currentCharacterCard() {
-        return new CurrentCharacterCardWrapper(null);
+    public CurrentGameStateWrapper currentCharacterCard() {
+        return new CurrentGameStateWrapper();
     }
 
     @Bean

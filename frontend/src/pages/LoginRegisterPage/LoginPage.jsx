@@ -1,6 +1,6 @@
 import './login-register-page.css';
 import './GoogleButton.css'
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import AuthHeader from '../../components/AuthHeader';
 import axios from "../../api/axios.js";
@@ -21,6 +21,13 @@ function LoginPage() {
     const [unverifiedEmail, setUnverifiedEmail] = useState("");
     const navigate = useNavigate();
     const {reload} = useAuth();
+
+    useEffect(() => {
+        document.body.classList.add('scrollable-page');
+        return () => {
+            document.body.classList.remove('scrollable-page');
+        };
+    }, []);
 
     const handleMergeConfirmation = () => {
         const anonymousGuesses = localStorage.getItem('anonymousGuessList');
