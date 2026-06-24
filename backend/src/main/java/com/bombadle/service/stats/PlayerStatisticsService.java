@@ -142,6 +142,15 @@ public class PlayerStatisticsService {
                 .toList();
     }
 
+    /**
+     * Removes all daily statistics for a player. Required for referential integrity when the
+     * player is cascade-deleted (the table has a foreign key to {@code player}).
+     */
+    @Transactional
+    public void deleteAllByPlayerId(Long playerId) {
+        playerDailyStatisticRepository.deleteByPlayerId(playerId);
+    }
+
     private Player getPlayerOrThrow(long playerId) {
         return playerRepository.findById(playerId)
                 .orElseThrow(() -> new UsernameNotFoundException("Player not found: " + playerId));
