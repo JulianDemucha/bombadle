@@ -7,6 +7,7 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.stats.LeaderboardService;
+import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class ScoreRegistrationService {
     private final PlayerService playerService;
     private final CacheService cacheService;
     private final LeaderboardService leaderboardService;
+    private final PlayerStatisticsService playerStatisticsService;
 
     @Transactional
     public void registerPlayerWin(Long playerId, int numberOfTries, GameMode gameMode) {
@@ -38,6 +40,8 @@ public class ScoreRegistrationService {
 
         player.addTodayScore(gameMode, savedScore);
         playerService.save(player);
+
+        playerStatisticsService.recordDailyStatistic(player, savedScore);
 
         clearLeaderboardCaches(gameMode, Instant.now());
     }
@@ -57,6 +61,8 @@ public class ScoreRegistrationService {
 
         player.addTodayScore(gameMode, savedScore);
         playerService.save(player);
+
+        playerStatisticsService.recordDailyStatistic(player, savedScore);
 
         clearLeaderboardCaches(gameMode, timestamp);
 

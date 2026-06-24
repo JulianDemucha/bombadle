@@ -78,6 +78,8 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
 
     Optional<Score> findByPlayerIdAndGameMode(Long playerId, GameMode gameMode);
 
+    long countByGameMode(GameMode gameMode);
+
     @Query("""
                 SELECT COUNT(s) + 1
                 FROM Score s 

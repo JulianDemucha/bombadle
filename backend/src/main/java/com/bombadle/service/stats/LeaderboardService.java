@@ -69,5 +69,9 @@ public class LeaderboardService {
         return repo.findTopByOrderByScoreTimestampDesc();
     }
 
+    public int countParticipants(GameMode gameMode) {
+        return (int) repo.countByGameMode(gameMode);
+    }
+
 
 }
