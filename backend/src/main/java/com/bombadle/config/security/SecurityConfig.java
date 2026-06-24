@@ -70,21 +70,26 @@ public class SecurityConfig {
                                                       StatelessCsrfValidationFilter statelessCsrfFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityMatcher("/api/**", "swagger-ui", "/images/**", "/character_card_avatars/**")
+                .securityMatcher("/api/**", "/test/**", "/swagger-ui/**", "/images/**", "/character_card_avatars/**")
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
+                        .requestMatchers("/api/admin/**", "/test/security/admin").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
                         .requestMatchers("/api/daily-reset/manual-trigger").hasAuthority("ROLE_SUPERADMIN")
-                        .requestMatchers("/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate",
-                                "/api/auth/refreshToken", "/api/card-guessing/classic/anonymous-guess/**",
+                        .requestMatchers(
+                                "/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate",
+                                "/api/auth/refreshToken",
                                 "/api/character-card/search-index", "/api/leaderboard/**", "/images/**",
                                 "/api/guess-list/**",
                                 "/api/players/anonymous/me",
-                                "/api/character-card/previous-character-card",
+                                "/api/character-card/*/previous-character-card",
                                 "/character_card_avatars/**", /*dev */
-                        "/api/auth/initiate-verify-email", "/api/auth/verify-email", "/api/auth/initiate-reset-password",
-                                "/api/auth/confirm-reset-password"
+                                "/api/auth/initiate-verify-email", "/api/auth/verify-email", "/api/auth/initiate-reset-password",
+                                "/api/auth/confirm-reset-password",
+                                "/api/card-guessing/*/guess/**", // classic, images, quotes_stage_2
+                                "/api/card-guessing/quotes/guess", // quotes stage 1
+                                "/api/card-guessing/quotes/prompt",
+                                "/api/card-guessing/images/current"
                         ).permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
@@ -95,9 +100,7 @@ public class SecurityConfig {
                 .addFilterAfter(activityTrackingFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(accountLockedFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(csrfCookieFilter, AccountLockedFilter.class)
-                .addFilterAfter(statelessCsrfFilter, CsrfCookieInjectionFilter.class)
-        ;
-
+                .addFilterAfter(statelessCsrfFilter, CsrfCookieInjectionFilter.class);
 
         return http.build();
     }

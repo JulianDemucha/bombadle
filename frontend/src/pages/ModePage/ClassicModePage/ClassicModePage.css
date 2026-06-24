@@ -80,13 +80,6 @@
     font-size: 0.95rem;
     color: #4f4035;
 }
-
-.leaderboard-wrapper .daily-solved-counter {
-    margin: 8px 0 0;
-    position: static;
-    top: auto;
-}
-
 .guess-legend {
     width: fit-content;
     max-width: 100%;
@@ -219,29 +212,6 @@
     clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
 }
 
-.leaderboard-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 620px;
-    padding: 12px 10px !important;
-    background-color: rgba(173, 140, 115, 0.82) !important;
-    border: 3px solid #5a463a !important;
-    border-radius: 10px !important;
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25) !important;
-    margin: 0 !important;
-}
-
-.leaderboard-section {
-    margin: 0;
-    animation: fadeInUp 0.5s ease-out forwards;
-}
-
-.leaderboard-section--after-guesses {
-    margin: 0;
-}
-
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -251,19 +221,6 @@
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-.leaderboard-title {
-    font-family: 'PixelifySans', monospace;
-    font-size: 1.7rem;
-    font-weight: 700;
-    line-height: 1.15;
-    text-shadow: none !important;
-    margin-bottom: 10px;
-    color: #3f3f3f;
-    text-align: center;
-    animation: slideDownTitle 0.6s ease-out forwards;
-    overflow: hidden;
 }
 
 @keyframes slideDownTitle {
@@ -281,70 +238,6 @@
     }
 }
 
-.leaderboard-table {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
-}
-
-.leaderboard-header {
-    display: grid;
-    grid-template-columns: 30px 1fr 60px 50px 50px;
-    gap: 6px;
-    padding: 4px;
-    border-bottom: 2px solid #2b2b2b;
-    font-size: 0.85rem;
-    font-family: 'PixelifySans', monospace !important;
-    color: #4f4035;
-    font-weight: bold;
-    align-items: center;
-    text-transform: uppercase;
-}
-
-.leaderboard-header span {
-    font-family: 'PixelifySans', monospace !important;
-}
-
-.leaderboard-row {
-    display: grid;
-    grid-template-columns: 30px 1fr 60px 50px 50px;
-    gap: 6px;
-    align-items: center;
-    padding: 6px;
-    background-color: rgba(90, 95, 61, 0.15);
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    font-size: 17px;
-    color: #2b2b2b;
-}
-
-.leaderboard-player {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    padding: 4px 6px;
-    border-radius: 6px;
-    background-color: rgba(43, 43, 43, 0.1);
-    border: 1px solid rgba(43, 43, 43, 0.18);
-}
-
-.leaderboard-row.current-user .leaderboard-player {
-    background-color: rgba(247, 240, 230, 0.14);
-    border-color: rgba(247, 240, 230, 0.28);
-}
-
-.leaderboard-row.current-user {
-    background-color: #6ea04b;
-    border: 2px solid #2b2b2b;
-    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
-    color: #f7f0e6;
-    animation: slideUpRow 0.6s ease-out forwards;
-    transform-origin: top;
-    overflow: hidden;
-}
 
 @keyframes slideUpRow {
     0% {
@@ -367,17 +260,6 @@
     }
 }
 
-.leaderboard-separator {
-    text-align: center;
-    padding: 4px;
-    font-family: 'PixelifySans', monospace;
-    font-size: 1.2rem;
-    letter-spacing: 4px;
-    color: #4f4035;
-    animation: fadeInSeparator 0.6s ease-out forwards;
-    overflow: hidden;
-}
-
 @keyframes fadeInSeparator {
     0% {
         opacity: 0;
@@ -389,35 +271,6 @@
         max-height: 30px;
         padding: 4px;
     }
-}
-
-.leaderboard-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
-    border: 1px solid #2b2b2b;
-    object-fit: cover;
-}
-
-.leaderboard-row.current-user .leaderboard-avatar {
-    border-color: #2b2b2b;
-}
-
-.leaderboard-cta {
-    margin-top: 10px;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    font-family: 'PixelifySans', monospace;
-    font-size: 0.95rem;
-    color: #2b2b2b;
-    text-decoration: underline;
-    align-self: center;
-}
-
-.leaderboard-cta:hover {
-    color: #1c3c2a;
 }
 
 .login-prompt-container {
@@ -480,31 +333,4 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.leaderboard-row .text-ellipsis {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    word-wrap: break-word;
-    word-break: break-all;
-    line-height: 1.1;
-}
-
-@media (max-width: 500px) {
-    .leaderboard-wrapper {
-        width: calc(100% - 16px) !important;
-        padding: 8px 4px !important;
-    }
-
-    .leaderboard-row, .leaderboard-header {
-        column-gap: 2px;
-        font-size: 14px;
-        padding: 6px 2px;
-    }
-
-    .leaderboard-player {
-        padding: 2px 2px;
-        gap: 4px;
-    }
 }

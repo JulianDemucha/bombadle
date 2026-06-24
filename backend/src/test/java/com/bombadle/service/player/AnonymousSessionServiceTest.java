@@ -1,9 +1,11 @@
 package com.bombadle.service.player;
 
 import com.bombadle.dto.AnonymousSessionDto;
+import com.bombadle.dto.ClassicGuessAttempt;
 import com.bombadle.dto.GuessListDto;
 import com.bombadle.entity.AnonymousGuessList;
 import com.bombadle.entity.AnonymousSession;
+import com.bombadle.enums.GameMode;
 import com.bombadle.repository.AnonymousSessionRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,53 +32,103 @@ class AnonymousSessionServiceTest {
     private AnonymousSessionService anonymousSessionService;
 
     @Nested
-    class GetAnonymousSessionTests {
+    class GetAnonymousSessionOrCreateNewTests {
 
         @Test
-        void getAnonymousSession_sessionIdIsNull_createsAndSavesNewSession() {
-            // Arrange
+        void getAnonymousSessionOrCreateNew_sessionIdIsNull_createsAndSavesNewSession() {
+            // ARRANGE
             when(repo.save(any(AnonymousSession.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // Act
-            AnonymousSessionDto result = anonymousSessionService.getAnonymousSession(null);
+            // ACT
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionOrCreateNew(null);
 
-            // Assert
+            // ASSERT
             assertNotNull(result);
             verify(repo).save(any(AnonymousSession.class));
             verify(repo, never()).findById(any(UUID.class));
         }
 
         @Test
-        void getAnonymousSession_sessionExists_returnsExistingSessionDto() {
-            // Arrange
+        void getAnonymousSessionOrCreateNew_sessionExists_returnsExistingSessionDto() {
+            // ARRANGE
             UUID sessionId = UUID.randomUUID();
-            AnonymousSession existingSession = new AnonymousSession(new AnonymousGuessList());
+            AnonymousSession existingSession = AnonymousSession.createEmptySession();
+            existingSession.setId(sessionId);
             when(repo.findById(sessionId)).thenReturn(Optional.of(existingSession));
             when(repo.save(existingSession)).thenReturn(existingSession);
 
-            // Act
-            AnonymousSessionDto result = anonymousSessionService.getAnonymousSession(sessionId);
+            // ACT
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionOrCreateNew(sessionId);
 
-            // Assert
+            // ASSERT
             assertNotNull(result);
+            assertEquals(sessionId, result.id());
             verify(repo).findById(sessionId);
             verify(repo).save(existingSession);
         }
 
         @Test
-        void getAnonymousSession_sessionNotFound_createsAndSavesNewSession() {
-            // Arrange
+        void getAnonymousSessionOrCreateNew_sessionNotFound_createsAndSavesNewSession() {
+            // ARRANGE
             UUID sessionId = UUID.randomUUID();
             when(repo.findById(sessionId)).thenReturn(Optional.empty());
             when(repo.save(any(AnonymousSession.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // Act
-            AnonymousSessionDto result = anonymousSessionService.getAnonymousSession(sessionId);
+            // ACT
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionOrCreateNew(sessionId);
 
-            // Assert
+            // ASSERT
             assertNotNull(result);
             verify(repo).findById(sessionId);
             verify(repo).save(any(AnonymousSession.class));
+        }
+    }
+
+    @Nested
+    class GetAnonymousSessionReadOnlyTests {
+
+        @Test
+        void getAnonymousSessionReadOnly_sessionIdIsNull_returnsEmptySessionDto() {
+            // ARRANGE & ACT
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionReadOnly(null);
+
+            // ASSERT
+            assertNotNull(result);
+            verifyNoInteractions(repo);
+        }
+
+        @Test
+        void getAnonymousSessionReadOnly_sessionExists_returnsExistingSessionDto() {
+            // ARRANGE
+            UUID sessionId = UUID.randomUUID();
+            AnonymousSession existingSession = AnonymousSession.createEmptySession();
+            existingSession.setId(sessionId);
+            when(repo.findById(sessionId)).thenReturn(Optional.of(existingSession));
+
+            // ACT
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionReadOnly(sessionId);
+
+            // ASSERT
+            assertNotNull(result);
+            assertEquals(sessionId, result.id());
+            verify(repo).findById(sessionId);
+            verify(repo, never()).save(any());
+        }
+
+        @Test
+        void getAnonymousSessionReadOnly_sessionNotFound_returnsEmptySessionDto() {
+            // ARRANGE
+            UUID sessionId = UUID.randomUUID();
+            when(repo.findById(sessionId)).thenReturn(Optional.empty());
+
+            // ACT
+            AnonymousSessionDto result = anonymousSessionService.getAnonymousSessionReadOnly(sessionId);
+
+            // ASSERT
+            assertNotNull(result);
+            assertNull(result.id()); // ID should be null for the freshly created empty unpersisted session
+            verify(repo).findById(sessionId);
+            verify(repo, never()).save(any());
         }
     }
 
@@ -84,43 +137,84 @@ class AnonymousSessionServiceTest {
 
         @Test
         void getGuessList_sessionIdIsNull_returnsEmptyDto() {
-            // Arrange
-            // No setup needed
+            // ARRANGE
+            GameMode gameMode = GameMode.CLASSIC;
 
-            // Act
-            GuessListDto result = anonymousSessionService.getGuessList(null);
+            // ACT
+            GuessListDto result = anonymousSessionService.getGuessList(null, gameMode);
 
-            // Assert
+            // ASSERT
             assertNotNull(result);
             assertTrue(result.guessList().isEmpty());
             verifyNoInteractions(repo);
         }
 
         @Test
-        void getGuessList_sessionExists_returnsDtoWithGuesses() {
-            // Arrange
+        void getGuessList_sessionExistsAndHasList_returnsDtoWithGuesses() {
+            // ARRANGE
             UUID sessionId = UUID.randomUUID();
-            AnonymousSession session = new AnonymousSession(new AnonymousGuessList());
+            GameMode gameMode = GameMode.CLASSIC;
+
+            ClassicGuessAttempt mockAttempt = mock(ClassicGuessAttempt.class);
+
+            AnonymousGuessList guessList = AnonymousGuessList.builder()
+                    .gameMode(gameMode)
+                    .guesses(List.of(mockAttempt))
+                    .build();
+
+            AnonymousSession session = AnonymousSession.builder()
+                    .guessLists(List.of(guessList))
+                    .build();
+
             when(repo.findById(sessionId)).thenReturn(Optional.of(session));
 
-            // Act
-            GuessListDto result = anonymousSessionService.getGuessList(sessionId);
+            // ACT
+            GuessListDto result = anonymousSessionService.getGuessList(sessionId, gameMode);
 
-            // Assert
+            // ASSERT
             assertNotNull(result);
+            assertFalse(result.guessList().isEmpty());
+            assertEquals(1, result.guessList().size());
+            verify(repo).findById(sessionId);
+        }
+
+        @Test
+        void getGuessList_sessionExistsButNoListForMode_returnsEmptyDto() {
+            // ARRANGE
+            UUID sessionId = UUID.randomUUID();
+            GameMode gameMode = GameMode.QUOTES_STAGE_1;
+
+            AnonymousGuessList guessList = AnonymousGuessList.builder()
+                    .gameMode(GameMode.CLASSIC)
+                    .guesses(List.of(mock(ClassicGuessAttempt.class)))
+                    .build();
+
+            AnonymousSession session = AnonymousSession.builder()
+                    .guessLists(List.of(guessList))
+                    .build();
+
+            when(repo.findById(sessionId)).thenReturn(Optional.of(session));
+
+            // ACT
+            GuessListDto result = anonymousSessionService.getGuessList(sessionId, gameMode);
+
+            // ASSERT
+            assertNotNull(result);
+            assertTrue(result.guessList().isEmpty());
             verify(repo).findById(sessionId);
         }
 
         @Test
         void getGuessList_sessionNotFound_returnsEmptyDto() {
-            // Arrange
+            // ARRANGE
             UUID sessionId = UUID.randomUUID();
+            GameMode gameMode = GameMode.CLASSIC;
             when(repo.findById(sessionId)).thenReturn(Optional.empty());
 
-            // Act
-            GuessListDto result = anonymousSessionService.getGuessList(sessionId);
+            // ACT
+            GuessListDto result = anonymousSessionService.getGuessList(sessionId, gameMode);
 
-            // Assert
+            // ASSERT
             assertNotNull(result);
             assertTrue(result.guessList().isEmpty());
             verify(repo).findById(sessionId);
@@ -132,14 +226,14 @@ class AnonymousSessionServiceTest {
 
         @Test
         void save_validSession_callsRepositorySave() {
-            // Arrange
-            AnonymousSession session = new AnonymousSession(new AnonymousGuessList());
+            // ARRANGE
+            AnonymousSession session = AnonymousSession.createEmptySession();
             when(repo.save(session)).thenReturn(session);
 
-            // Act
+            // ACT
             AnonymousSession result = anonymousSessionService.save(session);
 
-            // Assert
+            // ASSERT
             assertEquals(session, result);
             verify(repo).save(session);
         }
@@ -150,29 +244,29 @@ class AnonymousSessionServiceTest {
 
         @Test
         void findById_sessionExists_returnsOptionalWithSession() {
-            // Arrange
+            // ARRANGE
             UUID sessionId = UUID.randomUUID();
-            AnonymousSession session = new AnonymousSession(new AnonymousGuessList());
+            AnonymousSession session = AnonymousSession.createEmptySession();
             when(repo.findById(sessionId)).thenReturn(Optional.of(session));
 
-            // Act
+            // ACT
             Optional<AnonymousSession> result = anonymousSessionService.findById(sessionId);
 
-            // Assert
+            // ASSERT
             assertTrue(result.isPresent());
             assertEquals(session, result.get());
         }
 
         @Test
         void findById_sessionDoesNotExist_returnsEmptyOptional() {
-            // Arrange
+            // ARRANGE
             UUID sessionId = UUID.randomUUID();
             when(repo.findById(sessionId)).thenReturn(Optional.empty());
 
-            // Act
+            // ACT
             Optional<AnonymousSession> result = anonymousSessionService.findById(sessionId);
 
-            // Assert
+            // ASSERT
             assertTrue(result.isEmpty());
         }
     }
@@ -182,13 +276,13 @@ class AnonymousSessionServiceTest {
 
         @Test
         void delete_validSession_callsRepositoryDelete() {
-            // Arrange
-            AnonymousSession session = new AnonymousSession(new AnonymousGuessList());
+            // ARRANGE
+            AnonymousSession session = AnonymousSession.createEmptySession();
 
-            // Act
+            // ACT
             anonymousSessionService.delete(session);
 
-            // Assert
+            // ASSERT
             verify(repo).delete(session);
         }
     }
@@ -198,13 +292,12 @@ class AnonymousSessionServiceTest {
 
         @Test
         void truncateTable_called_callsRepositoryTruncateTable() {
-            // Arrange
-            // No setup needed
+            // ARRANGE
 
-            // Act
+            // ACT
             anonymousSessionService.truncateTable();
 
-            // Assert
+            // ASSERT
             verify(repo).truncateTable();
         }
     }

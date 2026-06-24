@@ -50,8 +50,8 @@ function EmailVerificationPage() {
         setMessage('');
         try {
             await axios.post('/api/auth/verify-email', { email, code });
-            setMessage('Konto aktywowane! Możesz się teraz zalogować.');
-            setTimeout(() => navigate('/login'), 3000);
+            alert('Konto aktywowane! Możesz się teraz zalogować.');
+            navigate('/login');
         } catch (err) {
             handleOtpError(err);
         } finally {
@@ -106,7 +106,7 @@ function EmailVerificationPage() {
             <AuthHeader />
             <form className="login-container" onSubmit={handleVerify}>
                 <h1>Aktywacja Konta</h1>
-                <p className="instruction-text">Wysłaliśmy kod aktywacyjny na Twój adres e-mail: <strong>{email}</strong></p>
+                <p className="instruction-text">Za chwilę dostaniesz kod aktywacyjny na Twój adres e-mail: <strong>{email}</strong></p>
                 <div className="input-group">
                     <label htmlFor="code">Kod OTP</label>
                     <input

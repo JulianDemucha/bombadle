@@ -28,7 +28,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.Instant;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.anyOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,7 +64,6 @@ class AuthenticationServiceTest {
         void register_validDataAutoActivateFalse_savesReturnsPlayerAndInitiatesEmail() {
             // Arrange
             RegisterRequest request = new RegisterRequest("TestUser", "Test@Email.com", "password123");
-
             when(playerService.existsByEmail("test@email.com")).thenReturn(false);
             when(playerService.existsByLogin("testuser")).thenReturn(false);
             when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
@@ -89,7 +87,6 @@ class AuthenticationServiceTest {
             assertThat(savedPlayer.getRole()).isEqualTo(Role.ROLE_USER);
             assertThat(savedPlayer.getAvatarImage()).isEqualTo(AvatarImage.AVATAR_DEFAULT);
             assertThat(savedPlayer.getAuthProvider()).isEqualTo(PlayerAuthProvider.LOCAL);
-            assertThat(savedPlayer.getHasGuessedToday()).isFalse();
             assertThat(savedPlayer.getAccountLocked()).isFalse();
             assertThat(savedPlayer.getEmailVerified()).isFalse();
             assertThat(savedPlayer.getCreatedAt()).isNotNull();
@@ -100,7 +97,6 @@ class AuthenticationServiceTest {
         void register_validDataAutoActivateTrue_savesReturnsPlayerAndSkipsEmail() {
             // Arrange
             RegisterRequest request = new RegisterRequest("TestUser", "Test@Email.com", "password123");
-
             when(playerService.existsByEmail("test@email.com")).thenReturn(false);
             when(playerService.existsByLogin("testuser")).thenReturn(false);
             when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
@@ -163,7 +159,7 @@ class AuthenticationServiceTest {
             AuthenticationRequest request = new AuthenticationRequest("Test@Email.com", "password123");
             Player existingPlayer = Player.builder()
                     .email("test@email.com")
-                    .emailVerified(true) // Zmiana dla poprawnego flow
+                    .emailVerified(true)
                     .lastActiveAt(Instant.now().minusSeconds(3600))
                     .build();
 
@@ -210,7 +206,6 @@ class AuthenticationServiceTest {
         void authenticate_authenticationManagerFails_throwsInvalidCredentialsException() {
             // Arrange
             AuthenticationRequest request = new AuthenticationRequest("test@email.com", "wrongPassword");
-
             when(authenticationManager.authenticate(any()))
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
@@ -235,7 +230,8 @@ class AuthenticationServiceTest {
             // Arrange
             when(playerService.existsByEmail("test@email.com")).thenReturn(true);
 
-            // Act & Assert
+            // Act
+            // Assert
             assertThat(authenticationService.existsByEmail("test@email.com")).isTrue();
         }
 
@@ -244,7 +240,8 @@ class AuthenticationServiceTest {
             // Arrange
             when(playerService.existsByLogin("testuser")).thenReturn(true);
 
-            // Act & Assert
+            // Act
+            // Assert
             assertThat(authenticationService.existsByUsername("testuser")).isTrue();
         }
     }

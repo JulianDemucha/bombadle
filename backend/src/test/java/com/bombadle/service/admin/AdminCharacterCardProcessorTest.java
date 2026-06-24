@@ -1,6 +1,5 @@
 package com.bombadle.service.admin;
 
-import com.bombadle.dto.queue.PendingCacheFlushPayload;
 import com.bombadle.dto.queue.PendingCardCreatePayload;
 import com.bombadle.dto.queue.PendingCardDeletePayload;
 import com.bombadle.dto.queue.PendingCardUpdatePayload;
@@ -139,7 +138,7 @@ class AdminCharacterCardProcessorTest {
         @Test
         void processUpdate_newNameAlreadyExists_throwsIllegalArgumentException() {
             // Arrange
-            CharacterCard existingCard = CharacterCard.create();
+            CharacterCard existingCard = CharacterCard.createNewEmpty();
             existingCard.setName("beta_name");
             AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", null, null,
                     null, null, null, null, null);
@@ -160,7 +159,7 @@ class AdminCharacterCardProcessorTest {
         @Test
         void processUpdate_validPayloadWithTempImage_updatesCardAndAppliesImage() throws IOException {
             // Arrange
-            CharacterCard existingCard = CharacterCard.create();
+            CharacterCard existingCard = CharacterCard.createNewEmpty();
             existingCard.setName("beta_name");
             AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", "FEMALE", null,
                     null, null, null, null, null);
@@ -186,7 +185,7 @@ class AdminCharacterCardProcessorTest {
         @Test
         void processUpdate_nameChangedWithoutTempImage_updatesCardAndRenamesImage() throws IOException {
             // Arrange
-            CharacterCard existingCard = CharacterCard.create();
+            CharacterCard existingCard = CharacterCard.createNewEmpty();
             existingCard.setName("beta_name");
             AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", null, null,
                     null, null, null, null, null);
@@ -208,7 +207,7 @@ class AdminCharacterCardProcessorTest {
         @Test
         void processUpdate_nameNotProvided_keepsOldNameAndUpdatesOtherFields() throws IOException {
             // Arrange
-            CharacterCard existingCard = CharacterCard.create();
+            CharacterCard existingCard = CharacterCard.createNewEmpty();
             existingCard.setName("sigma_name");
             AdminCharacterCardRequest req = new AdminCharacterCardRequest(" ", "MALE", null,
                     null, null, null, null, null);
@@ -258,49 +257,6 @@ class AdminCharacterCardProcessorTest {
 
             // Assert
             verify(repository, never()).deleteById(anyLong());
-        }
-    }
-
-    @Nested
-    class ProcessCacheFlushTests {
-
-        @Test
-        void processCacheFlush_flushAllIsTrue_evictsAllCaches() {
-            // Arrange
-            PendingCacheFlushPayload payload = new PendingCacheFlushPayload(null, true);
-
-            // Act
-            processor.processCacheFlush(payload);
-
-            // Assert
-            verify(cacheService).evictAllCaches();
-            verify(cacheService, never()).evictCache(anyString());
-        }
-
-        @Test
-        void processCacheFlush_flushAllIsFalseAndCacheNameProvided_evictsSpecificCache() {
-            // Arrange
-            PendingCacheFlushPayload payload = new PendingCacheFlushPayload("sigma_cache", false);
-
-            // Act
-            processor.processCacheFlush(payload);
-
-            // Assert
-            verify(cacheService, never()).evictAllCaches();
-            verify(cacheService).evictCache("sigma_cache");
-        }
-
-        @Test
-        void processCacheFlush_flushAllIsFalseAndCacheNameIsBlank_doesNothing() {
-            // Arrange
-            PendingCacheFlushPayload payload = new PendingCacheFlushPayload(" ", false);
-
-            // Act
-            processor.processCacheFlush(payload);
-
-            // Assert
-            verify(cacheService, never()).evictAllCaches();
-            verify(cacheService, never()).evictCache(anyString());
         }
     }
 }

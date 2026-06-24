@@ -1,0 +1,88 @@
+package com.bombadle.service.game.core;
+
+import com.bombadle.dto.*;
+import com.bombadle.dto.response.AnonymousGuessResponse;
+import com.bombadle.dto.response.GuessResponse;
+import com.bombadle.entity.CharacterCard;
+import com.bombadle.entity.Player;
+import com.bombadle.enums.GameMode;
+import com.bombadle.exception.CharacterCardNotFoundException;
+import com.bombadle.service.game.CharacterCardService;
+import com.bombadle.service.player.PlayerService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class GameServiceFacade {
+    private final PlayerService playerService;
+    private final CharacterCardService characterCardService;
+    private final GameService gameService;
+    private final PlayerGameStateService playerGameStateService;
+    private final GameImageService gameImageService;
+
+    @Transactional
+    @CacheEvict(value = "guess-list", key = "#playerId+ '-' + #gameMode")
+    public GuessResponse play(
+            Long guessCardId,
+            long playerId,
+            GameMode gameMode
+    ) {
+        Player player = playerService.getPlayerById(playerId);
+
+        CharacterCard guess = characterCardService.findCharacterCardById(guessCardId)
+                .orElseThrow(() -> new CharacterCardNotFoundException(guessCardId));
+
+        return gameService.play(
+                guess,
+                player,
+                gameMode
+        );
+    }
+
+    @Transactional
+    public AnonymousGuessResponse playAnonymous(
+            Long guessCardId,
+            UUID anonymousSessionId,
+            GameMode gameMode
+    ) {
+        CharacterCard guess = characterCardService.findCharacterCardById(guessCardId)
+                .orElseThrow(() -> new CharacterCardNotFoundException(guessCardId));
+
+        return gameService.playAnonymous(
+                guess,
+                anonymousSessionId,
+                gameMode
+        );
+    }
+
+    @Transactional
+    public GuessResponse playQuotesStageOne(String guess, Long playerId) {
+        Player player = playerService.getPlayerById(playerId);
+
+        return gameService.playQuotesStageOne(guess, player);
+    }
+
+    @Transactional
+    public AnonymousGuessResponse playAnonymousQuotesStageOne(String guess, UUID anonymousSessionId) {
+        return gameService.playAnonymousQuotesStageOne(guess, anonymousSessionId);
+    }
+
+    public QuotesGameStateDto getQuotesGameStateForPlayer(long playerId) {
+        return playerGameStateService.getQuotesStateForPlayer(playerId);
+    }
+
+    public QuotesGameStateDto getQuotesGameStateForAnonymous(UUID anonymousSessionId) {
+        return playerGameStateService.getQuotesStateForAnonymous(anonymousSessionId);
+    }
+
+    public Resource getImagesModeCurrentResource(Long playerId, UUID anonymousSessionId) {
+        return gameImageService.getCurrentImageResource(playerId, anonymousSessionId);
+    }
+
+}

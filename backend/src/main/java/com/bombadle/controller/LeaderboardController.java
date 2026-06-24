@@ -1,6 +1,7 @@
 package com.bombadle.controller;
 
 import com.bombadle.dto.LeaderboardEntryDto;
+import com.bombadle.enums.GameMode;
 import com.bombadle.service.stats.LeaderboardService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,14 +20,28 @@ import java.util.List;
 public class LeaderboardController {
     private final LeaderboardService leaderboardService;
 
-    @GetMapping
-    ResponseEntity<Page<LeaderboardEntryDto>> getLeaderboard(@RequestParam(defaultValue = "0") int page) {
-        return ResponseEntity.ok(leaderboardService.getPagedLeaderboard(page));
+    @GetMapping("/{gameMode}")
+    ResponseEntity<Page<LeaderboardEntryDto>> getLeaderboard(
+            @PathVariable String gameMode,
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        if ("quotes".equalsIgnoreCase(gameMode))
+            gameMode = "QUOTES_STAGE_2";
+
+        GameMode gameModeEnum = GameMode.valueOf(gameMode.toUpperCase());
+
+        if (gameModeEnum == GameMode.QUOTES_STAGE_1)
+            gameModeEnum = GameMode.QUOTES_STAGE_2;
+
+        return ResponseEntity.ok(leaderboardService.getPagedLeaderboard(
+                GameMode.valueOf(gameModeEnum.name()),
+                page
+        ));
     }
 
-    @GetMapping("/top3")
-    List<LeaderboardEntryDto> getTop10Leaderboard() {
-        return leaderboardService.getTop3Leaderboard();
+    @GetMapping("/{gameMode}/top3")
+    List<LeaderboardEntryDto> getTop3Leaderboard(@PathVariable String gameMode) {
+        return leaderboardService.getTop3Leaderboard(GameMode.valueOf(gameMode.toUpperCase()));
     }
 
     // todo: repair if needed
@@ -38,10 +53,14 @@ public class LeaderboardController {
 //                .orElseGet(() -> ResponseEntity.notFound().build()); // 404 not found
 //    }
 
-    @GetMapping("/player/{id}")
-    public ResponseEntity<LeaderboardEntryDto> findPlayerRankById(@PathVariable Long id) {
-        return ResponseEntity.ok(leaderboardService.getRankedEntryByPlayerId(id));
+    @GetMapping("/{gameMode}/player/{id}")
+    public ResponseEntity<LeaderboardEntryDto> findPlayerRankById(
+            @PathVariable String gameMode,
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(leaderboardService.getRankedEntryByPlayerId(
+                GameMode.valueOf(gameMode.toUpperCase()),
+                id
+        ));
     }
-
-
 }

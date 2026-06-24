@@ -20,10 +20,9 @@ public class PlayerCascadeDeletionService {
     public void deletePlayerWithCascade(Player player) {
         Long playerId = player.getId();
 
-        guessListService.findByPlayerId(playerId).ifPresent(guessListService::manualDelete);
-        refreshTokenService.findByPlayerId(playerId).ifPresent(refreshTokenService::manualDelete);
-        scoreService.findByPlayerId(playerId).ifPresent(scoreService::manualDelete);
+        guessListService.deleteAllByPlayerId(playerId);
+        scoreService.deleteAllByPlayerId(playerId);
+        refreshTokenService.deleteAllByPlayerId(playerId);
         playerService.manualDelete(player);
     }
-
 }

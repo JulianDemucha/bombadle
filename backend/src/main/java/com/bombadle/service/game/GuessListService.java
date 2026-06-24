@@ -1,9 +1,9 @@
 package com.bombadle.service.game;
 
-import com.bombadle.dto.GuessAttempt;
 import com.bombadle.dto.GuessListDto;
 import com.bombadle.entity.GuessList;
 import com.bombadle.entity.Player;
+import com.bombadle.enums.GameMode;
 import com.bombadle.repository.GuessListRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -11,47 +11,28 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class GuessListService {
     private final GuessListRepository guessListRepository;
 
-    public Optional<GuessList> findByPlayerId(long playerId) {
-        return guessListRepository.findById(playerId);
-    }
-
-    @Cacheable(value = "guess-list", key = "#playerId")
-    public GuessListDto getGuessListByPlayerId(long playerId) {
+    @Cacheable(value = "guess-list", key = "#playerId + '-' + #gameMode")
+    public GuessListDto getByPlayerId(long playerId, GameMode gameMode) {
         return new GuessListDto(
-                guessListRepository.findByPlayerId(playerId
-                        )
+                guessListRepository.findByPlayerIdAndGameMode(playerId, gameMode)
                         .map(GuessList::getGuesses)
                         .orElse(List.of())
         );
     }
 
-    public GuessList findByPlayerOrElseCreateNew(Player player) {
-        return guessListRepository.findByPlayerId(player.getId())
-                .orElseGet(() -> new GuessList(player));
+    public GuessList findByPlayerAndGameModeOrElseCreateNew(Player player, GameMode gameMode) {
+        return guessListRepository.findByPlayerIdAndGameMode(player.getId(), gameMode)
+                .orElseGet(() -> GuessList.builder().player(player).gameMode(gameMode).build());
     }
 
-    @Transactional
-    public void registerGuess(Player player, GuessAttempt guessResponse) {
-        GuessList guessList = findByPlayerOrElseCreateNew(player);
-        guessList.getGuesses().add(guessResponse);
-        guessListRepository.save(guessList);
-    }
-
-    public void manualSave(GuessList guessList){
-        guessListRepository.save(guessList);
-    }
-
-    @Transactional
-    public void registerGuess(GuessList guessList, GuessAttempt guessResponse) {
-        guessList.getGuesses().add(guessResponse);
-        guessListRepository.save(guessList);
+    public GuessList save(GuessList guessList){
+        return guessListRepository.save(guessList);
     }
 
     public void manualDelete(GuessList guessList) {
@@ -60,5 +41,10 @@ public class GuessListService {
 
     public void truncateTable() {
         guessListRepository.truncateTable();
+    }
+
+    @Transactional
+    public void deleteAllByPlayerId(long playerId) {
+        guessListRepository.deleteByPlayerId(playerId);
     }
 }

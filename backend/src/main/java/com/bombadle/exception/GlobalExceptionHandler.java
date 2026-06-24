@@ -1,5 +1,8 @@
 package com.bombadle.exception;
 
+import com.bombadle.dto.response.error.ErrorResponse;
+import com.bombadle.dto.response.error.ErrorResponseWithEmail;
+import com.bombadle.dto.response.error.RateLimitErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -136,8 +139,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorDetails);
     }
 
-    @ExceptionHandler(CardAlreadyGuessedException.class)
-    public ResponseEntity<ErrorResponse> handleCardAlreadyGuessed(CardAlreadyGuessedException ex) {
+    @ExceptionHandler(UserAlreadyGuessedException.class)
+    public ResponseEntity<ErrorResponse> handleCardAlreadyGuessed(UserAlreadyGuessedException ex) {
         ErrorResponse errorDetails = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 "Card Already Guessed",
@@ -219,4 +222,16 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorDetails);
     }
+
+    @ExceptionHandler(StageLockedException.class)
+    public ResponseEntity<ErrorResponse> handleStageLockedException(StageLockedException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "STAGE_LOCKED",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
 }

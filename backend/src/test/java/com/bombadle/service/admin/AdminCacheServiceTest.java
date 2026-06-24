@@ -1,12 +1,10 @@
 package com.bombadle.service.admin;
 
 import com.bombadle.config.ApplicationConfigProperties;
-import com.bombadle.dto.queue.PendingCacheFlushPayload;
 import com.bombadle.dto.request.AdminCacheFlushRequest;
-import org.junit.jupiter.api.Nested;
+import com.bombadle.service.cache.CacheService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,148 +12,109 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Duration;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AdminCacheServiceTest {
-
-    @InjectMocks
-    private AdminCacheService cacheService;
+class AdminCacheServiceTest {
 
     @Mock
     private ApplicationConfigProperties.CacheConfig cacheConfig;
 
     @Mock
-    private AdminAuditService auditService;
+    private AdminAuditService adminAuditService;
 
     @Mock
-    private AdminChangeQueueService changeQueueService;
+    private CacheService cacheService;
 
-    @Nested
-    class EnqueueFlushTests {
+    @InjectMocks
+    private AdminCacheService adminCacheService;
 
-        @Test
-        void enqueueFlush_requestNull_throwsIllegalArgumentException() {
-            assertThrows(IllegalArgumentException.class, () ->
-                    cacheService.enqueueFlush(1L, null));
-        }
+    @Test
+    void flushCache_whenRequestIsNull_throwsIllegalArgumentException() {
+        // Arrange
+        long actorId = 1L;
+        AdminCacheFlushRequest request = null;
 
-        @Test
-        void enqueueFlush_cacheNameIsNull_throwsIllegalArgumentException() {
-            assertThrows(IllegalArgumentException.class, () ->
-                    cacheService.enqueueFlush(
-                            1L,
-                            new AdminCacheFlushRequest(
-                                    null,
-                                    false
-                            )
-                    )
-            );
-        }
+        // Act & Assert
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> adminCacheService.flushCache(actorId, request))
+                .withMessage("Request is required");
 
-        @Test
-        void enqueueFlush_cacheNameIsBlank_throwsIllegalArgumentException() {
-            assertThrows(IllegalArgumentException.class, () ->
-                    cacheService.enqueueFlush(
-                            1L,
-                            new AdminCacheFlushRequest(
-                                    "",
-                                    false
-                            )
-                    )
-            );
-        }
+        verifyNoInteractions(cacheService, adminAuditService);
+    }
 
-        @Test
-        void enqueueFlush_flushAllIsTrue_enqueuesAndLogsFlushAllProperly() {
-            // Act
-            cacheService.enqueueFlush(
-                    1L,
-                    new AdminCacheFlushRequest(
-                            "sigma_cache",
-                            true
-                    )
-            );
+    @Test
+    void flushCache_whenFlushAllFalseAndCacheNameIsBlank_throwsIllegalArgumentException() {
+        // Arrange
+        long actorId = 1L;
+        // Poprawka: najpierw String cacheName, potem Boolean flushAll
+        AdminCacheFlushRequest request = new AdminCacheFlushRequest("   ", false);
 
-            // Assert
-            ArgumentCaptor<PendingCacheFlushPayload> payloadCaptor = ArgumentCaptor.forClass(PendingCacheFlushPayload.class);
+        // Act & Assert
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> adminCacheService.flushCache(actorId, request))
+                .withMessage("cacheName is required unless flushAll is true");
 
-            verify(changeQueueService).enqueue(eq("flush_cache_all"), eq("cache:all"), payloadCaptor.capture());
-            assertNotNull(payloadCaptor.getValue());
-            assertEquals("sigma_cache", payloadCaptor.getValue().cacheName());
-            assertTrue(payloadCaptor.getValue().flushAll());
+        verifyNoInteractions(cacheService, adminAuditService);
+    }
 
-            verify(auditService).logAction(eq(1L), eq("flush_cache_all"), isNull());
-        }
+    @Test
+    void flushCache_whenCacheNameIsUnknown_throwsIllegalArgumentException() {
+        // Arrange
+        long actorId = 1L;
+        String invalidCacheName = "unknownCache";
+        // Poprawka: najpierw String cacheName, potem Boolean flushAll
+        AdminCacheFlushRequest request = new AdminCacheFlushRequest(invalidCacheName, false);
 
-        @Test
-        void enqueueFlush_validCacheNameProvidedAndFlushAllIsFalse_enqueuesSpecificCacheFlush() {
-            // Arrange
-            when(cacheConfig.specs()).thenReturn(Map.of(
-                    "sigma_cache",
-                    new ApplicationConfigProperties.CacheSpec(
-                            Duration.ofMinutes(30),
-                            5L
-                    ),
-                    "not_sigma_cache",
-                    new ApplicationConfigProperties.CacheSpec(
-                            Duration.ofHours(3),
-                            50L
-                    )
+        when(cacheConfig.specs()).thenReturn(Map.of());
 
-            ));
+        // Act & Assert
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> adminCacheService.flushCache(actorId, request))
+                .withMessage("Unknown cache name: " + invalidCacheName);
 
-            // Act
-            cacheService.enqueueFlush(
-                    1L,
-                    new AdminCacheFlushRequest(
-                            "sigma_cache",
-                            false
-                    )
-            );
+        verifyNoInteractions(cacheService, adminAuditService);
+    }
 
-            // Assert
-            ArgumentCaptor<PendingCacheFlushPayload> payloadCaptor = ArgumentCaptor.forClass(PendingCacheFlushPayload.class);
+    @Test
+    void flushCache_whenFlushAllIsTrue_evictsAllCachesAndLogsAction() {
+        // Arrange
+        long actorId = 123L;
+        // Poprawka: najpierw String cacheName, potem Boolean flushAll
+        AdminCacheFlushRequest request = new AdminCacheFlushRequest(null, true);
 
-            verify(changeQueueService).enqueue(eq("flush_cache_sigma_cache"), eq("cache:sigma_cache"), payloadCaptor.capture());
-            assertNotNull(payloadCaptor.getValue());
-            assertEquals("sigma_cache", payloadCaptor.getValue().cacheName());
-            assertFalse(payloadCaptor.getValue().flushAll());
+        // Act
+        adminCacheService.flushCache(actorId, request);
 
-            verify(auditService).logAction(1L, "flush_cache_sigma_cache", null);
-        }
+        // Assert
+        verify(cacheService).evictAllCaches();
+        verify(adminAuditService).logAction(actorId, "flush_cache_all", null);
+        verifyNoMoreInteractions(cacheService);
+    }
 
-        @Test
-        void enqueueFlush_invalidCacheNameProvidedAndFlushAllIsFalse_throwsIllegalArgumentException() {
-            // Arrange
-            when(cacheConfig.specs()).thenReturn(Map.of(
-                    "not_sigma_cache",
-                    new ApplicationConfigProperties.CacheSpec(
-                            Duration.ofMinutes(30),
-                            5L
-                    ),
-                    "also_not_sigma_cache",
-                    new ApplicationConfigProperties.CacheSpec(
-                            Duration.ofHours(5),
-                            50L
-                    )
+    @Test
+    void flushCache_whenFlushAllIsFalseAndCacheNameIsValid_evictsSpecificCacheAndLogsAction() {
+        // Arrange
+        long actorId = 456L;
+        String validCacheName = "playersCache";
+        // Poprawka: użycie wartości 'false' zamiast słowa kluczowego 'boolean'
+        AdminCacheFlushRequest request = new AdminCacheFlushRequest(validCacheName, false);
 
-            ));
+        when(cacheConfig.specs()).thenReturn(Map.of(
+                validCacheName,
+                new ApplicationConfigProperties.CacheSpec(
+                        Duration.ofMinutes(1),
+                        1L
+                )
+        ));
 
-            // Act & Assert
-            assertThrows(IllegalArgumentException.class, () ->
-                    cacheService.enqueueFlush(
-                            1L,
-                            new AdminCacheFlushRequest(
-                                    "sigma_cache",
-                                    false
-                            )
-                    )
-            );
-        }
+        // Act
+        adminCacheService.flushCache(actorId, request);
+
+        // Assert
+        verify(cacheService).evictCache(validCacheName);
+        verify(adminAuditService).logAction(actorId, "flush_cache_playersCache", null);
+        verifyNoMoreInteractions(cacheService);
     }
 }

@@ -31,9 +31,9 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE Player p SET p.hasGuessedToday = false, p.todayScore = null")
+    @Query(value = "UPDATE player SET completed_modes_today = '[]'::jsonb", nativeQuery = true)
     void resetAllScores();
-
+    
     @Modifying
     @Query("UPDATE Player p SET p.lastActiveAt = :now WHERE p.id IN :ids")
     void updateLastActiveAtBulk(@Param("ids") Set<Long> ids, @Param("now") Instant now);

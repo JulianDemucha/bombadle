@@ -1,15 +1,23 @@
 .login-with-google-btn {
     transition: background-color .3s, box-shadow .3s;
 
-    padding: 12px 16px 12px 42px;
+    /* Stały, większy padding z lewej strony, żeby tekst nie najeżdżał na ikonę */
+    padding: 12px 16px 12px 48px;
     border: none;
+    border-radius: 6px; /* Warto dodać dla spójności, jeśli jeszcze nie masz */
 
     color: #757575;
-    background-size: 12px 12px;
+    /* Sztywny, czytelny rozmiar ikony zarówno na PC jak i na mobilce */
+    background-size: 24px 24px;
     background-image: url(../../assets/google.svg);
     background-color: white;
     background-repeat: no-repeat;
-    background-position: 4px 15px;
+    /* 12px od lewej krawędzi, a w pionie idealny środek (center) */
+    background-position: 12px center;
+
+    /* Utrzymanie odpowiedniej szerokości przycisku na telefonach */
+    width: 100%;
+    max-width: 320px;
 
     &:disabled {
         filter: grayscale(100%);
@@ -19,22 +27,8 @@
     }
 }
 
-@media (min-width: 405px) {
+@media (max-width: 400px) {
     .login-with-google-btn {
-        background-size: 25px 25px;
-        background-position: 12px 8px;
+        font-size: 0.85rem !important;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

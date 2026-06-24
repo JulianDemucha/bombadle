@@ -1,18 +1,10 @@
 package com.bombadle.service.stats;
 
-import com.bombadle.dto.LeaderboardEntryDto;
-import com.bombadle.entity.Player;
 import com.bombadle.entity.Score;
-import com.bombadle.enums.AvatarImage;
-import com.bombadle.enums.PlayerAuthProvider;
-import com.bombadle.enums.Role;
 import com.bombadle.repository.ScoreRepository;
-import com.bombadle.service.cache.CacheService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,63 +26,30 @@ public class ScoreServiceTest {
     @Mock
     private ScoreRepository repo;
 
-    @Mock
-    private LeaderboardService leaderboardService;
-
-    @Mock
-    private CacheService cacheService;
-
     @InjectMocks
     private ScoreService scoreService;
-
-    @Captor
-    private ArgumentCaptor<Score> scoreCaptor;
-
-    private Player getExamplePlayer() {
-        return Player.builder()
-                .id(1L)
-                .login("test")
-                .passwordHash("test")
-                .email("test@test.test")
-                .authProvider(PlayerAuthProvider.LOCAL)
-                .role(Role.ROLE_USER)
-                .avatarImage(AvatarImage.AVATAR_DEFAULT)
-                .createdAt(Instant.now())
-                .lastActiveAt(Instant.now())
-                .hasGuessedToday(true)
-                .totalSuccessfulGuesses(1)
-                .build();
-    }
 
     @Nested
     class SaveScoreTests {
 
         @Test
-        void saveScore_validScore_addsScoreSuccessfully() {
+        void saveScore_validScore_returnsSavedScore() {
             // Arrange
-            Player player = getExamplePlayer();
-            Score score = Score.builder()
-                    .player(player)
-                    .scoreTimestamp(Instant.now())
-                    .numberOfTries(5)
-                    .build();
-            score.setId(1L);
-
+            Score score = mock(Score.class);
             when(repo.save(score)).thenReturn(score);
 
             // Act
             Score savedScore = scoreService.saveScore(score);
 
             // Assert
-            assertNotNull(savedScore);
-            assertEquals(player.getEmail(), savedScore.getPlayer().getEmail());
-            assertEquals(score.getId(), savedScore.getId());
+            assertEquals(score, savedScore);
             verify(repo).save(score);
         }
 
         @Test
         void saveScore_scoreIsNull_throwsIllegalArgumentException() {
-            // Act & Assert
+            // Act
+            // Assert
             assertThrows(IllegalArgumentException.class, () -> scoreService.saveScore(null));
             verifyNoInteractions(repo);
         }
@@ -117,9 +76,7 @@ public class ScoreServiceTest {
         void getAllScores_withPageable_returnsPageOfScores() {
             // Arrange
             Pageable pageable = PageRequest.of(0, 10);
-            List<Score> content = List.of(mock(Score.class));
-            Page<Score> expectedPage = new PageImpl<>(content, pageable, 1);
-
+            Page<Score> expectedPage = new PageImpl<>(List.of(mock(Score.class)));
             when(repo.findAll(pageable)).thenReturn(expectedPage);
 
             // Act
@@ -135,24 +92,19 @@ public class ScoreServiceTest {
     class FindScoreTests {
 
         @Test
-        void findScoreByPlayerId_scoreExists_returnsOptionalWithScore() {
+        void findByPlayerId_scoreExists_returnsOptionalWithScore() {
             // Arrange
-            Player player = getExamplePlayer();
-            Score score = Score.builder()
-                    .player(player)
-                    .scoreTimestamp(Instant.now())
-                    .numberOfTries(1)
-                    .build();
-
-            when(repo.findByPlayerId(player.getId())).thenReturn(Optional.of(score));
+            Long playerId = 1L;
+            Score score = mock(Score.class);
+            when(repo.findByPlayerId(playerId)).thenReturn(Optional.of(score));
 
             // Act
-            Optional<Score> result = scoreService.findByPlayerId(player.getId());
+            Optional<Score> result = scoreService.findByPlayerId(playerId);
 
             // Assert
             assertTrue(result.isPresent());
-            assertEquals(player.getId(), result.get().getPlayer().getId());
-            verify(repo).findByPlayerId(player.getId());
+            assertEquals(score, result.get());
+            verify(repo).findByPlayerId(playerId);
         }
 
         @Test
@@ -186,93 +138,38 @@ public class ScoreServiceTest {
             assertEquals(score, result.get());
             verify(repo).findById(scoreId);
         }
-    }
-
-    @Nested
-    class RegisterScoreTests {
 
         @Test
-        void registerScore_validData_savesScoreAndEvictsLastPageCache() {
+        void findLatestScoreTimestamp_timestampExists_returnsOptionalWithTimestamp() {
             // Arrange
-            Player player = getExamplePlayer();
-            int tries = 3;
-
-            when(repo.save(any(Score.class))).thenAnswer(invocation -> invocation.getArgument(0));
-            when(repo.count()).thenReturn(25L); // 25 elements -> last page should be 2 ((25-1)/10)
+            Instant latestTime = Instant.now();
+            when(repo.findLatestScoreTimestamp()).thenReturn(Optional.of(latestTime));
 
             // Act
-            Score result = scoreService.registerScore(player, tries);
+            Optional<Instant> result = scoreService.findLatestScoreTimestamp();
 
             // Assert
-            assertNotNull(result);
-            assertEquals(player, result.getPlayer());
-            assertEquals(tries, result.getNumberOfTries());
-            assertNotNull(result.getScoreTimestamp());
-
-            verify(repo).save(any(Score.class));
-            verify(repo).count();
-            verify(cacheService).evictCacheEntry("classic-leaderboard", 2);
+            assertTrue(result.isPresent());
+            assertEquals(latestTime, result.get());
+            verify(repo).findLatestScoreTimestamp();
         }
     }
 
     @Nested
-    class RegisterScoreWithTimestampTests {
+    class SaveTests {
 
         @Test
-        void registerScoreWithTimestamp_isHistoricalInsert_clearsClassicCacheAndEvictsTop3IfNeeded() {
+        void save_validScore_callsRepositorySave() {
             // Arrange
-            Player player = getExamplePlayer();
-            int tries = 3;
-            Instant now = Instant.now();
-            Instant historicalTimestamp = now.minusSeconds(3600); // 1 hour ago
-
-            when(repo.findLatestScoreTimestamp()).thenReturn(Optional.of(now));
-            when(repo.save(any(Score.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-            // Mock Top3 list to be smaller than 3 to force top-3 cache eviction
-            when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of(mock(LeaderboardEntryDto.class)));
+            Score score = mock(Score.class);
+            when(repo.save(score)).thenReturn(score);
 
             // Act
-            Score result = scoreService.registerScoreWithTimestamp(player, tries, historicalTimestamp);
+            Score result = scoreService.save(score);
 
             // Assert
-            verify(repo).save(scoreCaptor.capture());
-            assertEquals(historicalTimestamp, scoreCaptor.getValue().getScoreTimestamp());
-
-            verify(cacheService).clear("classic-leaderboard");
-            verify(cacheService, never()).evictCacheEntry(eq("classic-leaderboard"), anyInt());
-            verify(cacheService).evictCache("top-3-leaderboard");
-        }
-
-        @Test
-        void registerScoreWithTimestamp_isNotHistoricalInsert_evictsLastPageAndTop3IfNeeded() {
-            // Arrange
-            Player player = getExamplePlayer();
-            int tries = 3;
-            Instant now = Instant.now();
-            Instant futureTimestamp = now.plusSeconds(3600);
-
-            when(repo.findLatestScoreTimestamp()).thenReturn(Optional.of(now));
-            when(repo.save(any(Score.class))).thenAnswer(invocation -> invocation.getArgument(0));
-            when(repo.count()).thenReturn(5L); // Last page will be 0
-
-            // Mock Top3 list of size 3, where new timestamp is NOT after the 3rd element's timestamp (forcing eviction)
-            LeaderboardEntryDto thirdEntry = mock(LeaderboardEntryDto.class);
-            when(thirdEntry.scoreTimeStamp()).thenReturn(futureTimestamp.plusSeconds(100));
-            when(leaderboardService.getTop3Leaderboard()).thenReturn(List.of(
-                    mock(LeaderboardEntryDto.class),
-                    mock(LeaderboardEntryDto.class),
-                    thirdEntry
-            ));
-
-            // Act
-            Score result = scoreService.registerScoreWithTimestamp(player, tries, futureTimestamp);
-
-            // Assert
-            verify(repo).save(any(Score.class));
-            verify(cacheService, never()).clear("classic-leaderboard");
-            verify(cacheService).evictCacheEntry("classic-leaderboard", 0);
-            verify(cacheService).evictCache("top-3-leaderboard");
+            assertEquals(score, result);
+            verify(repo).save(score);
         }
     }
 
@@ -280,7 +177,19 @@ public class ScoreServiceTest {
     class DeletionTests {
 
         @Test
-        void deleteScoreById_validId_callsRepositoryDelete() {
+        void manualDelete_validScore_callsRepositoryDelete() {
+            // Arrange
+            Score score = mock(Score.class);
+
+            // Act
+            scoreService.manualDelete(score);
+
+            // Assert
+            verify(repo).delete(score);
+        }
+
+        @Test
+        void deleteScoreById_validId_callsRepositoryDeleteById() {
             // Arrange
             Long scoreId = 1L;
 
@@ -301,15 +210,15 @@ public class ScoreServiceTest {
         }
 
         @Test
-        void manualDelete_validScore_callsRepositoryDelete() {
+        void deleteAllByPlayerId_validId_callsRepositoryDeleteByPlayerId() {
             // Arrange
-            Score score = mock(Score.class);
+            Long playerId = 1L;
 
             // Act
-            scoreService.manualDelete(score);
+            scoreService.deleteAllByPlayerId(playerId);
 
             // Assert
-            verify(repo).delete(score);
+            verify(repo).deleteByPlayerId(playerId);
         }
     }
 
@@ -327,20 +236,6 @@ public class ScoreServiceTest {
 
             // Assert
             assertTrue(result);
-            verify(repo).existsById(scoreId);
-        }
-
-        @Test
-        void existsById_idDoesNotExist_returnsFalse() {
-            // Arrange
-            Long scoreId = 1L;
-            when(repo.existsById(scoreId)).thenReturn(false);
-
-            // Act
-            boolean result = scoreService.existsById(scoreId);
-
-            // Assert
-            assertFalse(result);
             verify(repo).existsById(scoreId);
         }
     }

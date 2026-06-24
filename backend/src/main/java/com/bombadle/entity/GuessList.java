@@ -1,6 +1,7 @@
 package com.bombadle.entity;
 
 import com.bombadle.dto.GuessAttempt;
+import com.bombadle.enums.GameMode;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -10,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "guess_list", uniqueConstraints = {
+        @UniqueConstraint(name = "uc_guesslist_player_mode", columnNames = {"player_id", "game_mode"})
+})
 @Getter
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -19,12 +23,18 @@ public class GuessList {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id")
     private Player player;
 
+    @Builder.Default
     @JdbcTypeCode(SqlTypes.JSON)
-    private List<GuessAttempt> guesses;
+    @Column(columnDefinition = "jsonb")
+    private List<GuessAttempt> guesses = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "game_mode")
+    private GameMode gameMode;
 
     public GuessList(Player player) {
         this.player = player;

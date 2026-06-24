@@ -16,7 +16,7 @@ public class DailyResetDemoController {
 
     @PostMapping("/manual-trigger")
     public String triggerDailyReset() {
-        dailyResetService.pickNewCharacterCardAndResetScores();
+        dailyResetService.executeDailyReset();
         return "Daily reset triggered successfully!";
     }
 }
