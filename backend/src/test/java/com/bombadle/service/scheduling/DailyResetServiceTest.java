@@ -9,10 +9,12 @@ import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerDeletionService;
+import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -50,6 +52,8 @@ class DailyResetServiceTest {
     private ScoreMaintenanceService scoreMaintenanceService;
     @Mock
     private QuoteService quoteService;
+    @Mock
+    private PlayerStatisticsService playerStatisticsService;
 
     @InjectMocks
     private DailyResetService dailyResetService;
@@ -76,6 +80,7 @@ class DailyResetServiceTest {
             dailyResetService.executeDailyReset();
 
             // Assert
+            verify(playerStatisticsService).evaluateDailyStreaks();
             verify(adminChangeQueueService).applyAll();
             verify(guessListService).truncateTable();
             verify(anonymousSessionService).truncateTable();
@@ -83,6 +88,11 @@ class DailyResetServiceTest {
             verify(scoreMaintenanceService).resetAllScores();
             verify(scoreService).deleteAllInBatch();
             verify(playerDeletionService).deleteMarkedForDeletion(any(Duration.class));
+
+            // Streaks must be evaluated from completedModesToday BEFORE the reset wipes it
+            InOrder inOrder = inOrder(playerStatisticsService, scoreMaintenanceService);
+            inOrder.verify(playerStatisticsService).evaluateDailyStreaks();
+            inOrder.verify(scoreMaintenanceService).resetAllScores();
 
             verify(quoteService).findRandomQuote();
             verify(currentGameStateWrapper).setQuote(mockQuote);

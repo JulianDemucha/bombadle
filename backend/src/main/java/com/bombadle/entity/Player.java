@@ -80,12 +80,25 @@ public class Player {
     @Column(name = "auth_provider", nullable = false)
     private PlayerAuthProvider authProvider;
 
+    @Column(name = "current_streak", nullable = false)
+    private int currentStreak;
+
+    @Column(name = "longest_streak", nullable = false)
+    private int longestStreak;
+
+    @Column(name = "current_superstreak", nullable = false)
+    private int currentSuperstreak;
+
+    @Column(name = "longest_superstreak", nullable = false)
+    private int longestSuperstreak;
+
     @Builder
     protected Player(Long id, String login, String displayName, String email, String passwordHash, Role role,
                      Instant createdAt, Instant lastActiveAt, Map<GameMode, Score> todayScores,
                      AvatarImage avatarImage, int totalSuccessfulGuesses, Set<GameMode> completedModesToday,
                      Boolean accountLocked, Instant markedForDeletionAt, Boolean emailVerified,
-                     Instant lastEmailSentAt, PlayerAuthProvider authProvider) {
+                     Instant lastEmailSentAt, PlayerAuthProvider authProvider,
+                     int currentStreak, int longestStreak, int currentSuperstreak, int longestSuperstreak) {
         this.id = id;
         this.login = login;
         this.displayName = displayName;
@@ -103,6 +116,10 @@ public class Player {
         this.markedForDeletionAt = markedForDeletionAt;
         this.lastEmailSentAt = lastEmailSentAt;
         this.authProvider = authProvider;
+        this.currentStreak = currentStreak;
+        this.longestStreak = longestStreak;
+        this.currentSuperstreak = currentSuperstreak;
+        this.longestSuperstreak = longestSuperstreak;
     }
 
     protected Player() {
@@ -119,6 +136,29 @@ public class Player {
     public void resetDailyProgress() {
         this.completedModesToday.clear();
         this.todayScores.clear();
+    }
+
+    /**
+     * Advances the daily streak counters for the puzzle day that has just ended. Must be called
+     * once per day, per player, using {@code completedModesToday} BEFORE it is cleared by the reset.
+     *
+     * @param completedAnyMode  whether the player completed at least one mode that day (drives the streak)
+     * @param completedAllModes whether the player completed every mode that day (drives the superstreak)
+     */
+    public void applyDailyStreak(boolean completedAnyMode, boolean completedAllModes) {
+        if (completedAnyMode) {
+            currentStreak++;
+            longestStreak = Math.max(longestStreak, currentStreak);
+        } else {
+            currentStreak = 0;
+        }
+
+        if (completedAllModes) {
+            currentSuperstreak++;
+            longestSuperstreak = Math.max(longestSuperstreak, currentSuperstreak);
+        } else {
+            currentSuperstreak = 0;
+        }
     }
 
     public Optional<Score> getTodayScore(GameMode mode) {

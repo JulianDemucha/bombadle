@@ -5,6 +5,7 @@ import com.bombadle.entity.PlayerDailyStatistic;
 import com.bombadle.entity.Score;
 import com.bombadle.enums.GameMode;
 import com.bombadle.repository.PlayerDailyStatisticRepository;
+import com.bombadle.repository.PlayerRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,6 +29,9 @@ class PlayerStatisticsServiceTest {
 
     @Mock
     private PlayerDailyStatisticRepository playerDailyStatisticRepository;
+
+    @Mock
+    private PlayerRepository playerRepository;
 
     @Mock
     private LeaderboardService leaderboardService;
@@ -109,6 +115,64 @@ class PlayerStatisticsServiceTest {
             // Assert
             verify(playerDailyStatisticRepository, never()).save(any());
             verifyNoInteractions(leaderboardService);
+        }
+    }
+
+    @Nested
+    class EvaluateDailyStreaksTests {
+
+        private static Player playerWithStreaks(Set<GameMode> completedModesToday,
+                                                int currentStreak, int longestStreak,
+                                                int currentSuperstreak, int longestSuperstreak) {
+            return Player.builder()
+                    .completedModesToday(completedModesToday)
+                    .currentStreak(currentStreak)
+                    .longestStreak(longestStreak)
+                    .currentSuperstreak(currentSuperstreak)
+                    .longestSuperstreak(longestSuperstreak)
+                    .build();
+        }
+
+        @Test
+        void evaluateDailyStreaks_allModesCompleted_incrementsStreakAndSuperstreak() {
+            Player player = playerWithStreaks(
+                    Set.of(GameMode.CLASSIC, GameMode.IMAGES, GameMode.QUOTES_STAGE_1, GameMode.QUOTES_STAGE_2),
+                    4, 4, 2, 5);
+            when(playerRepository.findAll()).thenReturn(List.of(player));
+
+            playerStatisticsService.evaluateDailyStreaks();
+
+            assertEquals(5, player.getCurrentStreak());
+            assertEquals(5, player.getLongestStreak());
+            assertEquals(3, player.getCurrentSuperstreak());
+            assertEquals(5, player.getLongestSuperstreak()); // unchanged: 3 < 5
+            verify(playerRepository).saveAll(List.of(player));
+        }
+
+        @Test
+        void evaluateDailyStreaks_someButNotAllModes_incrementsStreakAndResetsSuperstreak() {
+            Player player = playerWithStreaks(Set.of(GameMode.CLASSIC), 4, 6, 3, 7);
+            when(playerRepository.findAll()).thenReturn(List.of(player));
+
+            playerStatisticsService.evaluateDailyStreaks();
+
+            assertEquals(5, player.getCurrentStreak());
+            assertEquals(6, player.getLongestStreak()); // unchanged: 5 < 6
+            assertEquals(0, player.getCurrentSuperstreak()); // reset independently
+            assertEquals(7, player.getLongestSuperstreak()); // preserved
+        }
+
+        @Test
+        void evaluateDailyStreaks_noModesCompleted_resetsBothCurrentCountersPreservingMaxima() {
+            Player player = playerWithStreaks(Set.of(), 9, 9, 4, 8);
+            when(playerRepository.findAll()).thenReturn(List.of(player));
+
+            playerStatisticsService.evaluateDailyStreaks();
+
+            assertEquals(0, player.getCurrentStreak());
+            assertEquals(9, player.getLongestStreak());
+            assertEquals(0, player.getCurrentSuperstreak());
+            assertEquals(8, player.getLongestSuperstreak());
         }
     }
 

@@ -5,6 +5,7 @@ import com.bombadle.entity.PlayerDailyStatistic;
 import com.bombadle.entity.Score;
 import com.bombadle.enums.GameMode;
 import com.bombadle.repository.PlayerDailyStatisticRepository;
+import com.bombadle.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,29 +14,29 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PlayerStatisticsService {
 
-    /** Same calendar-day boundary as {@code DailyResetService}: the daily reset runs at 07:00 Europe/Warsaw. */
     static final ZoneId RESET_ZONE = ZoneId.of("Europe/Warsaw");
     static final int RESET_HOUR = 7;
 
+    /** A superstreak requires completing every game mode on a given day. */
+    static final Set<GameMode> ALL_GAME_MODES = EnumSet.allOf(GameMode.class);
+
     private final PlayerDailyStatisticRepository playerDailyStatisticRepository;
+    private final PlayerRepository playerRepository;
     private final LeaderboardService leaderboardService;
 
     /**
      * Persists a permanent, per-day snapshot of a solved puzzle, mirroring the {@link Score}
      * that is wiped by the daily reset.
-     * <p>
-     * The leaderboard position is captured here, at solve time, on purpose: it reflects the
-     * position the player actually saw. Capturing it later (e.g. at the daily reset) would drift
-     * as other players post better times for the rest of the day.
-     * <p>
-     * {@code QUOTES_STAGE_1} is intentionally skipped — it is not a ranked board, so a position
-     * snapshot would be meaningless.
+     * {@code QUOTES_STAGE_1} is intentionally skipped — it is not a ranked board, so a position snapshot would be meaningless.
      */
     @Transactional
     public void recordDailyStatistic(Player player, Score score) {
@@ -68,6 +69,30 @@ public class PlayerStatisticsService {
         playerDailyStatisticRepository.save(statistic);
         log.debug("Recorded daily statistic for player {} in mode {} on {} (position {}/{})",
                 player.getId(), gameMode, puzzleDate, leaderboardPosition, totalParticipants);
+    }
+
+    /**
+     * Advances every player's streak counters for the puzzle day that has just ended.
+     * <p>
+     * Must run once per day, BEFORE the daily reset clears {@code completedModesToday} (the reset
+     * wipes it with a bulk native update that bypasses the persistence context, so the in-memory
+     * values must be read first). The 07:00 Europe/Warsaw day boundary is implicit: this is invoked
+     * by the daily reset at that moment.
+     */
+    @Transactional
+    public void evaluateDailyStreaks() {
+        List<Player> players = playerRepository.findAll();
+
+        for (Player player : players) {
+            Set<GameMode> completed = player.getCompletedModesToday();
+            boolean completedAnyMode = completed != null && !completed.isEmpty();
+            boolean completedAllModes = completed != null && completed.containsAll(ALL_GAME_MODES);
+            player.applyDailyStreak(completedAnyMode, completedAllModes);
+        }
+
+        playerRepository.saveAll(players);
+        playerRepository.flush();
+        log.info("Evaluated daily streaks for {} players", players.size());
     }
 
     /**
