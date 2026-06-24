@@ -1,5 +1,8 @@
 package com.bombadle.service.stats;
 
+import com.bombadle.dto.BasicStatisticsDto;
+import com.bombadle.dto.DailyStatisticDto;
+import com.bombadle.dto.DetailedStatisticsDto;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.PlayerDailyStatistic;
 import com.bombadle.entity.Score;
@@ -18,9 +21,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -173,6 +178,93 @@ class PlayerStatisticsServiceTest {
             assertEquals(9, player.getLongestStreak());
             assertEquals(0, player.getCurrentSuperstreak());
             assertEquals(8, player.getLongestSuperstreak());
+        }
+    }
+
+    @Nested
+    class ReadStatisticsTests {
+
+        @Test
+        void getBasicStatistics_withHistory_returnsLivePlayerFieldsAndAggregates() {
+            Player player = Player.builder()
+                    .currentSuperstreak(3)
+                    .totalSuccessfulGuesses(42)
+                    .build();
+            when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+            when(playerDailyStatisticRepository.findAveragePercentileByPlayerId(1L)).thenReturn(0.25);
+            when(playerDailyStatisticRepository.countTop3FinishesByPlayerId(1L)).thenReturn(7L);
+
+            BasicStatisticsDto result = playerStatisticsService.getBasicStatistics(1L);
+
+            assertEquals(3, result.currentSuperstreak());
+            assertEquals(42, result.totalGuesses());
+            assertEquals(0.25, result.averageLeaderboardPercentile());
+            assertEquals(7, result.totalTop3Finishes());
+        }
+
+        @Test
+        void getBasicStatistics_noHistory_returnsNullPercentileAndZeroTop3() {
+            Player player = Player.builder().currentSuperstreak(0).totalSuccessfulGuesses(0).build();
+            when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+            when(playerDailyStatisticRepository.findAveragePercentileByPlayerId(1L)).thenReturn(null);
+            when(playerDailyStatisticRepository.countTop3FinishesByPlayerId(1L)).thenReturn(0L);
+
+            BasicStatisticsDto result = playerStatisticsService.getBasicStatistics(1L);
+
+            assertNull(result.averageLeaderboardPercentile());
+            assertEquals(0, result.totalTop3Finishes());
+        }
+
+        @Test
+        void getDetailedStatistics_returnsStreaksAndPerModeBreakdown() {
+            Player player = Player.builder()
+                    .totalSuccessfulGuesses(20)
+                    .currentStreak(5)
+                    .longestStreak(8)
+                    .currentSuperstreak(2)
+                    .longestSuperstreak(4)
+                    .build();
+            when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+            when(playerDailyStatisticRepository.countByPlayerIdGroupedByGameMode(1L)).thenReturn(List.of(
+                    new Object[]{GameMode.CLASSIC, 5L},
+                    new Object[]{GameMode.IMAGES, 3L}
+            ));
+
+            DetailedStatisticsDto result = playerStatisticsService.getDetailedStatistics(1L);
+
+            assertEquals(20, result.totalGuesses());
+            assertEquals(5, result.currentStreak());
+            assertEquals(8, result.longestStreak());
+            assertEquals(2, result.currentSuperstreak());
+            assertEquals(4, result.longestSuperstreak());
+            assertEquals(2, result.guessesByMode().size());
+            assertEquals(5, result.guessesByMode().get(GameMode.CLASSIC));
+            assertEquals(3, result.guessesByMode().get(GameMode.IMAGES));
+        }
+
+        @Test
+        void getChartStatistics_mapsEntitiesToDtosInOrder() {
+            PlayerDailyStatistic stat = PlayerDailyStatistic.builder()
+                    .gameMode(GameMode.CLASSIC)
+                    .puzzleDate(LocalDate.of(2026, 6, 24))
+                    .solvedAt(Instant.parse("2026-06-24T12:00:00Z"))
+                    .numberOfTries(3)
+                    .leaderboardPosition(5)
+                    .totalParticipants(20)
+                    .build();
+            when(playerDailyStatisticRepository.findByPlayerIdOrderByPuzzleDateAscGameModeAsc(1L))
+                    .thenReturn(List.of(stat));
+
+            List<DailyStatisticDto> result = playerStatisticsService.getChartStatistics(1L);
+
+            assertEquals(1, result.size());
+            DailyStatisticDto dto = result.get(0);
+            assertEquals(GameMode.CLASSIC, dto.gameMode());
+            assertEquals("2026-06-24", dto.puzzleDate());
+            assertEquals(Instant.parse("2026-06-24T12:00:00Z"), dto.solvedAt());
+            assertEquals(3, dto.numberOfTries());
+            assertEquals(5, dto.leaderboardPosition());
+            assertEquals(20, dto.totalParticipants());
         }
     }
 

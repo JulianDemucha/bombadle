@@ -1,5 +1,8 @@
 package com.bombadle.service.stats;
 
+import com.bombadle.dto.BasicStatisticsDto;
+import com.bombadle.dto.DailyStatisticDto;
+import com.bombadle.dto.DetailedStatisticsDto;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.PlayerDailyStatistic;
 import com.bombadle.entity.Score;
@@ -8,14 +11,17 @@ import com.bombadle.repository.PlayerDailyStatisticRepository;
 import com.bombadle.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -93,6 +99,52 @@ public class PlayerStatisticsService {
         playerRepository.saveAll(players);
         playerRepository.flush();
         log.info("Evaluated daily streaks for {} players", players.size());
+    }
+
+    /** Compact statistics for the settings card. */
+    @Transactional(readOnly = true)
+    public BasicStatisticsDto getBasicStatistics(long playerId) {
+        Player player = getPlayerOrThrow(playerId);
+        return new BasicStatisticsDto(
+                player.getCurrentSuperstreak(),
+                player.getTotalSuccessfulGuesses(),
+                playerDailyStatisticRepository.findAveragePercentileByPlayerId(playerId),
+                (int) playerDailyStatisticRepository.countTop3FinishesByPlayerId(playerId)
+        );
+    }
+
+    /** Full statistics for the dedicated statistics page. */
+    @Transactional(readOnly = true)
+    public DetailedStatisticsDto getDetailedStatistics(long playerId) {
+        Player player = getPlayerOrThrow(playerId);
+
+        Map<GameMode, Integer> guessesByMode = new EnumMap<>(GameMode.class);
+        for (Object[] row : playerDailyStatisticRepository.countByPlayerIdGroupedByGameMode(playerId)) {
+            guessesByMode.put((GameMode) row[0], ((Number) row[1]).intValue());
+        }
+
+        return new DetailedStatisticsDto(
+                player.getTotalSuccessfulGuesses(),
+                guessesByMode,
+                player.getCurrentStreak(),
+                player.getLongestStreak(),
+                player.getCurrentSuperstreak(),
+                player.getLongestSuperstreak()
+        );
+    }
+
+    /** Historical per-day solves for charting, ordered chronologically. */
+    @Transactional(readOnly = true)
+    public List<DailyStatisticDto> getChartStatistics(long playerId) {
+        return playerDailyStatisticRepository.findByPlayerIdOrderByPuzzleDateAscGameModeAsc(playerId)
+                .stream()
+                .map(DailyStatisticDto::toDto)
+                .toList();
+    }
+
+    private Player getPlayerOrThrow(long playerId) {
+        return playerRepository.findById(playerId)
+                .orElseThrow(() -> new UsernameNotFoundException("Player not found: " + playerId));
     }
 
     /**
