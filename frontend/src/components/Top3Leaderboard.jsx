@@ -11,7 +11,8 @@ function Top3Leaderboard({
                              showSeparator = false,
                              dailyCounterText = null,
                              isAnonymousAndWon = false,
-                             leaderboardPath = '/leaderboard/classic'
+                             mode = 'classic',
+                             leaderboardPath
                          }) {
     const navigate = useNavigate();
     const location = useLocation();
@@ -24,7 +25,7 @@ function Top3Leaderboard({
     };
 
     const handleFullLeaderboardRedirect = () => {
-        navigate(leaderboardPath);
+        navigate(leaderboardPath || `/leaderboard/${mode}`);
     };
 
     return (

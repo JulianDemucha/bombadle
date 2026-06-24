@@ -1,28 +1,56 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../../../api/api.js';
 
-const useLeaderboard = () => {
+const VALID_MODES = ['classic', 'quotes', 'images'];
+
+const useLeaderboard = (mode = 'classic') => {
+    const normalizedMode = VALID_MODES.includes(mode) ? mode : null;
+
     const [leaderboardData, setLeaderboardData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
+    const [trackedMode, setTrackedMode] = useState(normalizedMode);
 
-    const fetchLeaderboard = useCallback(async (page) => {
+    if (normalizedMode !== trackedMode) {
+        setTrackedMode(normalizedMode);
+        setCurrentPage(0);
+        setLeaderboardData(null);
+        setError(null);
+    }
+
+    const requestIdRef = useRef(0);
+
+    const fetchLeaderboard = useCallback(async (targetMode, page) => {
+        if (!targetMode) {
+            setError('Nieznany tryb rankingu.');
+            setLeaderboardData(null);
+            return;
+        }
+
+        const requestId = ++requestIdRef.current;
         setLoading(true);
         setError(null);
-        try {
-            const response = await apiFetch(`/api/leaderboard/classic?page=${page}`);
-            setLeaderboardData(response.data);
-        } catch (err) {
-            setError(err.message || 'Wystąpił błąd podczas pobierania danych');
-        } finally {
-            setLoading(false);
+
+        const response = await apiFetch(`/api/leaderboard/${targetMode}?page=${page}`);
+
+        if (requestId !== requestIdRef.current) {
+            return;
         }
+
+        if (response.ok) {
+            setLeaderboardData(response.data);
+        } else {
+            setError(response.data?.message || 'Wystąpił błąd podczas pobierania danych');
+            setLeaderboardData(null);
+        }
+
+        setLoading(false);
     }, []);
 
     useEffect(() => {
-        fetchLeaderboard(currentPage);
-    }, [currentPage, fetchLeaderboard]);
+        fetchLeaderboard(normalizedMode, currentPage);
+    }, [normalizedMode, currentPage, fetchLeaderboard]);
 
     const goToNextPage = () => {
         if (leaderboardData && !leaderboardData.last) {

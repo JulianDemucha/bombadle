@@ -23,8 +23,7 @@ export const routes = [
     {path: '/Classic', element: <ClassicModePage/>},
     {path: '/Quotes', element: <QuotesModePage/>},
     {path: '/Images', element: <ImagesModePage/>},
-    {path: '/leaderboard/classic', element: <LeaderboardPage />},
-    {path: '/leaderboard/quotes', element: <LeaderboardPage />},
-    {path: '/leaderboard/images', element: <LeaderboardPage />},
+    {path: '/leaderboard/:mode', element: <LeaderboardPage />},
+    {path: '/leaderboard', element: <Navigate to="/leaderboard/classic" replace/>},
     {path: '/login-success', element: <Navigate to="/" replace/>}
 ]

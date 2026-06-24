@@ -1,14 +1,15 @@
 import React from 'react';
 import useLeaderboard from './hooks/useLeaderboard';
 import './LeaderboardPage.css';
-import { useNavigate } from 'react-router-dom';
+import {useNavigate, useParams} from 'react-router-dom';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
+import LeaderboardModeSwitcher from '../../components/LeaderboardModeSwitcher';
 
-const LeaderboardColumn = ({ players, startIndex, isLoading }) => {
+const LeaderboardColumn = ({players, startIndex, isLoading}) => {
     const filledPlayers = [...players];
     while (filledPlayers.length < 5) {
-        filledPlayers.push({ isEmpty: true, id: `empty-${startIndex + filledPlayers.length}` });
+        filledPlayers.push({isEmpty: true, id: `empty-${startIndex + filledPlayers.length}`});
     }
 
     return (
@@ -52,7 +53,10 @@ const LeaderboardColumn = ({ players, startIndex, isLoading }) => {
                         </div>
                         <span className="text-center">{player.numberOfTries}</span>
                         <span className="text-center">{player.wins}</span>
-                        <span className="text-center">{new Date(player.scoreTimeStamp).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-center">{new Date(player.scoreTimeStamp).toLocaleTimeString('pl-PL', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</span>
                     </div>
                 );
             })}
@@ -61,6 +65,9 @@ const LeaderboardColumn = ({ players, startIndex, isLoading }) => {
 };
 
 const LeaderboardPage = () => {
+    const {mode} = useParams();
+    const currentMode = (mode || 'classic').toLowerCase();
+
     const {
         leaderboardData,
         loading,
@@ -70,22 +77,36 @@ const LeaderboardPage = () => {
         goToPreviousPage,
         goToFirstPage,
         goToLastPage,
-    } = useLeaderboard();
+    } = useLeaderboard(currentMode);
 
     const navigate = useNavigate();
+
+    const getTitle = () => {
+        switch (currentMode) {
+            case 'images':
+                return 'Ranking Zdjęć';
+            case 'quotes':
+                return 'Ranking Cytatów';
+            case 'classic':
+                return 'Ranking Klasyczny';
+            default:
+                return 'Ranking';
+        }
+    };
 
     if (error) {
         return (
             <div className="leaderboard-page">
-                <Header />
+                <Header/>
                 <div className="leaderboard-container">
                     <button onClick={() => navigate(-1)} className="back-button">
                         Powrót
                     </button>
-                    <h1>Ranking Klasyczny</h1>
+                    <h1>{getTitle()}</h1>
+                    <LeaderboardModeSwitcher currentMode={currentMode}/>
                     <div>Wystąpił błąd: {error}</div>
                 </div>
-                <Footer />
+                <Footer/>
             </div>
         );
     }
@@ -102,33 +123,26 @@ const LeaderboardPage = () => {
 
     return (
         <div className="leaderboard-page">
-            <Header />
+            <Header/>
             <div className="leaderboard-container">
                 <button onClick={() => navigate(-1)} className="back-button">
                     Powrót
                 </button>
-                <h1>Ranking Klasyczny</h1>
+                <h1>{getTitle()}</h1>
+                <LeaderboardModeSwitcher currentMode={currentMode}/>
                 <div className="leaderboard-table-full">
-                    <LeaderboardColumn players={leftColumn} startIndex={globalStartIndex} isLoading={isLoading} />
-                    <LeaderboardColumn players={rightColumn} startIndex={globalStartIndex + 5} isLoading={isLoading} />
+                    <LeaderboardColumn players={leftColumn} startIndex={globalStartIndex} isLoading={isLoading}/>
+                    <LeaderboardColumn players={rightColumn} startIndex={globalStartIndex + 5} isLoading={isLoading}/>
                 </div>
                 <div className="pagination-controls">
-                    <button onClick={goToFirstPage} disabled={first || isLoading}>
-                        &lt;&lt;
-                    </button>
-                    <button onClick={goToPreviousPage} disabled={first || isLoading}>
-                        &lt;
-                    </button>
+                    <button onClick={goToFirstPage} disabled={first || isLoading}>&lt;&lt;</button>
+                    <button onClick={goToPreviousPage} disabled={first || isLoading}>&lt;</button>
                     <span>Strona {currentPage + 1} z {totalPages}</span>
-                    <button onClick={goToNextPage} disabled={last || isLoading}>
-                        &gt;
-                    </button>
-                    <button onClick={goToLastPage} disabled={last || isLoading}>
-                        &gt;&gt;
-                    </button>
+                    <button onClick={goToNextPage} disabled={last || isLoading}>&gt;</button>
+                    <button onClick={goToLastPage} disabled={last || isLoading}>&gt;&gt;</button>
                 </div>
             </div>
-            <Footer />
+            <Footer/>
         </div>
     );
 };

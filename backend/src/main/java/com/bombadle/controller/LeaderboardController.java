@@ -25,8 +25,16 @@ public class LeaderboardController {
             @PathVariable String gameMode,
             @RequestParam(defaultValue = "0") int page
     ) {
+        if ("quotes".equalsIgnoreCase(gameMode))
+            gameMode = "QUOTES_STAGE_2";
+
+        GameMode gameModeEnum = GameMode.valueOf(gameMode.toUpperCase());
+
+        if (gameModeEnum == GameMode.QUOTES_STAGE_1)
+            gameModeEnum = GameMode.QUOTES_STAGE_2;
+
         return ResponseEntity.ok(leaderboardService.getPagedLeaderboard(
-                GameMode.valueOf(gameMode.toUpperCase()),
+                GameMode.valueOf(gameModeEnum.name()),
                 page
         ));
     }
