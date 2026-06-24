@@ -159,6 +159,24 @@ class LeaderboardServiceTest {
     }
 
     @Nested
+    class CountParticipantsTests {
+
+        @Test
+        void countParticipants_returnsRepositoryCountAsInt() {
+            // Arrange
+            GameMode mode = GameMode.CLASSIC;
+            when(repo.countByGameMode(mode)).thenReturn(42L);
+
+            // Act
+            int result = leaderboardService.countParticipants(mode);
+
+            // Assert
+            assertEquals(42, result);
+            verify(repo).countByGameMode(mode);
+        }
+    }
+
+    @Nested
     class GetLatestScoreTests {
 
         @Test

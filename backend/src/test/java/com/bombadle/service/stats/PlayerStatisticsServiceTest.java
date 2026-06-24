@@ -283,4 +283,15 @@ class PlayerStatisticsServiceTest {
             assertEquals(LocalDate.of(2026, 6, 23), playerStatisticsService.resolvePuzzleDate(solvedAt));
         }
     }
+
+    @Nested
+    class DeleteAllByPlayerIdTests {
+
+        @Test
+        void deleteAllByPlayerId_delegatesToRepository() {
+            playerStatisticsService.deleteAllByPlayerId(7L);
+
+            verify(playerDailyStatisticRepository).deleteByPlayerId(7L);
+        }
+    }
 }
