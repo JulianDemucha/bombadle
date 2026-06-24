@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
+import { syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
 import confetti from 'canvas-confetti';
 import {
@@ -264,6 +265,10 @@ function useImagesModeGame() {
                     setGuesses(mappedRows.reverse());
                 } else {
                     setGuesses([]);
+                }
+
+                if (!user) {
+                    await syncAnonymousWonModes();
                 }
             } catch (error) {
                 console.error('Błąd ładowania stanu gry Images:', error);

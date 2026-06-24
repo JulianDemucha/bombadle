@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
+import { syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
 import confetti from 'canvas-confetti';
 import {
@@ -222,6 +223,10 @@ function useQuotesModeGame() {
                     } else if (user && user.todayScoresTimestamps?.['QUOTES_STAGE_2']) {
                         latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['QUOTES_STAGE_2']);
                     }
+                }
+
+                if (!user) {
+                    await syncAnonymousWonModes();
                 }
 
             } catch (error) {
