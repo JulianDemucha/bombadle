@@ -6,6 +6,7 @@ import { apiFetch } from "../../api/api.js";
 import axios from "../../api/axios.js";
 import { useNavigate } from "react-router-dom";
 import AvatarPicker from "./AvatarPicker.jsx";
+import StatisticsSummaryCard from "./components/StatisticsSummaryCard.jsx";
 
 export default function PlayerSettingsPage() {
     const [displayName, setDisplayName] = useState("");
@@ -213,17 +214,7 @@ export default function PlayerSettingsPage() {
                 </button>
             </div>
 
-            <div className="container">
-                <h2>Statystyki</h2>
-                <div>
-                    <span>Zgadnięto:</span>
-                    <span> {user.totalGuesses} razy</span>
-                </div>
-                <div>
-                    <span>Top 3:</span>
-                    <span> 0 razy</span>
-                </div>
-            </div>
+            <StatisticsSummaryCard />
 
             <div className="container">
                 <h1>Ustawienia Konta</h1>

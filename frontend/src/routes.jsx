@@ -5,6 +5,7 @@ import RegisterPage from "./pages/LoginRegisterPage/RegisterPage.jsx";
 import UnauthenticatedRoute from "./auth/UnauthenticatedRoute.jsx";
 import AuthenticatedRoute from "./auth/AuthenticatedRoute.jsx";
 import PlayerSettingsPage from "./pages/PlayerSettingsPage/PlayerSettingsPage.jsx";
+import PlayerStatisticsPage from "./pages/PlayerStatisticsPage/PlayerStatisticsPage.jsx";
 import ClassicModePage from "./pages/ModePage/ClassicModePage/ClassicModePage.jsx";
 import QuotesModePage from "./pages/ModePage/QuotesModePage/QuotesModePage.jsx";
 import ImagesModePage from "./pages/ModePage/ImagesModePage/ImagesModePage.jsx";
@@ -20,6 +21,7 @@ export const routes = [
     {path: '/verify-email', element: <UnauthenticatedRoute><EmailVerificationPage/></UnauthenticatedRoute>},
     {path: '/forgot-password', element: <UnauthenticatedRoute><ForgotPasswordPage/></UnauthenticatedRoute>},
     {path: '/Profile/', element: <AuthenticatedRoute><PlayerSettingsPage/></AuthenticatedRoute>},
+    {path: '/Statistics', element: <AuthenticatedRoute><PlayerStatisticsPage/></AuthenticatedRoute>},
     {path: '/Classic', element: <ClassicModePage/>},
     {path: '/Quotes', element: <QuotesModePage/>},
     {path: '/Images', element: <ImagesModePage/>},
