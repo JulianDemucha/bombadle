@@ -6,6 +6,8 @@ import AuthHeader from '../../components/AuthHeader';
 import axios from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../auth/UseAuth.jsx";
+import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
+import useAnonymousMergePrompt from "../../components/MergePrompt/useAnonymousMergePrompt.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
@@ -21,6 +23,7 @@ function LoginPage() {
     const [unverifiedEmail, setUnverifiedEmail] = useState("");
     const navigate = useNavigate();
     const {reload} = useAuth();
+    const merge = useAnonymousMergePrompt();
 
     useEffect(() => {
         document.body.classList.add('scrollable-page');
@@ -29,39 +32,7 @@ function LoginPage() {
         };
     }, []);
 
-    const handleMergeConfirmation = () => {
-        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
-        if (anonymousGuesses && anonymousGuesses !== '[]') {
-            if (window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?")) {
-                const sessionId = localStorage.getItem('bombadle_anonymous_session_id');
-                if (sessionId) {
-                    document.cookie = `bombadle_anonymous_session_id=${sessionId}; path=/; max-age=60`;
-                } else {
-                     document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
-                }
-                
-                localStorage.removeItem('anonymousGuessList');
-                localStorage.removeItem('anonymousWinTime');
-                localStorage.removeItem('lastPlayedDate');
-                localStorage.removeItem('bombadle_anonymous_session_id');
-            }
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!email || !password) {
-            setErrors(prev => ({...prev, general: "Wypełnij wymagane pola."}));
-            return;
-        }
-
-        if (!validateEmail(email)) {
-            setErrors(prev => ({...prev, email: "Nieprawidłowy adres e-mail."}));
-            return;
-        }
-
-        handleMergeConfirmation();
+    const performLogin = async () => {
         setLoading(true);
 
         try {
@@ -92,9 +63,26 @@ function LoginPage() {
         }
     };
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        if (!email || !password) {
+            setErrors(prev => ({...prev, general: "Wypełnij wymagane pola."}));
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            setErrors(prev => ({...prev, email: "Nieprawidłowy adres e-mail."}));
+            return;
+        }
+
+        merge.requestAuth(() => performLogin());
+    };
+
     const handleGoogleLogin = () => {
-        handleMergeConfirmation();
-        window.location.href = '/oauth2/authorization/google';
+        merge.requestAuth(() => {
+            window.location.href = '/oauth2/authorization/google';
+        });
     };
 
     const handleSendActivationCode = async () => {
@@ -131,6 +119,7 @@ function LoginPage() {
     return (
         <div className="login-register-page">
             <AuthHeader />
+            <MergePrompt isOpen={merge.isOpen} onConfirm={merge.confirm} onDecline={merge.decline} />
             <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>LOGOWANIE</h1>
 
