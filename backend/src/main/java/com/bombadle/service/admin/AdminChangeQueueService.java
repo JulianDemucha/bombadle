@@ -3,7 +3,6 @@ package com.bombadle.service.admin;
 import com.bombadle.dto.AdminPendingCardChangeDto;
 import com.bombadle.entity.AdminPendingChange;
 import com.bombadle.repository.AdminPendingChangeRepository;
-import com.bombadle.dto.queue.PendingCacheFlushPayload;
 import com.bombadle.dto.queue.PendingCardCreatePayload;
 import com.bombadle.dto.queue.PendingCardDeletePayload;
 import com.bombadle.dto.queue.PendingCardUpdatePayload;
@@ -95,11 +94,6 @@ public class AdminChangeQueueService {
         if (actionType.startsWith("delete_card")) {
             PendingCardDeletePayload payload = objectMapper.readValue(change.getPayload(), PendingCardDeletePayload.class);
             processor.processDelete(payload);
-            return;
-        }
-        if (actionType.startsWith("flush_cache")) {
-            PendingCacheFlushPayload payload = objectMapper.readValue(change.getPayload(), PendingCacheFlushPayload.class);
-            processor.processCacheFlush(payload);
         }
     }
 

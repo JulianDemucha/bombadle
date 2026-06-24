@@ -1,6 +1,5 @@
 package com.bombadle.service.admin;
 
-import com.bombadle.dto.queue.PendingCacheFlushPayload;
 import com.bombadle.dto.queue.PendingCardCreatePayload;
 import com.bombadle.dto.queue.PendingCardDeletePayload;
 import com.bombadle.dto.queue.PendingCardUpdatePayload;
@@ -69,18 +68,6 @@ public class AdminCharacterCardProcessor {
         }
         characterCardRepository.deleteById(payload.id());
         log.info("Successfully processed pending deletion for card ID: {}", payload.id());
-    }
-
-    public void processCacheFlush(PendingCacheFlushPayload payload) {
-        if (Boolean.TRUE.equals(payload.flushAll())) {
-            cacheService.evictAllCaches();
-            log.info("Successfully processed pending flush for ALL caches");
-            return;
-        }
-        if (payload.cacheName() != null && !payload.cacheName().isBlank()) {
-            cacheService.evictCache(payload.cacheName());
-            log.info("Successfully processed pending flush for cache: {}", payload.cacheName());
-        }
     }
 
     private void finalizeCardProcessing(

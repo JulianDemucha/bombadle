@@ -22,8 +22,8 @@ public class AdminCacheController {
             @AuthenticationPrincipal PlayerPrincipal actor,
             @RequestBody AdminCacheFlushRequest request
     ) {
-        adminCacheService.enqueueFlush(actor.getPlayerId(), request);
-        return ResponseEntity.accepted().build();
+        adminCacheService.flushCache(actor.getPlayerId(), request);
+
+        return ResponseEntity.ok().build();
     }
 }
-

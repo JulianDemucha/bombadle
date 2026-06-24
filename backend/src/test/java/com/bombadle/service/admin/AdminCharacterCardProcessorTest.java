@@ -1,6 +1,5 @@
 package com.bombadle.service.admin;
 
-import com.bombadle.dto.queue.PendingCacheFlushPayload;
 import com.bombadle.dto.queue.PendingCardCreatePayload;
 import com.bombadle.dto.queue.PendingCardDeletePayload;
 import com.bombadle.dto.queue.PendingCardUpdatePayload;
@@ -258,49 +257,6 @@ class AdminCharacterCardProcessorTest {
 
             // Assert
             verify(repository, never()).deleteById(anyLong());
-        }
-    }
-
-    @Nested
-    class ProcessCacheFlushTests {
-
-        @Test
-        void processCacheFlush_flushAllIsTrue_evictsAllCaches() {
-            // Arrange
-            PendingCacheFlushPayload payload = new PendingCacheFlushPayload(null, true);
-
-            // Act
-            processor.processCacheFlush(payload);
-
-            // Assert
-            verify(cacheService).evictAllCaches();
-            verify(cacheService, never()).evictCache(anyString());
-        }
-
-        @Test
-        void processCacheFlush_flushAllIsFalseAndCacheNameProvided_evictsSpecificCache() {
-            // Arrange
-            PendingCacheFlushPayload payload = new PendingCacheFlushPayload("sigma_cache", false);
-
-            // Act
-            processor.processCacheFlush(payload);
-
-            // Assert
-            verify(cacheService, never()).evictAllCaches();
-            verify(cacheService).evictCache("sigma_cache");
-        }
-
-        @Test
-        void processCacheFlush_flushAllIsFalseAndCacheNameIsBlank_doesNothing() {
-            // Arrange
-            PendingCacheFlushPayload payload = new PendingCacheFlushPayload(" ", false);
-
-            // Act
-            processor.processCacheFlush(payload);
-
-            // Assert
-            verify(cacheService, never()).evictAllCaches();
-            verify(cacheService, never()).evictCache(anyString());
         }
     }
 }
