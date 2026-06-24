@@ -7,6 +7,7 @@ import axios from "../../api/axios.js";
 import { useNavigate } from "react-router-dom";
 import AvatarPicker from "./AvatarPicker.jsx";
 import StatisticsSummaryCard from "./components/StatisticsSummaryCard.jsx";
+import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog.jsx";
 
 export default function PlayerSettingsPage() {
     const [displayName, setDisplayName] = useState("");
@@ -24,6 +25,10 @@ export default function PlayerSettingsPage() {
     const [deleteError, setDeleteError] = useState("");
     const [deleteResendDisabled, setDeleteResendDisabled] = useState(false);
     const [deleteCountdown, setDeleteCountdown] = useState(0);
+
+    const [saveMessage, setSaveMessage] = useState(null); // { type: 'error' | 'success', text }
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showDeletedInfo, setShowDeletedInfo] = useState(false);
 
     const context = useAuth();
     const user = context.user;
@@ -62,6 +67,7 @@ export default function PlayerSettingsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
+        setSaveMessage(null);
         try {
             const body = {
                 login: displayName === (user.displayName ?? user.login ?? "") ? null : (displayName.trim() === "" ? null : displayName.trim()),
@@ -75,18 +81,19 @@ export default function PlayerSettingsPage() {
             });
 
             if (res.status === 401) {
-                alert("Twoja sesja wygasła. Zaloguj się ponownie.");
+                setSaveMessage({ type: "error", text: "Twoja sesja wygasła. Zaloguj się ponownie." });
                 return;
             }
 
             if (!res.ok) {
                 const serverMsg = typeof res.data === "string" ? res.data : (res.data?.message || JSON.stringify(res.data));
-                alert("Aktualizacja nie powiodła się: " + (serverMsg || `status ${res.status}`));
+                setSaveMessage({ type: "error", text: "Aktualizacja nie powiodła się: " + (serverMsg || `status ${res.status}`) });
             } else {
+                setSaveMessage({ type: "success", text: "Zmiany zostały zapisane." });
                 await reload();
             }
         } catch (err) {
-            alert("Błąd podczas zapisu: " + (err.message || err));
+            setSaveMessage({ type: "error", text: "Błąd podczas zapisu: " + (err.message || err) });
         } finally {
             setSaving(false);
         }
@@ -122,9 +129,12 @@ export default function PlayerSettingsPage() {
         }
     };
 
-    const handleInitiateDelete = async () => {
-        if (!window.confirm("Czy na pewno chcesz usunąć konto? Otrzymasz kod potwierdzający na e-mail.")) return;
+    const handleInitiateDelete = () => {
+        setShowDeleteConfirm(true);
+    };
 
+    const confirmDeleteRequest = async () => {
+        setShowDeleteConfirm(false);
         setSaving(true);
         setDeleteError("");
         try {
@@ -174,8 +184,8 @@ export default function PlayerSettingsPage() {
         setDeleteError("");
         try {
             await axios.post("/api/players/me/delete-confirm", { code: deleteCode });
-            alert("Konto zostało usunięte. Przykro nam, że odchodzisz!");
-            await logout();
+            setSaving(false);
+            setShowDeletedInfo(true);
         } catch (err) {
             if (err.response?.status === 403 || err.response?.status === 404 || err.response?.status === 410) {
                 setDeleteError("Nieprawidłowy lub wygasły kod weryfikacyjny.");
@@ -344,6 +354,16 @@ export default function PlayerSettingsPage() {
                     )}
                 </div>
 
+                {saveMessage && (
+                    <div
+                        className={saveMessage.type === "success" ? "form-success" : "form-error"}
+                        style={{ marginTop: "20px" }}
+                        role="alert"
+                    >
+                        {saveMessage.text}
+                    </div>
+                )}
+
                 <div className="form-actions" style={{ marginTop: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <button type="button" className="btn btn-logout" disabled={saving} onClick={() => logout()}>
                         Wyloguj się
@@ -353,6 +373,26 @@ export default function PlayerSettingsPage() {
                     </button>
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                title="Usunąć konto?"
+                message="Czy na pewno chcesz usunąć konto? Otrzymasz kod potwierdzający na e-mail."
+                confirmLabel="Tak, usuń"
+                cancelLabel="Anuluj"
+                variant="danger"
+                onConfirm={confirmDeleteRequest}
+                onCancel={() => setShowDeleteConfirm(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={showDeletedInfo}
+                title="Konto zostało usunięte"
+                message="Przykro nam, że odchodzisz!"
+                confirmLabel="OK"
+                onConfirm={() => { setShowDeletedInfo(false); logout(); }}
+            />
+
             <Footer />
         </div>
     );
