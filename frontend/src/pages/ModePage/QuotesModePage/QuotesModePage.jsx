@@ -24,6 +24,7 @@ function QuotesModePage() {
         stageTwoRef,
         isLeaderboardExpanded,
         topThree,
+        todaySolvers,
         currentUserRow,
         isCurrentUserInTopThree
     } = useQuotesModeGame();
@@ -65,6 +66,7 @@ function QuotesModePage() {
                             showSeparator={showSeparator}
                             currentUserRow={currentUserRow}
                             isAnonymousAndWon={isAnonymousAndWon}
+                            dailyCounterText={`dziś zgadło ${todaySolvers} graczy`}
                             leaderboardPath="/leaderboard/quotes"
                         />
                     ) : (
@@ -72,6 +74,7 @@ function QuotesModePage() {
                             topThree={topThree}
                             ctaLabel="Zobacz pełny ranking"
                             className={stageTwoGuesses.length > 0 ? 'leaderboard-section--after-guesses' : ''}
+                            dailyCounterText={`dziś zgadło ${todaySolvers} graczy`}
                             leaderboardPath="/leaderboard/quotes"
                         />
 

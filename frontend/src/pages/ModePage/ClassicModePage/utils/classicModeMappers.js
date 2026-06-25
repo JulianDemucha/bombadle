@@ -67,7 +67,7 @@ const mapLeaderboardEntryToRow = (entry, index, currentUser) => {
         entry?.name ||
         entry?.username ||
         (playerId ? `Gracz #${playerId}` : `Gracz #${rank}`);
-    const wins = entry?.wins ?? entry?.totalGuesses ?? 0;
+    const currentStreak = entry?.currentStreak ?? 0;
     const attempts = entry?.numberOfTries ?? entry?.attempts ?? '-';
     const userId = currentUser?.id ?? currentUser?.playerId ?? null;
     const userDisplayName = String(currentUser?.displayName ?? currentUser?.login ?? '').toLowerCase();
@@ -80,7 +80,7 @@ const mapLeaderboardEntryToRow = (entry, index, currentUser) => {
         name: playerName,
         attempts,
         time: formatLeaderboardTime(entry?.scoreTimeStamp ?? entry?.time),
-        wins,
+        currentStreak,
         avatar: toAvatarPath(entry?.playerAvatarImage ?? entry?.avatarImage ?? entry?.avatar),
         playerId,
         isCurrentUser

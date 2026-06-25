@@ -19,6 +19,7 @@ function ClassicModePage() {
         isLeaderboardExpanded,
         isAnimatingSuccess,
         topThree,
+        todaySolvers,
         currentUserRow,
         isCurrentUserInTopThree,
         handleSelectCharacterId,
@@ -50,7 +51,7 @@ function ClassicModePage() {
                             title={`Zgadłeś w ${guesses.length} próbach!`}
                             showSeparator={showSeparator}
                             currentUserRow={currentUserRow}
-                            dailyCounterText="Dzisiaj zgadło już 10 osób."
+                            dailyCounterText={`dziś zgadło ${todaySolvers} graczy`}
                             isAnonymousAndWon={isAnonymousAndWon}
                         />
                     ) : (
@@ -58,7 +59,7 @@ function ClassicModePage() {
                             topThree={topThree}
                             ctaLabel="Zobacz pelny ranking"
                             className={hasGuesses ? 'leaderboard-section--after-guesses' : ''}
-                            dailyCounterText="Dzisiaj zgadło już 9 osób."
+                            dailyCounterText={`dziś zgadło ${todaySolvers} graczy`}
                         />
                     )}
                 </div>

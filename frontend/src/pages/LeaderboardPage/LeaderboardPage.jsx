@@ -5,6 +5,7 @@ import {useNavigate, useParams} from 'react-router-dom';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import LeaderboardModeSwitcher from '../../components/LeaderboardModeSwitcher';
+import StreakFlame from '../../components/StreakFlame';
 
 const LeaderboardColumn = ({players, startIndex, isLoading}) => {
     const filledPlayers = [...players];
@@ -18,7 +19,7 @@ const LeaderboardColumn = ({players, startIndex, isLoading}) => {
                 <span className="text-center">#</span>
                 <span className="text-left">Gracz</span>
                 <span className="text-center">Próby</span>
-                <span className="text-center">Wygrane</span>
+                <span className="text-center">Streak</span>
                 <span className="text-center">Czas</span>
             </div>
             {filledPlayers.map((player, idx) => {
@@ -52,7 +53,7 @@ const LeaderboardColumn = ({players, startIndex, isLoading}) => {
                             <span className="text-left text-ellipsis">{player.playerDisplayName}</span>
                         </div>
                         <span className="text-center">{player.numberOfTries}</span>
-                        <span className="text-center">{player.wins}</span>
+                        <span className="text-center"><StreakFlame value={player.currentStreak} /></span>
                         <span className="text-center">{new Date(player.scoreTimeStamp).toLocaleTimeString('pl-PL', {
                             hour: '2-digit',
                             minute: '2-digit'

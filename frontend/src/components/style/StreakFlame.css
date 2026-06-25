@@ -1,0 +1,35 @@
+.streak-flame {
+    --streak-flame-color: #e0552b;
+    --streak-flame-inner-color: #ffc24d;
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.streak-flame__icon {
+    width: 100%;
+    height: 100%;
+    fill: var(--streak-flame-color);
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.25));
+}
+
+.streak-flame__inner {
+    fill: var(--streak-flame-inner-color);
+}
+
+.streak-flame__value {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 11px;
+    line-height: 1;
+    color: #3a2410;
+    pointer-events: none;
+}

@@ -23,6 +23,7 @@ const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
 
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/CLASSIC/top3';
 const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/CLASSIC/player';
+const LEADERBOARD_TODAY_SOLVERS_ENDPOINT = '/api/leaderboard/CLASSIC/today-solvers';
 
 const formatTimeLabel = (value) => {
     if (!value) return '--:--';
@@ -57,7 +58,6 @@ const buildFallbackCurrentUserRow = (user, attempts, timeLabel) => ({
     name: user?.displayName || user?.login || 'Ty',
     time: timeLabel || '--:--',
     attempts: attempts > 0 ? attempts : '-',
-    wins: user?.totalGuesses ?? '?',
     avatar: user?.avatarImage ? `/avatar/${user.avatarImage}.jpg` : '/avatar/AVATAR_DEFAULT.jpg',
     isCurrentUser: true
 });
@@ -79,6 +79,7 @@ function useClassicModeGame() {
     const [isLeaderboardExpanded, setIsLeaderboardExpanded] = useState(false);
     const [isAnimatingSuccess, setIsAnimatingSuccess] = useState(false);
     const [topThree, setTopThree] = useState([]);
+    const [todaySolvers, setTodaySolvers] = useState(0);
     const [currentUserRow, setCurrentUserRow] = useState(null);
     const [isCurrentUserInTopThree, setIsCurrentUserInTopThree] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -155,6 +156,12 @@ function useClassicModeGame() {
             const isCurrentInTopThree = topThreeRows.some((row) => row.isCurrentUser);
             setIsCurrentUserInTopThree(isCurrentInTopThree);
 
+            const solversResponse = await apiFetch(LEADERBOARD_TODAY_SOLVERS_ENDPOINT);
+            if (solversResponse.ok && solversResponse.data) {
+                const { loggedIn = 0, anonymous = 0 } = solversResponse.data;
+                setTodaySolvers(loggedIn + anonymous);
+            }
+
             if (isWon && user && !isCurrentInTopThree) {
                 const userId = user?.id ?? user?.playerId;
                 if (userId) {
@@ -180,7 +187,6 @@ function useClassicModeGame() {
                 }
             } else if (isWon && !user) {
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
-                fallbackRow.wins = '?';
                 setCurrentUserRow(fallbackRow);
             } else {
                 setCurrentUserRow(null);
@@ -329,6 +335,7 @@ function useClassicModeGame() {
         isLeaderboardExpanded,
         isAnimatingSuccess,
         topThree,
+        todaySolvers,
         currentUserRow,
         isCurrentUserInTopThree,
         handleSelectCharacterId,

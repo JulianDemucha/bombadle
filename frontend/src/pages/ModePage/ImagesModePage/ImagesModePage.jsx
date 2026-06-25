@@ -18,6 +18,7 @@ function ImagesModePage() {
         isLeaderboardExpanded,
         isAnimatingSuccess,
         topThree,
+        todaySolvers,
         currentUserRow,
         isCurrentUserInTopThree,
         handleSelectCharacterId,
@@ -122,6 +123,7 @@ function ImagesModePage() {
                             showSeparator={showSeparator}
                             currentUserRow={currentUserRow}
                             isAnonymousAndWon={isAnonymousAndWon}
+                            dailyCounterText={`dziś zgadło ${todaySolvers} graczy`}
                             leaderboardPath="/leaderboard/images"
                         />
                     ) : (
@@ -129,6 +131,7 @@ function ImagesModePage() {
                             topThree={topThree}
                             ctaLabel="Zobacz pełny ranking"
                             className={hasGuesses ? 'leaderboard-section--after-guesses' : ''}
+                            dailyCounterText={`dziś zgadło ${todaySolvers} graczy`}
                             leaderboardPath="/leaderboard/images"
                         />
                     )}

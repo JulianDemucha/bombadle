@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import StreakFlame from './StreakFlame.jsx';
 import './style/Top3Leaderboard.css';
 
 function Top3Leaderboard({
@@ -38,7 +39,7 @@ function Top3Leaderboard({
                     <span className="text-left">Gracz</span>
                     <span className="text-center">Czas</span>
                     <span className="text-center">Próby</span>
-                    <span className="text-center">Wins</span>
+                    <span className="text-center">Streak</span>
                 </div>
 
                 {topThree.map((player) => (
@@ -57,7 +58,7 @@ function Top3Leaderboard({
                         </div>
                         <span className="text-center">{player.time}</span>
                         <span className="text-center">{player.attempts}</span>
-                        <span className="text-center">{player.wins}</span>
+                        <span className="text-center"><StreakFlame value={player.currentStreak} /></span>
                     </div>
                 ))}
 
@@ -76,7 +77,7 @@ function Top3Leaderboard({
                         </div>
                         <span className="text-center">{currentUserRow.time}</span>
                         <span className="text-center">{currentUserRow.attempts}</span>
-                        <span className="text-center">{currentUserRow.wins}</span>
+                        <span className="text-center"><StreakFlame value={currentUserRow.currentStreak} /></span>
                     </div>
                 )}
             </div>
