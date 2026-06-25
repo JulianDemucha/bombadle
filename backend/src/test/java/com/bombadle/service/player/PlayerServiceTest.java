@@ -3,6 +3,7 @@ package com.bombadle.service.player;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
+import com.bombadle.enums.GameMode;
 import com.bombadle.enums.PlayerAuthProvider;
 import com.bombadle.enums.Role;
 import com.bombadle.repository.PlayerRepository;
@@ -318,6 +319,22 @@ class PlayerServiceTest {
 
             // Assert
             assertTrue(result);
+        }
+    }
+
+    @Nested
+    class CountSolversForModeTests {
+        @Test
+        void countSolversForMode_delegatesToRepositoryWithModeName() {
+            // Arrange
+            when(repo.countByCompletedModeToday("CLASSIC")).thenReturn(9L);
+
+            // Act
+            long result = playerService.countSolversForMode(GameMode.CLASSIC);
+
+            // Assert
+            assertEquals(9L, result);
+            verify(repo).countByCompletedModeToday("CLASSIC");
         }
     }
 }

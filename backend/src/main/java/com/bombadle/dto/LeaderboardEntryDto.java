@@ -18,7 +18,8 @@ public record LeaderboardEntryDto(
         AvatarImage playerAvatarImage,
         Instant scoreTimeStamp,
         int numberOfTries,
-        int wins
+        int wins,
+        int currentStreak
 ) {
 
 
@@ -29,6 +30,7 @@ public record LeaderboardEntryDto(
                 .playerAvatarImage(score.getPlayer().getAvatarImage())
                 .scoreTimeStamp(score.getScoreTimestamp())
                 .numberOfTries(score.getNumberOfTries())
+                .currentStreak(score.getPlayer().getCurrentStreak())
                 .build();
     }
 
@@ -42,6 +44,7 @@ public record LeaderboardEntryDto(
                 .playerAvatarImage(player.getAvatarImage())
                 .scoreTimeStamp(score.getScoreTimestamp())
                 .numberOfTries(score.getNumberOfTries())
+                .currentStreak(player.getCurrentStreak())
                 .build();
     }
 }

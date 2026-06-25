@@ -43,4 +43,13 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Modifying
     @Query("UPDATE Player p SET p.lastEmailSentAt = CURRENT_TIMESTAMP WHERE p.id = :id")
     void updateLastEmailSentAt(@Param("id") Long id);
+
+    /**
+     * Counts logged-in players whose {@code completed_modes_today} JSONB array contains the given
+     * mode. The set is cleared by the daily reset, so this is inherently a "solved today" count and
+     * needs no date filtering.
+     */
+    @Query(value = "SELECT COUNT(*) FROM player WHERE jsonb_exists(completed_modes_today, :mode)",
+            nativeQuery = true)
+    long countByCompletedModeToday(@Param("mode") String mode);
 }

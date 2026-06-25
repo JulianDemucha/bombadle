@@ -301,4 +301,22 @@ class AnonymousSessionServiceTest {
             verify(repo).truncateTable();
         }
     }
+
+    @Nested
+    class CountSolversForModeTests {
+
+        @Test
+        void countSolversForMode_delegatesToRepositoryWithModeName() {
+            // ARRANGE
+            GameMode gameMode = GameMode.QUOTES_STAGE_2;
+            when(repo.countByCompletedModeToday("QUOTES_STAGE_2")).thenReturn(5L);
+
+            // ACT
+            long result = anonymousSessionService.countSolversForMode(gameMode);
+
+            // ASSERT
+            assertEquals(5L, result);
+            verify(repo).countByCompletedModeToday("QUOTES_STAGE_2");
+        }
+    }
 }

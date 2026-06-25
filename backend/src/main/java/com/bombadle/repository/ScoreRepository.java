@@ -35,11 +35,12 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
-                p.totalSuccessfulGuesses
+                p.totalSuccessfulGuesses,
+                p.currentStreak
             )
             FROM Score s
             JOIN s.player p
-            WHERE s.gameMode = :gameMode 
+            WHERE s.gameMode = :gameMode
             ORDER BY s.scoreTimestamp ASC
             LIMIT 3
             """)
@@ -57,7 +58,8 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
-                p.totalSuccessfulGuesses
+                p.totalSuccessfulGuesses,
+                p.currentStreak
             )
             FROM Score s
             JOIN s.player p
@@ -99,7 +101,8 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
-                p.totalSuccessfulGuesses
+                p.totalSuccessfulGuesses,
+                p.currentStreak
             )
             FROM Score s
             JOIN s.player p
