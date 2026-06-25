@@ -1,5 +1,6 @@
 package com.bombadle.service.stats;
 
+import com.bombadle.dto.FullLeaderboardEntryDto;
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.entity.Score;
 import com.bombadle.enums.GameMode;
@@ -57,11 +58,11 @@ class LeaderboardServiceTest {
             // Arrange
             GameMode mode = GameMode.CLASSIC;
             int page = 0;
-            Page<LeaderboardEntryDto> expectedPage = new PageImpl<>(List.of(mock(LeaderboardEntryDto.class)));
+            Page<FullLeaderboardEntryDto> expectedPage = new PageImpl<>(List.of(mock(FullLeaderboardEntryDto.class)));
             when(repo.findPagedLeaderboard(mode, PageRequest.of(page, 10))).thenReturn(expectedPage);
 
             // Act
-            Page<LeaderboardEntryDto> result = leaderboardService.getPagedLeaderboard(mode, page);
+            Page<FullLeaderboardEntryDto> result = leaderboardService.getPagedLeaderboard(mode, page);
 
             // Assert
             assertEquals(expectedPage, result);

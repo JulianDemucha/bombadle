@@ -1,19 +1,25 @@
 import React from 'react';
+import StreakFlame from '../../../components/StreakFlame.jsx';
+import InfoTooltip from '../../../components/InfoTooltip.jsx';
+import { STREAK_TOOLTIP, SUPERSTREAK_TOOLTIP } from '../../../components/streakInfo.js';
 
-const StreakTile = ({ label, value }) => (
+const StreakTile = ({ label, value, variant, tooltip }) => (
     <div className="streak-panel__tile">
-        <span className="streak-panel__value">{value ?? 0}</span>
-        <span className="streak-panel__label">{label}</span>
+        <StreakFlame value={value} variant={variant} size="lg" />
+        <span className="streak-panel__label">
+            {label}
+            <InfoTooltip text={tooltip} />
+        </span>
     </div>
 );
 
 export default function StreakPanel({ detailed }) {
     return (
         <div className="streak-panel">
-            <StreakTile label="Aktualny streak" value={detailed?.currentStreak} />
-            <StreakTile label="Najdłuższy streak" value={detailed?.longestStreak} />
-            <StreakTile label="Aktualny superstreak" value={detailed?.currentSuperstreak} />
-            <StreakTile label="Najdłuższy superstreak" value={detailed?.longestSuperstreak} />
+            <StreakTile label="Aktualna seria" value={detailed?.currentStreak} variant="default" tooltip={STREAK_TOOLTIP} />
+            <StreakTile label="Najdłuższa seria" value={detailed?.longestStreak} variant="default" tooltip={STREAK_TOOLTIP} />
+            <StreakTile label="Aktualna superseria" value={detailed?.currentSuperstreak} variant="super" tooltip={SUPERSTREAK_TOOLTIP} />
+            <StreakTile label="Najdłuższa superseria" value={detailed?.longestSuperstreak} variant="super" tooltip={SUPERSTREAK_TOOLTIP} />
         </div>
     );
 }

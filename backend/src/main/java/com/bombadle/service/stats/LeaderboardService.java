@@ -1,5 +1,6 @@
 package com.bombadle.service.stats;
 
+import com.bombadle.dto.FullLeaderboardEntryDto;
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.entity.Score;
 import com.bombadle.enums.GameMode;
@@ -29,7 +30,7 @@ public class LeaderboardService {
     }
 
     @Cacheable(value = "classic-leaderboard", key = "#gameMode.name() + '-' + #page")
-    public Page<LeaderboardEntryDto> getPagedLeaderboard(GameMode gameMode, int page) {
+    public Page<FullLeaderboardEntryDto> getPagedLeaderboard(GameMode gameMode, int page) {
         return repo.findPagedLeaderboard(gameMode, PageRequest.of(page, 10));
     }
 

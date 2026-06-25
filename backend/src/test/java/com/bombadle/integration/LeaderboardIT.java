@@ -1,5 +1,6 @@
 package com.bombadle.integration;
 
+import com.bombadle.dto.FullLeaderboardEntryDto;
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.dto.TodaySolversDto;
 import com.bombadle.entity.AnonymousSession;
@@ -46,7 +47,7 @@ class LeaderboardIT extends BaseIT {
     @Autowired
     private TodaySolversService todaySolversService;
 
-    private Player persistPlayerWithScore(String login, int currentStreak, GameMode gameMode) {
+    private Player persistPlayerWithScore(String login, int currentStreak, int currentSuperstreak, GameMode gameMode) {
         Player player = Player.builder()
                 .login(login)
                 .displayName(login)
@@ -58,6 +59,7 @@ class LeaderboardIT extends BaseIT {
                 .createdAt(Instant.now())
                 .lastActiveAt(Instant.now())
                 .currentStreak(currentStreak)
+                .currentSuperstreak(currentSuperstreak)
                 .completedModesToday(new HashSet<>(Set.of(gameMode)))
                 .emailVerified(true)
                 .build();
@@ -84,8 +86,8 @@ class LeaderboardIT extends BaseIT {
     }
 
     @Test
-    void findTop3_mapsCurrentStreakFromPlayer() {
-        persistPlayerWithScore("top3streaker", 7, GameMode.CLASSIC);
+    void findTop3_mapsCurrentStreakFromPlayer_withoutSuperstreak() {
+        persistPlayerWithScore("top3streaker", 7, 4, GameMode.CLASSIC);
 
         List<LeaderboardEntryDto> result = scoreRepository.findTop3(GameMode.CLASSIC);
 
@@ -94,19 +96,20 @@ class LeaderboardIT extends BaseIT {
     }
 
     @Test
-    void findPagedLeaderboard_mapsCurrentStreakFromPlayer() {
-        persistPlayerWithScore("pagedstreaker", 3, GameMode.IMAGES);
+    void findPagedLeaderboard_mapsBothStreaksFromPlayer() {
+        persistPlayerWithScore("pagedstreaker", 3, 2, GameMode.IMAGES);
 
-        Page<LeaderboardEntryDto> result =
+        Page<FullLeaderboardEntryDto> result =
                 scoreRepository.findPagedLeaderboard(GameMode.IMAGES, PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
         assertEquals(3, result.getContent().get(0).currentStreak());
+        assertEquals(2, result.getContent().get(0).currentSuperstreak());
     }
 
     @Test
     void findLeaderboardRankedEntryByPlayerId_mapsCurrentStreakFromPlayer() {
-        Player player = persistPlayerWithScore("rankedstreaker", 12, GameMode.QUOTES_STAGE_2);
+        Player player = persistPlayerWithScore("rankedstreaker", 12, 9, GameMode.QUOTES_STAGE_2);
 
         Optional<LeaderboardEntryDto> result =
                 scoreRepository.findLeaderboardRankedEntryByPlayerId(GameMode.QUOTES_STAGE_2, player.getId());
@@ -118,9 +121,9 @@ class LeaderboardIT extends BaseIT {
     @Test
     void getTodaySolvers_countsLoggedInScoresAndAnonymousJsonbSessions() {
         // logged-in: two solved CLASSIC, one solved IMAGES (must not count for CLASSIC)
-        persistPlayerWithScore("solver1", 1, GameMode.CLASSIC);
-        persistPlayerWithScore("solver2", 1, GameMode.CLASSIC);
-        persistPlayerWithScore("solver3", 1, GameMode.IMAGES);
+        persistPlayerWithScore("solver1", 1, 0, GameMode.CLASSIC);
+        persistPlayerWithScore("solver2", 1, 0, GameMode.CLASSIC);
+        persistPlayerWithScore("solver3", 1, 0, GameMode.IMAGES);
 
         // anonymous: three completed CLASSIC, one completed only IMAGES
         persistAnonymousSession(GameMode.CLASSIC);

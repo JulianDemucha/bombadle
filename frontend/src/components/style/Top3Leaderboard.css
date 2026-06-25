@@ -70,9 +70,9 @@
 
 .leaderboard-header {
     display: grid;
-    grid-template-columns: 30px 1fr 60px 50px 50px;
+    grid-template-columns: 28px minmax(0, 1fr) 54px 44px 46px;
     gap: 6px;
-    padding: 4px;
+    padding: 6px;
     border-bottom: 2px solid #2b2b2b;
     font-size: 0.85rem;
     font-family: 'PixelifySans', monospace !important;
@@ -86,9 +86,14 @@
     font-family: 'PixelifySans', monospace !important;
 }
 
+/* line the GRACZ label up with the player pill (which has its own left padding/border) */
+.leaderboard-header .text-left {
+    padding-left: 7px;
+}
+
 .leaderboard-row {
     display: grid;
-    grid-template-columns: 30px 1fr 60px 50px 50px;
+    grid-template-columns: 28px minmax(0, 1fr) 54px 44px 46px;
     gap: 6px;
     align-items: center;
     padding: 6px;

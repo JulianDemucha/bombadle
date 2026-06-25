@@ -6,6 +6,8 @@ import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import LeaderboardModeSwitcher from '../../components/LeaderboardModeSwitcher';
 import StreakFlame from '../../components/StreakFlame';
+import InfoTooltip from '../../components/InfoTooltip';
+import { STREAK_TOOLTIP, SUPERSTREAK_TOOLTIP } from '../../components/streakInfo';
 import TodaySolversInfo from './components/TodaySolversInfo';
 
 const LeaderboardColumn = ({players, startIndex, isLoading}) => {
@@ -20,7 +22,8 @@ const LeaderboardColumn = ({players, startIndex, isLoading}) => {
                 <span className="text-center">#</span>
                 <span className="text-left">Gracz</span>
                 <span className="text-center">Próby</span>
-                <span className="text-center">Streak</span>
+                <span className="text-center">Seria<InfoTooltip text={STREAK_TOOLTIP} /></span>
+                <span className="text-center">Superseria<InfoTooltip text={SUPERSTREAK_TOOLTIP} /></span>
                 <span className="text-center">Czas</span>
             </div>
             {filledPlayers.map((player, idx) => {
@@ -35,6 +38,7 @@ const LeaderboardColumn = ({players, startIndex, isLoading}) => {
                             <div className="leaderboard-player empty-player">
                                 <span>---</span>
                             </div>
+                            <span className="text-center">-</span>
                             <span className="text-center">-</span>
                             <span className="text-center">-</span>
                             <span className="text-center">--:--</span>
@@ -55,6 +59,7 @@ const LeaderboardColumn = ({players, startIndex, isLoading}) => {
                         </div>
                         <span className="text-center">{player.numberOfTries}</span>
                         <span className="text-center"><StreakFlame value={player.currentStreak} /></span>
+                        <span className="text-center"><StreakFlame value={player.currentSuperstreak} variant="super" /></span>
                         <span className="text-center">{new Date(player.scoreTimeStamp).toLocaleTimeString('pl-PL', {
                             hour: '2-digit',
                             minute: '2-digit'

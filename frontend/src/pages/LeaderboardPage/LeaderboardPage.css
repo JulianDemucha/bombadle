@@ -41,25 +41,26 @@
     flex-direction: column;
     gap: 6px;
     width: 48%;
-    min-width: 400px;
+    min-width: 440px;
 }
 
 .leaderboard-header,
 .leaderboard-row {
      display: grid;
-     grid-template-columns: 40px 1fr 60px 70px 60px;
-     gap: 8px;
+     grid-template-columns: 30px 1fr 42px 56px 92px 50px;
+     gap: 6px;
      padding: 8px;
      align-items: center;
 }
 
 .leaderboard-header {
     border-bottom: 2px solid #5a463a;
-    font-size: 0.85rem;
+    font-size: 0.72rem;
     font-family: 'PixelifySans', monospace;
     font-weight: bold;
     color: #4f4035;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .leaderboard-row {
@@ -210,7 +211,7 @@
 }
 
 
-@media (max-width: 800px) {
+@media (max-width: 1000px) {
     .leaderboard-table-full {
         flex-direction: column;
         align-items: center;
@@ -218,25 +219,69 @@
 
     .leaderboard-column {
         width: 100%;
+        max-width: 600px;
         min-width: unset;
     }
 
     .leaderboard-container {
-        padding: 10px;
+        padding: 12px;
         padding-top: 50px;
-        margin: 10px auto;
+        margin: 16px auto;
         width: 95%;
     }
+}
 
+@media (max-width: 720px) {
     .leaderboard-header,
     .leaderboard-row {
-        grid-template-columns: 30px 1fr 50px 60px 50px;
-        font-size: 14px;
-        padding: 6px;
+        grid-template-columns: 26px 1fr 38px 52px 84px 46px;
         gap: 4px;
     }
 
     .leaderboard-header {
-        font-size: 0.75rem;
+        font-size: 0.66rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .leaderboard-container {
+        padding: 8px;
+        padding-top: 46px;
+        margin: 10px auto;
+    }
+
+    .leaderboard-header,
+    .leaderboard-row {
+        grid-template-columns: 20px 1fr 28px 46px 66px 36px;
+        font-size: 13px;
+        padding: 5px 4px;
+        gap: 2px;
+    }
+
+    .leaderboard-header {
+        font-size: 0.5rem;
+    }
+
+    .leaderboard-row {
+        min-height: 52px;
+    }
+
+    .leaderboard-avatar {
+        width: 30px;
+        height: 30px;
+    }
+
+    .leaderboard-player {
+        gap: 4px;
+        padding: 2px 4px;
+    }
+
+    .leaderboard-row .streak-flame--sm .streak-flame__icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    .leaderboard-row .streak-flame--sm .streak-flame__value {
+        font-size: 12px;
     }
 }

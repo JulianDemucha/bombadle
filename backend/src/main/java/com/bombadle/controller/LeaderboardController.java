@@ -1,5 +1,6 @@
 package com.bombadle.controller;
 
+import com.bombadle.dto.FullLeaderboardEntryDto;
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.dto.TodaySolversDto;
 import com.bombadle.enums.GameMode;
@@ -24,7 +25,7 @@ public class LeaderboardController {
     private final TodaySolversService todaySolversService;
 
     @GetMapping("/{gameMode}")
-    ResponseEntity<Page<LeaderboardEntryDto>> getLeaderboard(
+    ResponseEntity<Page<FullLeaderboardEntryDto>> getLeaderboard(
             @PathVariable String gameMode,
             @RequestParam(defaultValue = "0") int page
     ) {

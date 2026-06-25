@@ -1,0 +1,70 @@
+/* Zero-footprint anchor: doesn't add to the line box, so neighbouring
+   header/label text stays vertically aligned. The badge floats as a
+   small superscript to the top-right of the preceding text. */
+.info-tooltip {
+    position: relative;
+    display: inline-block;
+    width: 0;
+    vertical-align: baseline;
+}
+
+.info-tooltip__icon {
+    position: absolute;
+    left: 2px;
+    bottom: 0.45em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 1.5px solid #5a463a;
+    background-color: rgba(247, 240, 230, 0.65);
+    color: #5a463a;
+    font-family: 'PixelifySans', monospace;
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 1;
+    cursor: help;
+}
+
+.info-tooltip__bubble {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 220px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background-color: #2b2b2b;
+    color: #f7f0e6;
+    font-family: 'PixelifySans', monospace;
+    font-size: 0.78rem;
+    font-weight: normal;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+    z-index: 40;
+}
+
+.info-tooltip__bubble::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #2b2b2b;
+}
+
+.info-tooltip__icon:hover .info-tooltip__bubble,
+.info-tooltip__icon:focus .info-tooltip__bubble,
+.info-tooltip__icon:focus-visible .info-tooltip__bubble {
+    opacity: 1;
+    visibility: visible;
+}
