@@ -46,7 +46,7 @@ class LeaderboardIT extends BaseIT {
     @Autowired
     private TodaySolversService todaySolversService;
 
-    private Player persistPlayerWithScore(String login, int currentStreak, int wins, GameMode gameMode) {
+    private Player persistPlayerWithScore(String login, int currentStreak, GameMode gameMode) {
         Player player = Player.builder()
                 .login(login)
                 .displayName(login)
@@ -57,7 +57,6 @@ class LeaderboardIT extends BaseIT {
                 .authProvider(PlayerAuthProvider.LOCAL)
                 .createdAt(Instant.now())
                 .lastActiveAt(Instant.now())
-                .totalSuccessfulGuesses(wins)
                 .currentStreak(currentStreak)
                 .completedModesToday(new HashSet<>(Set.of(gameMode)))
                 .emailVerified(true)
@@ -86,48 +85,42 @@ class LeaderboardIT extends BaseIT {
 
     @Test
     void findTop3_mapsCurrentStreakFromPlayer() {
-        persistPlayerWithScore("top3streaker", 7, 15, GameMode.CLASSIC);
+        persistPlayerWithScore("top3streaker", 7, GameMode.CLASSIC);
 
         List<LeaderboardEntryDto> result = scoreRepository.findTop3(GameMode.CLASSIC);
 
         assertEquals(1, result.size());
-        LeaderboardEntryDto entry = result.get(0);
-        assertEquals(7, entry.currentStreak());
-        // wins must remain intact alongside the new field
-        assertEquals(15, entry.wins());
+        assertEquals(7, result.get(0).currentStreak());
     }
 
     @Test
     void findPagedLeaderboard_mapsCurrentStreakFromPlayer() {
-        persistPlayerWithScore("pagedstreaker", 3, 8, GameMode.IMAGES);
+        persistPlayerWithScore("pagedstreaker", 3, GameMode.IMAGES);
 
         Page<LeaderboardEntryDto> result =
                 scoreRepository.findPagedLeaderboard(GameMode.IMAGES, PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
-        LeaderboardEntryDto entry = result.getContent().get(0);
-        assertEquals(3, entry.currentStreak());
-        assertEquals(8, entry.wins());
+        assertEquals(3, result.getContent().get(0).currentStreak());
     }
 
     @Test
     void findLeaderboardRankedEntryByPlayerId_mapsCurrentStreakFromPlayer() {
-        Player player = persistPlayerWithScore("rankedstreaker", 12, 20, GameMode.QUOTES_STAGE_2);
+        Player player = persistPlayerWithScore("rankedstreaker", 12, GameMode.QUOTES_STAGE_2);
 
         Optional<LeaderboardEntryDto> result =
                 scoreRepository.findLeaderboardRankedEntryByPlayerId(GameMode.QUOTES_STAGE_2, player.getId());
 
         assertTrue(result.isPresent());
         assertEquals(12, result.get().currentStreak());
-        assertEquals(20, result.get().wins());
     }
 
     @Test
     void getTodaySolvers_countsLoggedInScoresAndAnonymousJsonbSessions() {
         // logged-in: two solved CLASSIC, one solved IMAGES (must not count for CLASSIC)
-        persistPlayerWithScore("solver1", 1, 1, GameMode.CLASSIC);
-        persistPlayerWithScore("solver2", 1, 1, GameMode.CLASSIC);
-        persistPlayerWithScore("solver3", 1, 1, GameMode.IMAGES);
+        persistPlayerWithScore("solver1", 1, GameMode.CLASSIC);
+        persistPlayerWithScore("solver2", 1, GameMode.CLASSIC);
+        persistPlayerWithScore("solver3", 1, GameMode.IMAGES);
 
         // anonymous: three completed CLASSIC, one completed only IMAGES
         persistAnonymousSession(GameMode.CLASSIC);

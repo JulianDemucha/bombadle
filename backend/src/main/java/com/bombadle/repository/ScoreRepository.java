@@ -35,7 +35,6 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
-                p.totalSuccessfulGuesses,
                 p.currentStreak
             )
             FROM Score s
@@ -58,7 +57,6 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
-                p.totalSuccessfulGuesses,
                 p.currentStreak
             )
             FROM Score s
@@ -101,7 +99,6 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
-                p.totalSuccessfulGuesses,
                 p.currentStreak
             )
             FROM Score s

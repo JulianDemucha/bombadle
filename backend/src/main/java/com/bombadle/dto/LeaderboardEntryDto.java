@@ -18,7 +18,6 @@ public record LeaderboardEntryDto(
         AvatarImage playerAvatarImage,
         Instant scoreTimeStamp,
         int numberOfTries,
-        int wins,
         int currentStreak
 ) {
 
