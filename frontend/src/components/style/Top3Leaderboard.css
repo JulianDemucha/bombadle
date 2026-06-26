@@ -97,6 +97,7 @@
     gap: 6px;
     align-items: center;
     padding: 6px;
+    min-height: 52px;
     background-color: rgba(90, 95, 61, 0.15);
     border-radius: 4px;
     font-family: 'Courier New', monospace;

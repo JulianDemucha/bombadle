@@ -44,8 +44,8 @@
     min-width: 440px;
 }
 
-.leaderboard-header,
-.leaderboard-row {
+.leaderboard-column .leaderboard-header,
+.leaderboard-column .leaderboard-row {
      display: grid;
      grid-template-columns: 30px 1fr 42px 56px 92px 50px;
      gap: 6px;
@@ -53,7 +53,7 @@
      align-items: center;
 }
 
-.leaderboard-header {
+.leaderboard-column .leaderboard-header {
     border-bottom: 2px solid #5a463a;
     font-size: 0.72rem;
     font-family: 'PixelifySans', monospace;
@@ -63,7 +63,7 @@
     white-space: nowrap;
 }
 
-.leaderboard-row {
+.leaderboard-column .leaderboard-row {
     background-color: rgba(90, 95, 61, 0.15);
     border-radius: 4px;
     font-family: 'Courier New', monospace;
@@ -73,7 +73,7 @@
     min-height: 66px;
 }
 
-.leaderboard-row.empty-row {
+.leaderboard-column .leaderboard-row.empty-row {
     background-color: rgba(43, 43, 43, 0.05);
     color: #8d8d8d;
 }
@@ -201,7 +201,7 @@
     white-space: nowrap;
 }
 
-.leaderboard-row .text-ellipsis {
+.leaderboard-column .leaderboard-row .text-ellipsis {
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
@@ -232,13 +232,13 @@
 }
 
 @media (max-width: 720px) {
-    .leaderboard-header,
-    .leaderboard-row {
+    .leaderboard-column .leaderboard-header,
+    .leaderboard-column .leaderboard-row {
         grid-template-columns: 26px 1fr 38px 52px 84px 46px;
         gap: 4px;
     }
 
-    .leaderboard-header {
+    .leaderboard-column .leaderboard-header {
         font-size: 0.66rem;
     }
 }
@@ -250,19 +250,19 @@
         margin: 10px auto;
     }
 
-    .leaderboard-header,
-    .leaderboard-row {
+    .leaderboard-column .leaderboard-header,
+    .leaderboard-column .leaderboard-row {
         grid-template-columns: 20px 1fr 28px 46px 66px 36px;
         font-size: 13px;
         padding: 5px 4px;
         gap: 2px;
     }
 
-    .leaderboard-header {
+    .leaderboard-column .leaderboard-header {
         font-size: 0.5rem;
     }
 
-    .leaderboard-row {
+    .leaderboard-column .leaderboard-row {
         min-height: 52px;
     }
 
@@ -276,12 +276,12 @@
         padding: 2px 4px;
     }
 
-    .leaderboard-row .streak-flame--sm .streak-flame__icon {
+    .leaderboard-column .leaderboard-row .streak-flame--sm .streak-flame__icon {
         width: 18px;
         height: 18px;
     }
 
-    .leaderboard-row .streak-flame--sm .streak-flame__value {
+    .leaderboard-column .leaderboard-row .streak-flame--sm .streak-flame__value {
         font-size: 12px;
     }
 }
