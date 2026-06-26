@@ -92,6 +92,8 @@ public class Player {
     @Column(name = "longest_superstreak", nullable = false)
     private int longestSuperstreak;
 
+    public static final Set<GameMode> ALL_GAME_MODES = Set.copyOf(EnumSet.allOf(GameMode.class));
+
     @Builder
     protected Player(Long id, String login, String displayName, String email, String passwordHash, Role role,
                      Instant createdAt, Instant lastActiveAt, Map<GameMode, Score> todayScores,
@@ -130,33 +132,33 @@ public class Player {
     }
 
     private void markModeAsCompleted(GameMode mode) {
-        this.completedModesToday.add(mode);
+        // Replacing the field with a new instance (not mutating in-place) is required so
+        // Hibernate's ImmutableMutabilityPlan dirty checker sees a changed reference and
+        // emits the UPDATE for completed_modes_today. In-place add() leaves snapshot == current.
+        Set<GameMode> updated = new HashSet<>(this.completedModesToday);
+        updated.add(mode);
+        this.completedModesToday = updated;
     }
 
     public void resetDailyProgress() {
-        this.completedModesToday.clear();
+        // Same reason as markModeAsCompleted: replace, don't clear(), to force dirty detection.
+        this.completedModesToday = new HashSet<>();
         this.todayScores.clear();
     }
 
     /**
-     * Advances the daily streak counters for the puzzle day that has just ended. Must be called
-     * once per day, per player, using {@code completedModesToday} BEFORE it is cleared by the reset.
+     * Zeroes streak counters at the daily 07:00 boundary for players who did not meet the
+     * daily threshold. Increments are applied in real-time by {@link #addTodayScore} as each
+     * mode is solved, so this method must never increment — only zero out.
      *
-     * @param completedAnyMode  whether the player completed at least one mode that day (drives the streak)
-     * @param completedAllModes whether the player completed every mode that day (drives the superstreak)
+     * @param playedToday       true if the player completed at least one mode (streak safe)
+     * @param completedAllModes true if the player completed every mode (superstreak safe)
      */
-    public void applyDailyStreak(boolean completedAnyMode, boolean completedAllModes) {
-        if (completedAnyMode) {
-            currentStreak++;
-            longestStreak = Math.max(longestStreak, currentStreak);
-        } else {
+    public void resetStreaksIfThresholdsNotMet(boolean playedToday, boolean completedAllModes) {
+        if (!playedToday) {
             currentStreak = 0;
         }
-
-        if (completedAllModes) {
-            currentSuperstreak++;
-            longestSuperstreak = Math.max(longestSuperstreak, currentSuperstreak);
-        } else {
+        if (!completedAllModes) {
             currentSuperstreak = 0;
         }
     }
@@ -172,14 +174,22 @@ public class Player {
             );
         }
 
+        boolean wasFirstSolveToday = completedModesToday.isEmpty();
+        boolean wasAllModesAlreadyDone = completedModesToday.containsAll(ALL_GAME_MODES);
+
         markModeAsCompleted(gameMode);
-        setTotalSuccessfulGuesses(
-                getTotalSuccessfulGuesses() + 1
-        );
-
+        setTotalSuccessfulGuesses(getTotalSuccessfulGuesses() + 1);
         score.setPlayer(this);
-
         this.todayScores.put(gameMode, score);
+
+        if (wasFirstSolveToday) {
+            currentStreak++;
+            longestStreak = Math.max(longestStreak, currentStreak);
+        }
+        if (!wasAllModesAlreadyDone && completedModesToday.containsAll(ALL_GAME_MODES)) {
+            currentSuperstreak++;
+            longestSuperstreak = Math.max(longestSuperstreak, currentSuperstreak);
+        }
     }
 
     @PostLoad

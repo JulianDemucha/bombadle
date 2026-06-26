@@ -139,31 +139,35 @@ class PlayerStatisticsServiceTest {
         }
 
         @Test
-        void evaluateDailyStreaks_allModesCompleted_incrementsStreakAndSuperstreak() {
+        void evaluateDailyStreaks_allModesCompleted_leavesAlreadyIncrementedCountersUntouched() {
+            // Increments happen in real-time inside addTodayScore(); evaluateDailyStreaks() only
+            // resets players who did not meet the threshold — it must not increment anything.
             Player player = playerWithStreaks(
                     Set.of(GameMode.CLASSIC, GameMode.IMAGES, GameMode.QUOTES_STAGE_1, GameMode.QUOTES_STAGE_2),
-                    4, 4, 2, 5);
+                    5, 5, 3, 5);
             when(playerRepository.findAll()).thenReturn(List.of(player));
 
             playerStatisticsService.evaluateDailyStreaks();
 
-            assertEquals(5, player.getCurrentStreak());
-            assertEquals(5, player.getLongestStreak());
-            assertEquals(3, player.getCurrentSuperstreak());
-            assertEquals(5, player.getLongestSuperstreak()); // unchanged: 3 < 5
+            assertEquals(5, player.getCurrentStreak());      // unchanged — already incremented in real-time
+            assertEquals(5, player.getLongestStreak());      // unchanged
+            assertEquals(3, player.getCurrentSuperstreak()); // unchanged — already incremented in real-time
+            assertEquals(5, player.getLongestSuperstreak()); // unchanged
             verify(playerRepository).saveAll(List.of(player));
         }
 
         @Test
-        void evaluateDailyStreaks_someButNotAllModes_incrementsStreakAndResetsSuperstreak() {
-            Player player = playerWithStreaks(Set.of(GameMode.CLASSIC), 4, 6, 3, 7);
+        void evaluateDailyStreaks_someButNotAllModes_leavesStreakAndResetsSuperstreak() {
+            // Streak was incremented in real-time on first solve; superstreak was never
+            // incremented because not all modes were finished.
+            Player player = playerWithStreaks(Set.of(GameMode.CLASSIC), 5, 6, 3, 7);
             when(playerRepository.findAll()).thenReturn(List.of(player));
 
             playerStatisticsService.evaluateDailyStreaks();
 
-            assertEquals(5, player.getCurrentStreak());
-            assertEquals(6, player.getLongestStreak()); // unchanged: 5 < 6
-            assertEquals(0, player.getCurrentSuperstreak()); // reset independently
+            assertEquals(5, player.getCurrentStreak());      // unchanged
+            assertEquals(6, player.getLongestStreak());      // unchanged
+            assertEquals(0, player.getCurrentSuperstreak()); // reset: not all modes completed
             assertEquals(7, player.getLongestSuperstreak()); // preserved
         }
 

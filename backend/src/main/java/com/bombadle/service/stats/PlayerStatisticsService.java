@@ -19,7 +19,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +32,7 @@ public class PlayerStatisticsService {
     static final int RESET_HOUR = 7;
 
     /** A superstreak requires completing every game mode on a given day. */
-    static final Set<GameMode> ALL_GAME_MODES = EnumSet.allOf(GameMode.class);
+    static final Set<GameMode> ALL_GAME_MODES = Player.ALL_GAME_MODES;
 
     private final PlayerDailyStatisticRepository playerDailyStatisticRepository;
     private final PlayerRepository playerRepository;
@@ -91,9 +90,9 @@ public class PlayerStatisticsService {
 
         for (Player player : players) {
             Set<GameMode> completed = player.getCompletedModesToday();
-            boolean completedAnyMode = completed != null && !completed.isEmpty();
+            boolean playedToday = completed != null && !completed.isEmpty();
             boolean completedAllModes = completed != null && completed.containsAll(ALL_GAME_MODES);
-            player.applyDailyStreak(completedAnyMode, completedAllModes);
+            player.resetStreaksIfThresholdsNotMet(playedToday, completedAllModes);
         }
 
         playerRepository.saveAll(players);
