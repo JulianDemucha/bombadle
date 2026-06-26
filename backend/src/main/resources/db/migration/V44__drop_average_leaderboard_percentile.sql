@@ -1,0 +1,1 @@
+ALTER TABLE deleted_account_statistic DROP COLUMN average_leaderboard_percentile;

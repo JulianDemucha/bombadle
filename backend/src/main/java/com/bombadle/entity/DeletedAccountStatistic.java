@@ -54,9 +54,6 @@ public class DeletedAccountStatistic {
     @Column(name = "total_top3_finishes", nullable = false)
     private int totalTop3Finishes;
 
-    @Column(name = "average_leaderboard_percentile")
-    private Double averageLeaderboardPercentile;
-
     @Column(name = "captured_at", nullable = false)
     private Instant capturedAt;
 }
