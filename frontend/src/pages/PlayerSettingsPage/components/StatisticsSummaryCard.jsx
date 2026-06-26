@@ -42,7 +42,7 @@ export default function StatisticsSummaryCard() {
                 type="button"
                 className="btn btn-secondary"
                 style={{ marginTop: '1rem' }}
-                onClick={() => navigate('/Statistics')}
+                onClick={() => navigate('/statistics')}
             >
                 Więcej statystyk
             </button>

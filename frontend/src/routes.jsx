@@ -21,7 +21,7 @@ export const routes = [
     {path: '/verify-email', element: <UnauthenticatedRoute><EmailVerificationPage/></UnauthenticatedRoute>},
     {path: '/forgot-password', element: <UnauthenticatedRoute><ForgotPasswordPage/></UnauthenticatedRoute>},
     {path: '/Profile/', element: <AuthenticatedRoute><PlayerSettingsPage/></AuthenticatedRoute>},
-    {path: '/Statistics', element: <AuthenticatedRoute><PlayerStatisticsPage/></AuthenticatedRoute>},
+    {path: '/statistics', element: <AuthenticatedRoute><PlayerStatisticsPage/></AuthenticatedRoute>},
     {path: '/Classic', element: <ClassicModePage/>},
     {path: '/Quotes', element: <QuotesModePage/>},
     {path: '/Images', element: <ImagesModePage/>},
