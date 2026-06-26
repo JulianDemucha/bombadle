@@ -9,6 +9,7 @@ import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerDeletionService;
+import com.bombadle.service.stats.DailySolverStatisticService;
 import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import org.junit.jupiter.api.Nested;
@@ -54,6 +55,8 @@ class DailyResetServiceTest {
     private QuoteService quoteService;
     @Mock
     private PlayerStatisticsService playerStatisticsService;
+    @Mock
+    private DailySolverStatisticService dailySolverStatisticService;
 
     @InjectMocks
     private DailyResetService dailyResetService;
@@ -81,6 +84,7 @@ class DailyResetServiceTest {
 
             // Assert
             verify(playerStatisticsService).evaluateDailyStreaks();
+            verify(dailySolverStatisticService).captureClosingDay();
             verify(adminChangeQueueService).applyAll();
             verify(guessListService).truncateTable();
             verify(anonymousSessionService).truncateTable();
@@ -89,9 +93,11 @@ class DailyResetServiceTest {
             verify(scoreService).deleteAllInBatch();
             verify(playerDeletionService).deleteMarkedForDeletion(any(Duration.class));
 
-            // Streaks must be evaluated from completedModesToday BEFORE the reset wipes it
-            InOrder inOrder = inOrder(playerStatisticsService, scoreMaintenanceService);
+            // Streaks must be evaluated, and the end-of-day solver totals captured, from
+            // completedModesToday BEFORE the reset wipes it.
+            InOrder inOrder = inOrder(playerStatisticsService, dailySolverStatisticService, scoreMaintenanceService);
             inOrder.verify(playerStatisticsService).evaluateDailyStreaks();
+            inOrder.verify(dailySolverStatisticService).captureClosingDay();
             inOrder.verify(scoreMaintenanceService).resetAllScores();
 
             verify(quoteService).findRandomQuote();
