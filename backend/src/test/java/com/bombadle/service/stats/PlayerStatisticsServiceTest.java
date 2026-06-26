@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -242,8 +243,8 @@ class PlayerStatisticsServiceTest {
         }
 
         @Test
-        void getChartStatistics_mapsEntitiesToDtosInOrder() {
-            PlayerDailyStatistic stat = PlayerDailyStatistic.builder()
+        void getChartStatistics_computesPercentileFromAggregate_andNullForTheInProgressDay() {
+            PlayerDailyStatistic withAggregate = PlayerDailyStatistic.builder()
                     .gameMode(GameMode.CLASSIC)
                     .puzzleDate(LocalDate.of(2026, 6, 24))
                     .solvedAt(Instant.parse("2026-06-24T12:00:00Z"))
@@ -251,19 +252,35 @@ class PlayerStatisticsServiceTest {
                     .leaderboardPosition(5)
                     .totalParticipants(20)
                     .build();
-            when(playerDailyStatisticRepository.findByPlayerIdOrderByPuzzleDateAscGameModeAsc(1L))
-                    .thenReturn(List.of(stat));
+            PlayerDailyStatistic today = PlayerDailyStatistic.builder()
+                    .gameMode(GameMode.IMAGES)
+                    .puzzleDate(LocalDate.of(2026, 6, 25))
+                    .solvedAt(Instant.parse("2026-06-25T12:00:00Z"))
+                    .numberOfTries(2)
+                    .leaderboardPosition(1)
+                    .totalParticipants(8)
+                    .build();
+            when(playerDailyStatisticRepository.findChartRowsByPlayerId(1L)).thenReturn(List.of(
+                    new Object[]{withAggregate, 100}, // finalized end-of-day solver count
+                    new Object[]{today, null}         // current day: no aggregate row yet
+            ));
 
             List<DailyStatisticDto> result = playerStatisticsService.getChartStatistics(1L);
 
-            assertEquals(1, result.size());
-            DailyStatisticDto dto = result.get(0);
-            assertEquals(GameMode.CLASSIC, dto.gameMode());
-            assertEquals("2026-06-24", dto.puzzleDate());
-            assertEquals(Instant.parse("2026-06-24T12:00:00Z"), dto.solvedAt());
-            assertEquals(3, dto.numberOfTries());
-            assertEquals(5, dto.leaderboardPosition());
-            assertEquals(20, dto.totalParticipants());
+            assertEquals(2, result.size());
+
+            DailyStatisticDto first = result.get(0);
+            assertEquals(GameMode.CLASSIC, first.gameMode());
+            assertEquals("2026-06-24", first.puzzleDate());
+            assertEquals(Instant.parse("2026-06-24T12:00:00Z"), first.solvedAt());
+            assertEquals(3, first.numberOfTries());
+            assertEquals(5, first.leaderboardPosition());
+            assertEquals(0.05, first.percentile(), 1e-9); // 5 / 100
+
+            DailyStatisticDto second = result.get(1);
+            assertEquals(GameMode.IMAGES, second.gameMode());
+            assertEquals(1, second.leaderboardPosition());
+            assertNull(second.percentile()); // no aggregate row for the in-progress day
         }
     }
 

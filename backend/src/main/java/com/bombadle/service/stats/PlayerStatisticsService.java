@@ -131,12 +131,24 @@ public class PlayerStatisticsService {
         );
     }
 
-    /** Historical per-day solves for charting, ordered chronologically. */
+    /**
+     * Historical per-day solves for charting, ordered chronologically. Each solve's leaderboard
+     * percentile is computed against the finalized end-of-day solver count (see
+     * {@link PlayerDailyStatisticRepository#findChartRowsByPlayerId}); it is {@code null} for the
+     * current in-progress day, which has no aggregate row yet.
+     */
     @Transactional(readOnly = true)
     public List<DailyStatisticDto> getChartStatistics(long playerId) {
-        return playerDailyStatisticRepository.findByPlayerIdOrderByPuzzleDateAscGameModeAsc(playerId)
+        return playerDailyStatisticRepository.findChartRowsByPlayerId(playerId)
                 .stream()
-                .map(DailyStatisticDto::toDto)
+                .map(row -> {
+                    PlayerDailyStatistic statistic = (PlayerDailyStatistic) row[0];
+                    Number totalSolvers = (Number) row[1];
+                    Double percentile = (totalSolvers == null || totalSolvers.intValue() == 0)
+                            ? null
+                            : statistic.getLeaderboardPosition() * 1.0 / totalSolvers.intValue();
+                    return DailyStatisticDto.toDto(statistic, percentile);
+                })
                 .toList();
     }
 
