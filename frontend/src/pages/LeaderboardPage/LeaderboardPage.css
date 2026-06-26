@@ -47,10 +47,15 @@
 .leaderboard-column .leaderboard-header,
 .leaderboard-column .leaderboard-row {
      display: grid;
-     grid-template-columns: 30px 1fr 42px 56px 92px 50px;
+     grid-template-columns: 30px 1fr 42px 56px 60px 50px;
      gap: 6px;
      padding: 8px;
      align-items: center;
+}
+
+.leaderboard-header__super {
+    white-space: normal;
+    line-height: 1.15;
 }
 
 .leaderboard-column .leaderboard-header {
@@ -234,7 +239,7 @@
 @media (max-width: 720px) {
     .leaderboard-column .leaderboard-header,
     .leaderboard-column .leaderboard-row {
-        grid-template-columns: 26px 1fr 38px 52px 84px 46px;
+        grid-template-columns: 26px 1fr 38px 52px 58px 46px;
         gap: 4px;
     }
 
@@ -252,7 +257,7 @@
 
     .leaderboard-column .leaderboard-header,
     .leaderboard-column .leaderboard-row {
-        grid-template-columns: 20px 1fr 28px 46px 66px 36px;
+        grid-template-columns: 20px 1fr 28px 46px 54px 36px;
         font-size: 13px;
         padding: 5px 4px;
         gap: 2px;

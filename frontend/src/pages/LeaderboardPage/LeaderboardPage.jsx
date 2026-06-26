@@ -23,7 +23,7 @@ const LeaderboardColumn = ({players, startIndex, isLoading}) => {
                 <span className="text-left">Gracz</span>
                 <span className="text-center">Próby</span>
                 <span className="text-center">Seria<InfoTooltip text={STREAK_TOOLTIP} /></span>
-                <span className="text-center">Superseria<InfoTooltip text={SUPERSTREAK_TOOLTIP} /></span>
+                <span className="text-center leaderboard-header__super">SUPER<InfoTooltip text={SUPERSTREAK_TOOLTIP} /><br />SERIA</span>
                 <span className="text-center">Czas</span>
             </div>
             {filledPlayers.map((player, idx) => {
