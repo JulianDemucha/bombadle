@@ -91,6 +91,11 @@
     padding-left: 7px;
 }
 
+/* Above mobile breakpoint: match streak value font-size to row font-size */
+.leaderboard-row .streak-flame--sm .streak-flame__value {
+    font-size: 17px;
+}
+
 .leaderboard-row {
     display: grid;
     grid-template-columns: 28px minmax(0, 1fr) 54px 44px 46px;
@@ -285,6 +290,13 @@
     line-height: 1.1;
 }
 
+/* Between 400px and 499px: cap wrapper to reduce excess space in player column */
+@media (min-width: 400px) and (max-width: 499px) {
+    .leaderboard-wrapper {
+        max-width: 380px;
+    }
+}
+
 @media (max-width: 500px) {
     .leaderboard-wrapper {
         width: calc(100% - 16px) !important;
@@ -295,5 +307,9 @@
         column-gap: 2px;
         font-size: 14px;
         padding: 6px 2px !important;
+    }
+
+    .leaderboard-row .streak-flame--sm .streak-flame__value {
+        font-size: 14px;
     }
 }
