@@ -96,6 +96,11 @@
     font-size: 17px;
 }
 
+/* Current-user row has white text — streak value must follow */
+.leaderboard-row.current-user .streak-flame__value {
+    color: inherit;
+}
+
 .leaderboard-row {
     display: grid;
     grid-template-columns: 28px minmax(0, 1fr) 54px 44px 46px;

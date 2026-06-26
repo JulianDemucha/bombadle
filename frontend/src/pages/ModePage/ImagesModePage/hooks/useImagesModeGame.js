@@ -194,7 +194,7 @@ function useImagesModeGame() {
                 }
             } else if (isWon && !user) {
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
-                setCurrentUserRow(fallbackRow);
+                setCurrentUserRow({ ...fallbackRow, currentStreak: 1 });
             } else {
                 setCurrentUserRow(null);
             }
