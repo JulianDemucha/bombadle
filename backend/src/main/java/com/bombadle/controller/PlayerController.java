@@ -2,9 +2,6 @@ package com.bombadle.controller;
 
 import com.bombadle.config.PlayerPrincipal;
 import com.bombadle.dto.AnonymousSessionDto;
-import com.bombadle.dto.BasicStatisticsDto;
-import com.bombadle.dto.DailyStatisticDto;
-import com.bombadle.dto.DetailedStatisticsDto;
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.dto.request.ChangePasswordRequest;
 import com.bombadle.dto.request.PlayerUpdateRequest;
@@ -18,9 +15,7 @@ import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerCredentialsService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.player.PlayerUpdateService;
-import com.bombadle.service.stats.PlayerStatisticsService;
 
-import java.util.List;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -45,7 +40,6 @@ public class PlayerController {
     private final EmailConfirmationService emailConfirmationService;
     private final PlayerUpdateService playerUpdateService;
     private final PlayerCredentialsService playerCredentialsService;
-    private final PlayerStatisticsService playerStatisticsService;
 
     @GetMapping("/all")
     public Page<PlayerDto> getAllPlayers(Pageable pageable) {
@@ -55,21 +49,6 @@ public class PlayerController {
     @GetMapping("/me")
     public ResponseEntity<PlayerDto> getAuthenticatedPlayer(@AuthenticationPrincipal PlayerPrincipal userDetails) {
         return ResponseEntity.ok(playerService.getAuthenticatedPlayerDto(userDetails.getPlayerId()));
-    }
-
-    @GetMapping("/me/statistics/basic")
-    public ResponseEntity<BasicStatisticsDto> getBasicStatistics(@AuthenticationPrincipal PlayerPrincipal userDetails) {
-        return ResponseEntity.ok(playerStatisticsService.getBasicStatistics(userDetails.getPlayerId()));
-    }
-
-    @GetMapping("/me/statistics/detailed")
-    public ResponseEntity<DetailedStatisticsDto> getDetailedStatistics(@AuthenticationPrincipal PlayerPrincipal userDetails) {
-        return ResponseEntity.ok(playerStatisticsService.getDetailedStatistics(userDetails.getPlayerId()));
-    }
-
-    @GetMapping("/me/statistics/chart")
-    public ResponseEntity<List<DailyStatisticDto>> getChartStatistics(@AuthenticationPrincipal PlayerPrincipal userDetails) {
-        return ResponseEntity.ok(playerStatisticsService.getChartStatistics(userDetails.getPlayerId()));
     }
 
     @PutMapping("/me")
