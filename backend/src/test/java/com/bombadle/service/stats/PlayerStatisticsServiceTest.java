@@ -298,6 +298,27 @@ class PlayerStatisticsServiceTest {
             Instant solvedAt = Instant.parse("2026-06-24T03:00:00Z"); // 05:00 Europe/Warsaw, before the 07:00 reset
             assertEquals(LocalDate.of(2026, 6, 23), playerStatisticsService.resolvePuzzleDate(solvedAt));
         }
+
+        @Test
+        void resolvePuzzleDate_springForwardResetInstant_mapsToNewDayDespiteLostHour() {
+            // 2026-03-29: 02:00 CET -> 03:00 CEST. 07:00 CEST = 05:00 UTC. Subtracting 7 real hours
+            // would wrongly land on 03-28; the wall-clock boundary keeps the reset day at 03-29.
+            Instant resetInstant = Instant.parse("2026-03-29T05:00:00Z");
+            assertEquals(LocalDate.of(2026, 3, 29), playerStatisticsService.resolvePuzzleDate(resetInstant));
+        }
+
+        @Test
+        void resolvePuzzleDate_springForwardBeforeReset_mapsToPreviousPuzzleDay() {
+            Instant beforeReset = Instant.parse("2026-03-29T04:30:00Z"); // 06:30 CEST, before the boundary
+            assertEquals(LocalDate.of(2026, 3, 28), playerStatisticsService.resolvePuzzleDate(beforeReset));
+        }
+
+        @Test
+        void resolvePuzzleDate_fallBackResetInstant_mapsToNewDay() {
+            // 2026-10-25: 03:00 CEST -> 02:00 CET. 07:00 CET = 06:00 UTC.
+            Instant resetInstant = Instant.parse("2026-10-25T06:00:00Z");
+            assertEquals(LocalDate.of(2026, 10, 25), playerStatisticsService.resolvePuzzleDate(resetInstant));
+        }
     }
 
     @Nested

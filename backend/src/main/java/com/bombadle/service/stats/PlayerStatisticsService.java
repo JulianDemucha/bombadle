@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.EnumMap;
 import java.util.List;
@@ -170,8 +171,15 @@ public class PlayerStatisticsService {
      * Resolves the puzzle day for a given solve instant using the same 07:00 Europe/Warsaw
      * boundary as the daily reset. A solve before 07:00 local time belongs to the previous
      * puzzle day (the one that has not been reset yet).
+     * <p>
+     * Compares the local wall-clock hour rather than subtracting hours from the instant: the
+     * latter is duration-based and lands a day early on the spring-forward DST day, where the
+     * 00:00–07:00 window is only six real hours long.
      */
     LocalDate resolvePuzzleDate(Instant solvedAt) {
-        return solvedAt.atZone(RESET_ZONE).minusHours(RESET_HOUR).toLocalDate();
+        LocalDateTime local = solvedAt.atZone(RESET_ZONE).toLocalDateTime();
+        return local.getHour() < RESET_HOUR
+                ? local.toLocalDate().minusDays(1)
+                : local.toLocalDate();
     }
 }
