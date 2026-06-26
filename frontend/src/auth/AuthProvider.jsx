@@ -3,6 +3,7 @@ import {AuthContext} from "./AuthContext";
 import {apiFetch} from "../api/api.js";
 import {useNavigate} from "react-router-dom";
 import axios, {setupSilentRefresh} from "../api/axios.js";
+import {clearAnonymousProgress} from "../api/anonymousProgress.js";
 
 export function AuthProvider({children}) {
     const [user, setUser] = useState(null);
@@ -19,7 +20,13 @@ export function AuthProvider({children}) {
             const res = await axios.get('/api/players/me');
             if (latestLoadUserRequestRef.current !== requestId) return;
             setUser(res.data ?? null);
-            if(res.data) setupSilentRefresh();
+            if (res.data) {
+                // Authenticated via any path (login, register, OAuth round-trip): the anonymous
+                // win flags / win timestamps are now meaningless. This is the single reliable
+                // place to clear them — the merge-prompt hook is unmounted after an OAuth redirect.
+                clearAnonymousProgress();
+                setupSilentRefresh();
+            }
         } catch (err) {
             if (latestLoadUserRequestRef.current !== requestId) return;
             setUser(null);

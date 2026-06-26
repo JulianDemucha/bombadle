@@ -1,9 +1,14 @@
 import { apiFetch } from './api.js';
 
-const FLAG_PREFIX = 'anonymousModeWon_';
+const WON_FLAG_PREFIX = 'anonymousModeWon_';
+const WIN_TIME_PREFIX = 'anonymousWinTime_';
 
 export function anonymousWonFlagKey(mode) {
-    return `${FLAG_PREFIX}${mode}`;
+    return `${WON_FLAG_PREFIX}${mode}`;
+}
+
+export function anonymousWinTimeKey(mode) {
+    return `${WIN_TIME_PREFIX}${mode}`;
 }
 
 /**
@@ -27,17 +32,24 @@ export async function syncAnonymousWonModes() {
 /** Whether at least one "won as anonymous" flag is currently stored. */
 export function hasAnyAnonymousWonFlag() {
     for (let i = 0; i < localStorage.length; i += 1) {
-        if (localStorage.key(i)?.startsWith(FLAG_PREFIX)) return true;
+        if (localStorage.key(i)?.startsWith(WON_FLAG_PREFIX)) return true;
     }
     return false;
 }
 
-/** Removes every "won as anonymous" flag. Called once the player is authenticated. */
-export function clearAnonymousWonFlags() {
+/**
+ * Removes every trace of anonymous-session progress from localStorage: both the "won as
+ * anonymous" flags (anonymousModeWon_*) and the cached win timestamps (anonymousWinTime_*).
+ * Called once the player is authenticated — at that point all of this is meaningless and the
+ * backend merge (if any) has already run.
+ */
+export function clearAnonymousProgress() {
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i += 1) {
         const key = localStorage.key(i);
-        if (key?.startsWith(FLAG_PREFIX)) keysToRemove.push(key);
+        if (key?.startsWith(WON_FLAG_PREFIX) || key?.startsWith(WIN_TIME_PREFIX)) {
+            keysToRemove.push(key);
+        }
     }
     keysToRemove.forEach((key) => localStorage.removeItem(key));
 }

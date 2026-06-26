@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
-import { syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
+import { anonymousWinTimeKey, syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
 import confetti from 'canvas-confetti';
 import {
@@ -196,7 +196,7 @@ function useImagesModeGame() {
                     }
                 }
             } else if (isWon && !user) {
-                const winTime = localStorage.getItem('anonymousWinTime_IMAGES');
+                const winTime = localStorage.getItem(anonymousWinTimeKey('IMAGES'));
                 if (winTime) latestWinTimeLabelRef.current = formatTimeLabel(parseInt(winTime, 10));
 
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
@@ -320,7 +320,7 @@ function useImagesModeGame() {
 
                 if (!user) {
                     setIsAnonymousAndWon(true);
-                    localStorage.setItem('anonymousWinTime_IMAGES', winTimestamp.toString());
+                    localStorage.setItem(anonymousWinTimeKey('IMAGES'), winTimestamp.toString());
                 }
                 setIsAnimatingSuccess(true);
 

@@ -124,7 +124,9 @@ function RegisterPage() {
         setLoading(true);
         try {
             await axios.post("/api/auth/register", {email: email, username: username, password: password});
-            merge.clearWonFlags();
+            // Register does not authenticate immediately (the user must verify their email first),
+            // so AuthProvider's clear-on-authenticated won't fire here — clear explicitly.
+            merge.clearAnonymousProgress();
             navigate('/verify-email', { state: { email } });
 
         } catch (err) {

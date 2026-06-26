@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
-import { syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
+import { anonymousWinTimeKey, syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
 import confetti from 'canvas-confetti';
 import {
@@ -156,7 +156,7 @@ function useQuotesModeGame() {
                     }
                 }
             } else if (isStageTwoWon && !user) {
-                const winTime = localStorage.getItem('anonymousWinTime_QUOTES');
+                const winTime = localStorage.getItem(anonymousWinTimeKey('QUOTES'));
                 latestWinTimeLabelRef.current = formatTimeLabel(winTime ? parseInt(winTime, 10) : null);
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
                 setCurrentUserRow(fallbackRow);
@@ -222,7 +222,7 @@ function useQuotesModeGame() {
                     setIsLeaderboardExpanded(true);
                     if (!user) {
                         setIsAnonymousAndWon(true);
-                        const winTime = localStorage.getItem('anonymousWinTime_QUOTES');
+                        const winTime = localStorage.getItem(anonymousWinTimeKey('QUOTES'));
                         if (winTime) {
                             latestWinTimeLabelRef.current = formatTimeLabel(parseInt(winTime, 10));
                         }
@@ -295,7 +295,7 @@ function useQuotesModeGame() {
 
                 if (!user) {
                     setIsAnonymousAndWon(true);
-                    localStorage.setItem('anonymousWinTime_QUOTES', winTimestamp.toString());
+                    localStorage.setItem(anonymousWinTimeKey('QUOTES'), winTimestamp.toString());
                 }
                 setIsAnimatingSuccess(true);
 

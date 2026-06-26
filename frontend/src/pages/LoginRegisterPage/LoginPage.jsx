@@ -39,6 +39,7 @@ function LoginPage() {
             const res = await axios.post("/api/auth/authenticate", {email, password});
 
             if (res.status === 201 || res.status === 200) {
+                // reload() -> AuthProvider.loadUser() clears anonymous progress once /me returns a user.
                 await reload();
                 navigate("/");
             }

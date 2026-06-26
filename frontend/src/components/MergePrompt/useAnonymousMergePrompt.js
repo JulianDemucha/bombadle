@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAuth } from '../../auth/UseAuth.jsx';
-import { clearAnonymousWonFlags, hasAnyAnonymousWonFlag } from '../../api/anonymousProgress.js';
+import { useCallback, useRef, useState } from 'react';
+import { clearAnonymousProgress, hasAnyAnonymousWonFlag } from '../../api/anonymousProgress.js';
 
 // Generous max-age so the cookie survives the OAuth round-trip to Google and back.
 const MERGE_COOKIE_MAX_AGE_SECONDS = 300;
@@ -20,17 +19,11 @@ function armMerge() {
  *   <MergePrompt isOpen={merge.isOpen} onConfirm={merge.confirm} onDecline={merge.decline} />
  */
 export default function useAnonymousMergePrompt() {
-    const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
 
     // Ephemeral "declined" state: reset naturally on page reload, never persisted.
     const declinedRef = useRef(false);
     const proceedRef = useRef(null);
-
-    // Once authenticated, the anonymous-win flags are meaningless.
-    useEffect(() => {
-        if (user) clearAnonymousWonFlags();
-    }, [user]);
 
     const requestAuth = useCallback((proceed) => {
         if (!hasAnyAnonymousWonFlag() || declinedRef.current) {
@@ -65,6 +58,6 @@ export default function useAnonymousMergePrompt() {
         requestAuth,
         confirm,
         decline,
-        clearWonFlags: clearAnonymousWonFlags,
+        clearAnonymousProgress,
     };
 }
