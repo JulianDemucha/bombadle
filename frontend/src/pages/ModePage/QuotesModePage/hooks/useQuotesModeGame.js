@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
-import { anonymousWinTimeKey, syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
+import { syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
 import confetti from 'canvas-confetti';
 import {
@@ -156,8 +156,6 @@ function useQuotesModeGame() {
                     }
                 }
             } else if (isStageTwoWon && !user) {
-                const winTime = localStorage.getItem(anonymousWinTimeKey('QUOTES'));
-                latestWinTimeLabelRef.current = formatTimeLabel(winTime ? parseInt(winTime, 10) : null);
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
                 setCurrentUserRow(fallbackRow);
             } else {
@@ -218,21 +216,18 @@ function useQuotesModeGame() {
                     setStageTwoGuesses(mappedS2.reverse());
                 }
 
+                // Dla anonima pobieramy sesję raz: ustawia flagi "won" + cookie i zwraca dto,
+                // z którego czytamy czas zgadnięcia (scoreTimestamps), bo GuessAttempt nie ma timestampu.
+                const anonymousSession = user ? null : await syncAnonymousWonModes();
+
                 if (gameState.isStageTwoPassed) {
                     setIsLeaderboardExpanded(true);
                     if (!user) {
                         setIsAnonymousAndWon(true);
-                        const winTime = localStorage.getItem(anonymousWinTimeKey('QUOTES'));
-                        if (winTime) {
-                            latestWinTimeLabelRef.current = formatTimeLabel(parseInt(winTime, 10));
-                        }
-                    } else if (user && user.todayScoresTimestamps?.['QUOTES_STAGE_2']) {
+                        latestWinTimeLabelRef.current = formatTimeLabel(anonymousSession?.scoreTimestamps?.['QUOTES_STAGE_2']);
+                    } else if (user.todayScoresTimestamps?.['QUOTES_STAGE_2']) {
                         latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['QUOTES_STAGE_2']);
                     }
-                }
-
-                if (!user) {
-                    await syncAnonymousWonModes();
                 }
 
             } catch (error) {
@@ -295,7 +290,6 @@ function useQuotesModeGame() {
 
                 if (!user) {
                     setIsAnonymousAndWon(true);
-                    localStorage.setItem(anonymousWinTimeKey('QUOTES'), winTimestamp.toString());
                 }
                 setIsAnimatingSuccess(true);
 

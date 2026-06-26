@@ -7,10 +7,6 @@ export function anonymousWonFlagKey(mode) {
     return `${WON_FLAG_PREFIX}${mode}`;
 }
 
-export function anonymousWinTimeKey(mode) {
-    return `${WIN_TIME_PREFIX}${mode}`;
-}
-
 /**
  * Reads the anonymous session and persists, per game mode, the fact that it was won while
  * anonymous. Source of truth is AnonymousSessionDto.completedModesToday — the only reliable
@@ -18,15 +14,20 @@ export function anonymousWinTimeKey(mode) {
  *
  * Side effect: hitting /api/players/anonymous/me also ensures the ANON_SESSION_ID cookie
  * exists, which the backend later needs to perform the merge.
+ *
+ * Returns the fetched AnonymousSessionDto (or null on failure) so callers can read
+ * scoreTimestamps from the same request instead of issuing a second fetch.
  */
 export async function syncAnonymousWonModes() {
     const res = await apiFetch('/api/players/anonymous/me');
-    if (!res.ok || !res.data) return;
+    if (!res.ok || !res.data) return null;
 
     const completedModes = res.data.completedModesToday ?? [];
     completedModes.forEach((mode) => {
         localStorage.setItem(anonymousWonFlagKey(mode), '1');
     });
+
+    return res.data;
 }
 
 /** Whether at least one "won as anonymous" flag is currently stored. */

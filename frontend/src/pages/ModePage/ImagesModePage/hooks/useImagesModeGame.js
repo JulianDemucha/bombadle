@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
-import { anonymousWinTimeKey, syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
+import { syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
 import confetti from 'canvas-confetti';
 import {
@@ -49,9 +49,6 @@ const triggerWinAnimation = () => {
     fire(0.2, { spread: 60, startVelocity: 45, origin: { x: 1, y: 1 }, angle: 135 });
     fire(0.1, { spread: 120, decay: 0.91, scalar: 0.8, origin: { x: 0.5, y: 1 }, startVelocity: 60, angle: 90 });
 };
-
-const pickGuessTimestamp = (entry) =>
-    entry?.scoreTimeStamp || entry?.timestamp || entry?.timeStamp || entry?.createdAt || entry?.guessAttempt?.scoreTimeStamp || null;
 
 const buildFallbackCurrentUserRow = (user, attempts, timeLabel) => ({
     rank: '-',
@@ -196,9 +193,6 @@ function useImagesModeGame() {
                     }
                 }
             } else if (isWon && !user) {
-                const winTime = localStorage.getItem(anonymousWinTimeKey('IMAGES'));
-                if (winTime) latestWinTimeLabelRef.current = formatTimeLabel(parseInt(winTime, 10));
-
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
                 setCurrentUserRow(fallbackRow);
             } else {
@@ -238,6 +232,10 @@ function useImagesModeGame() {
                 const response = await apiFetch(GET_GUESS_LIST_ENDPOINT);
                 const items = pickGuessListItems(response.data);
 
+                // Dla anonima pobieramy sesję raz: ustawia flagi "won" + cookie i zwraca dto,
+                // z którego czytamy czas zgadnięcia (scoreTimestamps), bo GuessAttempt nie ma timestampu.
+                const anonymousSession = user ? null : await syncAnonymousWonModes();
+
                 if (user && user.completedModesToday?.includes('IMAGES')) {
                     setIsWon(true);
                     setIsLeaderboardExpanded(true);
@@ -251,10 +249,16 @@ function useImagesModeGame() {
                     const isLastGuessCorrect = extractGuessAttempt(lastGuess)?.name?.match === 'MATCH';
 
                     if (isLastGuessCorrect) {
-                        latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
                         setIsWon(true);
                         setIsLeaderboardExpanded(true);
-                        if (!user) setIsAnonymousAndWon(true);
+                        if (user) {
+                            if (user.todayScoresTimestamps?.['IMAGES']) {
+                                latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['IMAGES']);
+                            }
+                        } else {
+                            setIsAnonymousAndWon(true);
+                            latestWinTimeLabelRef.current = formatTimeLabel(anonymousSession?.scoreTimestamps?.['IMAGES']);
+                        }
                     }
 
                     const mappedRows = items.map((item, index) => {
@@ -271,10 +275,6 @@ function useImagesModeGame() {
                     setGuesses(mappedRows.reverse());
                 } else {
                     setGuesses([]);
-                }
-
-                if (!user) {
-                    await syncAnonymousWonModes();
                 }
             } catch (error) {
                 console.error('Błąd ładowania stanu gry Images:', error);
@@ -320,7 +320,6 @@ function useImagesModeGame() {
 
                 if (!user) {
                     setIsAnonymousAndWon(true);
-                    localStorage.setItem(anonymousWinTimeKey('IMAGES'), winTimestamp.toString());
                 }
                 setIsAnimatingSuccess(true);
 

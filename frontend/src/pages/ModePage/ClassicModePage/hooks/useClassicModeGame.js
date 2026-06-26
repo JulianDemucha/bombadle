@@ -50,9 +50,6 @@ const triggerWinAnimation = () => {
     fire(0.1, { spread: 120, decay: 0.91, scalar: 0.8, origin: { x: 0.5, y: 1 }, startVelocity: 60, angle: 90 });
 };
 
-const pickGuessTimestamp = (entry) =>
-    entry?.scoreTimeStamp || entry?.timestamp || entry?.timeStamp || entry?.createdAt || entry?.guessAttempt?.scoreTimeStamp || null;
-
 const buildFallbackCurrentUserRow = (user, attempts, timeLabel) => ({
     rank: '-',
     name: user?.displayName || user?.login || 'Ty',
@@ -225,6 +222,10 @@ function useClassicModeGame() {
                 const response = await apiFetch(GET_GUESS_LIST_ENDPOINT);
                 const items = pickGuessListItems(response.data);
 
+                // Dla anonima pobieramy sesję raz: ustawia flagi "won" + cookie i zwraca dto,
+                // z którego czytamy czas zgadnięcia (scoreTimestamps), bo GuessAttempt nie ma timestampu.
+                const anonymousSession = user ? null : await syncAnonymousWonModes();
+
                 if (user && user.completedModesToday?.includes('CLASSIC')) {
                     setIsWon(true);
                     setIsLeaderboardExpanded(true);
@@ -238,11 +239,16 @@ function useClassicModeGame() {
                     const isLastGuessCorrect = extractGuessAttempt(lastGuess)?.name?.match === 'MATCH';
 
                     if (isLastGuessCorrect) {
-                        // Bierzemy czas z ostatniego zgadnięcia bezpośrednio z backendu!
-                        latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
                         setIsWon(true);
                         setIsLeaderboardExpanded(true);
-                        if (!user) setIsAnonymousAndWon(true);
+                        if (user) {
+                            if (user.todayScoresTimestamps?.['CLASSIC']) {
+                                latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['CLASSIC']);
+                            }
+                        } else {
+                            setIsAnonymousAndWon(true);
+                            latestWinTimeLabelRef.current = formatTimeLabel(anonymousSession?.scoreTimestamps?.['CLASSIC']);
+                        }
                     }
 
                     const mappedRows = items.map((item, index) => {
@@ -259,10 +265,6 @@ function useClassicModeGame() {
                     setGuesses(mappedRows.reverse());
                 } else {
                     setGuesses([]);
-                }
-
-                if (!user) {
-                    await syncAnonymousWonModes();
                 }
             } catch (error) {
                 console.error('Blad ladowania stanu gry Classic:', error);
