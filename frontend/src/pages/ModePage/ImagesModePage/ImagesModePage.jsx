@@ -5,6 +5,7 @@ import Footer from "../../../components/Footer.jsx";
 import ImgTextBanner from "../../../components/ImgTextBanner.jsx";
 import CharacterSearchBar from "../../../components/CharacterSearchBar.jsx";
 import Top3Leaderboard from '../../../components/Top3Leaderboard.jsx';
+import NavImgButton from '../../../components/NavImgButton.jsx';
 import PreviousCharacterCard from "../ClassicModePage/components/PreviousCharacterCard.jsx";
 import useImagesModeGame from './hooks/useImagesModeGame.js';
 import GlobalLoader from '../../../components/GlobalLoader.jsx';
@@ -140,6 +141,15 @@ function ImagesModePage() {
                         <PreviousCharacterCard endpoint="/api/character-card/IMAGES/previous-character-card"/>
                     </div>
                 </div>
+
+                <NavImgButton
+                    to="/login"
+                    imgSrc="/src/assets/buttons/login_button.png"
+                    altText="Zaloguj się"
+                    className="image-button login-mobile"
+                    hideIfAuthenticated={true}
+                />
+
             </div>
             <Footer/>
         </div>

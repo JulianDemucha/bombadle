@@ -6,6 +6,7 @@ import ImgTextBanner from "../../../components/ImgTextBanner.jsx";
 import QuoteStageOne from './components/QuoteStageOne.jsx';
 import QuoteStageTwo from './components/QuoteStageTwo.jsx';
 import Top3Leaderboard from '../../../components/Top3Leaderboard.jsx';
+import NavImgButton from '../../../components/NavImgButton.jsx';
 import useQuotesModeGame from './hooks/useQuotesModeGame.js';
 import PreviousCharacterCard from "../ClassicModePage/components/PreviousCharacterCard.jsx";
 
@@ -83,6 +84,15 @@ function QuotesModePage() {
                         <PreviousCharacterCard endpoint="/api/character-card/QUOTES_STAGE_2/previous-character-card"/>
                     </div>
                 </div>
+
+                <NavImgButton
+                    to="/login"
+                    imgSrc="/src/assets/buttons/login_button.png"
+                    altText="Zaloguj się"
+                    className="image-button login-mobile"
+                    hideIfAuthenticated={true}
+                />
+
             </div>
             <Footer/>
         </div>

@@ -8,6 +8,7 @@ import ClassicGuessList from "../../../components/ClassicGuessList.jsx";
 import PreviousCharacterCard from './components/PreviousCharacterCard.jsx';
 import GuessLegend from './components/GuessLegend.jsx';
 import Top3Leaderboard from '../../../components/Top3Leaderboard.jsx';
+import NavImgButton from '../../../components/NavImgButton.jsx';
 import useClassicModeGame from './hooks/useClassicModeGame.js';
 
 function ClassicModePage() {
@@ -65,6 +66,14 @@ function ClassicModePage() {
                 </div>
 
                 <PreviousCharacterCard />
+
+                <NavImgButton
+                    to="/login"
+                    imgSrc="/src/assets/buttons/login_button.png"
+                    altText="Zaloguj się"
+                    className="image-button login-mobile"
+                    hideIfAuthenticated={true}
+                />
 
             </div>
             <Footer/>
