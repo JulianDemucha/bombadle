@@ -107,7 +107,6 @@ public class PlayerStatisticsService {
         return new BasicStatisticsDto(
                 player.getCurrentSuperstreak(),
                 player.getTotalSuccessfulGuesses(),
-                playerDailyStatisticRepository.findAveragePercentileByPlayerId(playerId),
                 (int) playerDailyStatisticRepository.countTop3FinishesByPlayerId(playerId)
         );
     }

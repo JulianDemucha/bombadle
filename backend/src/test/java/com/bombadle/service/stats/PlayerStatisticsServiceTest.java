@@ -25,7 +25,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -195,27 +194,23 @@ class PlayerStatisticsServiceTest {
                     .totalSuccessfulGuesses(42)
                     .build();
             when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
-            when(playerDailyStatisticRepository.findAveragePercentileByPlayerId(1L)).thenReturn(0.25);
             when(playerDailyStatisticRepository.countTop3FinishesByPlayerId(1L)).thenReturn(7L);
 
             BasicStatisticsDto result = playerStatisticsService.getBasicStatistics(1L);
 
             assertEquals(3, result.currentSuperstreak());
             assertEquals(42, result.totalGuesses());
-            assertEquals(0.25, result.averageLeaderboardPercentile());
             assertEquals(7, result.totalTop3Finishes());
         }
 
         @Test
-        void getBasicStatistics_noHistory_returnsNullPercentileAndZeroTop3() {
+        void getBasicStatistics_noHistory_returnsZeroTop3() {
             Player player = Player.builder().currentSuperstreak(0).totalSuccessfulGuesses(0).build();
             when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
-            when(playerDailyStatisticRepository.findAveragePercentileByPlayerId(1L)).thenReturn(null);
             when(playerDailyStatisticRepository.countTop3FinishesByPlayerId(1L)).thenReturn(0L);
 
             BasicStatisticsDto result = playerStatisticsService.getBasicStatistics(1L);
 
-            assertNull(result.averageLeaderboardPercentile());
             assertEquals(0, result.totalTop3Finishes());
         }
 

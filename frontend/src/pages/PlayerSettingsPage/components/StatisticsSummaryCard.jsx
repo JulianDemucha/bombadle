@@ -2,11 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import useBasicStatistics from '../hooks/useBasicStatistics.js';
 
-function formatPercentile(fraction) {
-    if (fraction === null || fraction === undefined) return '—';
-    return `top ${Math.round(fraction * 100)}%`;
-}
-
 export default function StatisticsSummaryCard() {
     const { stats, loading } = useBasicStatistics();
     const navigate = useNavigate();
@@ -30,10 +25,6 @@ export default function StatisticsSummaryCard() {
                     <div>
                         <span>Top 3:</span>
                         <span> {stats?.totalTop3Finishes ?? 0} razy</span>
-                    </div>
-                    <div>
-                        <span>Średni percentyl:</span>
-                        <span> {formatPercentile(stats?.averageLeaderboardPercentile)}</span>
                     </div>
                 </>
             )}

@@ -19,13 +19,6 @@ public interface PlayerDailyStatisticRepository extends JpaRepository<PlayerDail
     List<PlayerDailyStatistic> findByPlayerIdOrderByPuzzleDateAscGameModeAsc(Long playerId);
 
     @Query("""
-            SELECT AVG((s.leaderboardPosition * 1.0) / s.totalParticipants)
-            FROM PlayerDailyStatistic s
-            WHERE s.player.id = :playerId
-            """)
-    Double findAveragePercentileByPlayerId(@Param("playerId") Long playerId);
-
-    @Query("""
             SELECT COUNT(s)
             FROM PlayerDailyStatistic s
             WHERE s.player.id = :playerId AND s.leaderboardPosition <= 3
