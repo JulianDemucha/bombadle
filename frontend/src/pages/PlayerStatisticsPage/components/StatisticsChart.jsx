@@ -10,7 +10,10 @@ import {
 } from 'recharts';
 
 export default function StatisticsChart({ data, metricLabel, modeLabel }) {
-    if (!data || data.length === 0) {
+    // Omit points with no value (the current in-progress day has a null percentile).
+    const points = (data ?? []).filter((point) => point.value != null);
+
+    if (points.length === 0) {
         return (
             <div className="statistics-chart statistics-chart--empty">
                 <p>Brak danych dla wybranego trybu. Zagraj kilka dni, aby zobaczyć wykres.</p>
@@ -22,7 +25,7 @@ export default function StatisticsChart({ data, metricLabel, modeLabel }) {
         <div className="statistics-chart">
             <h3 className="statistics-chart__title">{`${metricLabel} — ${modeLabel}`}</h3>
             <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+                <LineChart data={points} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--primary)" opacity={0.2} />
                     <XAxis dataKey="puzzleDate" stroke="var(--primary)" tick={{ fontSize: 12 }} />
                     <YAxis stroke="var(--primary)" tick={{ fontSize: 12 }} allowDecimals={false} />

@@ -21,9 +21,7 @@ function metricValue(row, metric) {
         case 'position':
             return row.leaderboardPosition;
         case 'percentile':
-            return row.totalParticipants > 0
-                ? Math.round((row.leaderboardPosition / row.totalParticipants) * 100)
-                : null;
+            return row.percentile == null ? null : Math.round(row.percentile * 100);
         case 'tries':
         default:
             return row.numberOfTries;
