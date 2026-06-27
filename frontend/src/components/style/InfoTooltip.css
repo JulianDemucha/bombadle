@@ -47,6 +47,11 @@
     white-space: normal;
     opacity: 0;
     visibility: hidden;
+    /* display:none gives the resting bubble a zero layout footprint. Without it the
+       absolutely-positioned 220px box (anchored near the right edge in the leaderboard
+       "Seria" column) still extends the document past narrow viewports, producing a
+       persistent horizontal-scroll strip on the mode pages. It's revealed below. */
+    display: none;
     transition: opacity 0.15s ease;
     pointer-events: none;
     z-index: 40;
@@ -65,6 +70,7 @@
 .info-tooltip__icon:hover .info-tooltip__bubble,
 .info-tooltip__icon:focus .info-tooltip__bubble,
 .info-tooltip__icon:focus-visible .info-tooltip__bubble {
+    display: block;
     opacity: 1;
     visibility: visible;
 }
