@@ -10,6 +10,7 @@ import ClassicModePage from "./pages/ModePage/ClassicModePage/ClassicModePage.js
 import QuotesModePage from "./pages/ModePage/QuotesModePage/QuotesModePage.jsx";
 import ImagesModePage from "./pages/ModePage/ImagesModePage/ImagesModePage.jsx";
 import LeaderboardPage from "./pages/LeaderboardPage/LeaderboardPage.jsx";
+import StreakLeaderboardPage from "./pages/StreakLeaderboardPage/StreakLeaderboardPage.jsx";
 import EmailVerificationPage from "./pages/LoginRegisterPage/EmailVerificationPage.jsx";
 import ForgotPasswordPage from "./pages/LoginRegisterPage/ForgotPasswordPage.jsx";
 import {Navigate} from "react-router-dom";
@@ -25,6 +26,8 @@ export const routes = [
     {path: '/Classic', element: <ClassicModePage/>},
     {path: '/Quotes', element: <QuotesModePage/>},
     {path: '/Images', element: <ImagesModePage/>},
+    {path: '/leaderboard/streak', element: <StreakLeaderboardPage variant="streak"/>},
+    {path: '/leaderboard/superstreak', element: <StreakLeaderboardPage variant="superstreak"/>},
     {path: '/leaderboard/:mode', element: <LeaderboardPage />},
     {path: '/leaderboard', element: <Navigate to="/leaderboard/classic" replace/>},
     {path: '/login-success', element: <Navigate to="/" replace/>}
