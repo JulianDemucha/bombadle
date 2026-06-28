@@ -139,11 +139,12 @@ const LeaderboardPage = () => {
                 </button>
                 <h1>{getTitle()}</h1>
                 <LeaderboardModeSwitcher currentMode={currentMode}/>
-                <TodaySolversInfo loggedIn={loggedInSolvers} anonymous={anonymousSolvers}/>
+
                 <div className="leaderboard-table-full">
                     <LeaderboardColumn players={leftColumn} startIndex={globalStartIndex} isLoading={isLoading}/>
                     <LeaderboardColumn players={rightColumn} startIndex={globalStartIndex + 5} isLoading={isLoading}/>
                 </div>
+                <TodaySolversInfo loggedIn={loggedInSolvers} anonymous={anonymousSolvers}/>
                 <div className="pagination-controls">
                     <button onClick={goToFirstPage} disabled={first || isLoading}>&lt;&lt;</button>
                     <button onClick={goToPreviousPage} disabled={first || isLoading}>&lt;</button>

@@ -142,7 +142,7 @@
     .superstreak-board__row,
     .superstreak-board__header {
         column-gap: 2px;
-        font-size: 14px;
+        font-size: 13px;
         grid-template-columns: 28px minmax(0, 1fr) 80px;
     }
 

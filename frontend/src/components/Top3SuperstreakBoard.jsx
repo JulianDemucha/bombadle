@@ -11,7 +11,7 @@ const avatarSrc = (avatarImage) =>
 function Top3SuperstreakBoard({ topThree = [], loading = false }) {
     return (
         <div className="superstreak-board">
-            <h3 className="superstreak-board__title">Najlepsze superserie</h3>
+            <h3 className="superstreak-board__title">Najdłuższe superserie</h3>
 
             <div className="superstreak-board__table">
                 <div className="superstreak-board__header">
