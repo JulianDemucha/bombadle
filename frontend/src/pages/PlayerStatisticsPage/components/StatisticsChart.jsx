@@ -25,10 +25,10 @@ export default function StatisticsChart({ data, metricLabel, modeLabel }) {
         <div className="statistics-chart">
             <h3 className="statistics-chart__title">{`${metricLabel} — ${modeLabel}`}</h3>
             <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={points} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+                <LineChart data={points} margin={{ top: 10, right: 12, bottom: 10, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--primary)" opacity={0.2} />
                     <XAxis dataKey="puzzleDate" stroke="var(--primary)" tick={{ fontSize: 12 }} />
-                    <YAxis stroke="var(--primary)" tick={{ fontSize: 12 }} allowDecimals={false} />
+                    <YAxis stroke="var(--primary)" tick={{ fontSize: 12 }} width={36} allowDecimals={false} />
                     <Tooltip
                         labelStyle={{ color: 'var(--primary)' }}
                         contentStyle={{

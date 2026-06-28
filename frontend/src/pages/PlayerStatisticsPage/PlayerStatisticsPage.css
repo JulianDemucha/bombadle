@@ -7,9 +7,9 @@
 
 .player-statistics-container {
     flex: 1;
-    width: 100%;
+    box-sizing: border-box;
     max-width: 60rem;
-    margin: 2rem auto;
+    margin: 4rem auto;
     padding: 2rem;
     background-color: var(--secondary);
     border: 2px solid var(--primary);
@@ -59,7 +59,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-    padding: 1rem 0.5rem;
+    padding: 1rem 1rem;
     text-align: center;
     background-color: var(--secondary);
     border: 2px solid var(--primary);
@@ -168,12 +168,15 @@
     color: var(--primary);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 920px) {
     .player-statistics-container {
-        margin: 1rem;
+        margin: 2.5rem 1rem 1rem;
+    }
+}
+@media (max-width: 720px) {
+    .player-statistics-container {
         padding: 1.25rem;
     }
-
     .streak-panel {
         grid-template-columns: repeat(2, 1fr);
     }
