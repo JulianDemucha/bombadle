@@ -6,6 +6,7 @@ import ImgTextBanner from "../../../components/ImgTextBanner.jsx";
 import CharacterSearchBar from "../../../components/CharacterSearchBar.jsx";
 import Top3Leaderboard from '../../../components/Top3Leaderboard.jsx';
 import NavImgButton from '../../../components/NavImgButton.jsx';
+import DailyResetTimer from '../../../components/DailyResetTimer.jsx';
 import PreviousCharacterCard from "../ClassicModePage/components/PreviousCharacterCard.jsx";
 import useImagesModeGame from './hooks/useImagesModeGame.js';
 import GlobalLoader from '../../../components/GlobalLoader.jsx';
@@ -58,6 +59,7 @@ function ImagesModePage() {
     return (
         <div className="images-mode-page classic-mode-page">
             <Header/>
+            <DailyResetTimer/>
             <div className="classic-mode-content">
                 <ImgTextBanner text="Zgadnij postać ze zdjęcia!" altText="Zgadnij ze zdjęcia"/>
 

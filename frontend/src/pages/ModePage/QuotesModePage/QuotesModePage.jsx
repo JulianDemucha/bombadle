@@ -7,6 +7,7 @@ import QuoteStageOne from './components/QuoteStageOne.jsx';
 import QuoteStageTwo from './components/QuoteStageTwo.jsx';
 import Top3Leaderboard from '../../../components/Top3Leaderboard.jsx';
 import NavImgButton from '../../../components/NavImgButton.jsx';
+import DailyResetTimer from '../../../components/DailyResetTimer.jsx';
 import useQuotesModeGame from './hooks/useQuotesModeGame.js';
 import PreviousCharacterCard from "../ClassicModePage/components/PreviousCharacterCard.jsx";
 
@@ -35,6 +36,7 @@ function QuotesModePage() {
     return (
         <div className="quotes-mode-page classic-mode-page">
             <Header/>
+            <DailyResetTimer/>
             <div className="classic-mode-content">
                 <ImgTextBanner text="Dokończ dzisiejszy cytat!" altText="Dokończ Cytat"/>
 

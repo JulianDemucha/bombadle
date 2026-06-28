@@ -9,6 +9,7 @@ import PreviousCharacterCard from './components/PreviousCharacterCard.jsx';
 import GuessLegend from './components/GuessLegend.jsx';
 import Top3Leaderboard from '../../../components/Top3Leaderboard.jsx';
 import NavImgButton from '../../../components/NavImgButton.jsx';
+import DailyResetTimer from '../../../components/DailyResetTimer.jsx';
 import useClassicModeGame from './hooks/useClassicModeGame.js';
 
 function ClassicModePage() {
@@ -33,6 +34,7 @@ function ClassicModePage() {
     return (
         <div className="classic-mode-page">
             <Header/>
+            <DailyResetTimer/>
             <div className="classic-mode-content">
                 <ImgTextBanner text = 'Zgadnij dzisiejszą postać' altText="ok"/>
 
