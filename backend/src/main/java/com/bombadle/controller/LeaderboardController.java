@@ -2,6 +2,7 @@ package com.bombadle.controller;
 
 import com.bombadle.dto.FullLeaderboardEntryDto;
 import com.bombadle.dto.LeaderboardEntryDto;
+import com.bombadle.dto.StreakLeaderboardEntryDto;
 import com.bombadle.dto.TodaySolversDto;
 import com.bombadle.enums.GameMode;
 import com.bombadle.service.stats.LeaderboardService;
@@ -43,6 +44,36 @@ public class LeaderboardController {
     @GetMapping("/{gameMode}/today-solvers")
     ResponseEntity<TodaySolversDto> getTodaySolvers(@PathVariable String gameMode) {
         return ResponseEntity.ok(todaySolversService.getTodaySolvers(resolveGameMode(gameMode)));
+    }
+
+    /*
+     * Player-level streak rankings. These are NOT mode-keyed and must not be routed through
+     * resolveGameMode/GameMode.valueOf. The literal "streak"/"superstreak" segments take precedence
+     * over the dynamic "/{gameMode}" mappings in Spring's path matching, so there is no collision.
+     */
+
+    @GetMapping("/streak/top3")
+    List<StreakLeaderboardEntryDto> getStreakTop3() {
+        return leaderboardService.getStreakTop3();
+    }
+
+    @GetMapping("/superstreak/top3")
+    List<StreakLeaderboardEntryDto> getSuperstreakTop3() {
+        return leaderboardService.getSuperstreakTop3();
+    }
+
+    @GetMapping("/streak")
+    ResponseEntity<Page<StreakLeaderboardEntryDto>> getStreakLeaderboard(
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        return ResponseEntity.ok(leaderboardService.getStreakPagedLeaderboard(page));
+    }
+
+    @GetMapping("/superstreak")
+    ResponseEntity<Page<StreakLeaderboardEntryDto>> getSuperstreakLeaderboard(
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        return ResponseEntity.ok(leaderboardService.getSuperstreakPagedLeaderboard(page));
     }
 
     /**

@@ -52,4 +52,24 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Query(value = "SELECT COUNT(*) FROM player WHERE jsonb_exists(completed_modes_today, :mode)",
             nativeQuery = true)
     long countByCompletedModeToday(@Param("mode") String mode);
+
+    /*
+     * Player-level streak rankings.
+     *
+     * Ordering for both the streak and superstreak boards:
+     *   1. the ranked streak value DESC (the actual ranking criterion),
+     *   2. the corresponding longest-streak field DESC (a higher all-time peak breaks ties in
+     *      favour of the more consistent player),
+     *   3. id ASC (deterministic, stable tie-break — older accounts first).
+     *
+     * Callers pass threshold = 0 so that {@code GreaterThan} excludes players with a zero streak.
+     */
+
+    List<Player> findTop3ByCurrentStreakGreaterThanOrderByCurrentStreakDescLongestStreakDescIdAsc(int threshold);
+
+    List<Player> findTop3ByCurrentSuperstreakGreaterThanOrderByCurrentSuperstreakDescLongestSuperstreakDescIdAsc(int threshold);
+
+    Page<Player> findByCurrentStreakGreaterThanOrderByCurrentStreakDescLongestStreakDescIdAsc(int threshold, Pageable pageable);
+
+    Page<Player> findByCurrentSuperstreakGreaterThanOrderByCurrentSuperstreakDescLongestSuperstreakDescIdAsc(int threshold, Pageable pageable);
 }

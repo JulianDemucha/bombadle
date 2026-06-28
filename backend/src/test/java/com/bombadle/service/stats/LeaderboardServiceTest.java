@@ -2,9 +2,13 @@ package com.bombadle.service.stats;
 
 import com.bombadle.dto.FullLeaderboardEntryDto;
 import com.bombadle.dto.LeaderboardEntryDto;
+import com.bombadle.dto.StreakLeaderboardEntryDto;
+import com.bombadle.entity.Player;
 import com.bombadle.entity.Score;
+import com.bombadle.enums.AvatarImage;
 import com.bombadle.enums.GameMode;
 import com.bombadle.exception.ScoreNotFoundException;
+import com.bombadle.repository.PlayerRepository;
 import com.bombadle.repository.ScoreRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,8 +32,21 @@ class LeaderboardServiceTest {
     @Mock
     private ScoreRepository repo;
 
+    @Mock
+    private PlayerRepository playerRepository;
+
     @InjectMocks
     private LeaderboardService leaderboardService;
+
+    private static Player playerWithStreaks(Long id, int currentStreak, int currentSuperstreak) {
+        return Player.builder()
+                .id(id)
+                .displayName("player-" + id)
+                .avatarImage(AvatarImage.AVATAR_DEFAULT)
+                .currentStreak(currentStreak)
+                .currentSuperstreak(currentSuperstreak)
+                .build();
+    }
 
     @Nested
     class GetTop3LeaderboardTests {
@@ -206,6 +223,113 @@ class LeaderboardServiceTest {
             // Assert
             assertTrue(result.isEmpty());
             verify(repo).findTopByOrderByScoreTimestampDesc();
+        }
+    }
+
+    @Nested
+    class GetStreakTop3Tests {
+
+        @Test
+        void getStreakTop3_assignsRanksByPositionAndExcludesZeroStreak() {
+            // Arrange
+            Player first = playerWithStreaks(10L, 7, 3);
+            Player second = playerWithStreaks(20L, 5, 1);
+            when(playerRepository
+                    .findTop3ByCurrentStreakGreaterThanOrderByCurrentStreakDescLongestStreakDescIdAsc(0))
+                    .thenReturn(List.of(first, second));
+
+            // Act
+            List<StreakLeaderboardEntryDto> result = leaderboardService.getStreakTop3();
+
+            // Assert
+            assertEquals(2, result.size());
+            assertEquals(1L, result.get(0).rank());
+            assertEquals(10L, result.get(0).playerId());
+            assertEquals(7, result.get(0).currentStreak());
+            assertEquals(2L, result.get(1).rank());
+            assertEquals(20L, result.get(1).playerId());
+            verify(playerRepository)
+                    .findTop3ByCurrentStreakGreaterThanOrderByCurrentStreakDescLongestStreakDescIdAsc(0);
+        }
+    }
+
+    @Nested
+    class GetSuperstreakTop3Tests {
+
+        @Test
+        void getSuperstreakTop3_assignsRanksByPositionAndExcludesZeroStreak() {
+            // Arrange
+            Player first = playerWithStreaks(30L, 4, 9);
+            Player second = playerWithStreaks(40L, 2, 6);
+            when(playerRepository
+                    .findTop3ByCurrentSuperstreakGreaterThanOrderByCurrentSuperstreakDescLongestSuperstreakDescIdAsc(0))
+                    .thenReturn(List.of(first, second));
+
+            // Act
+            List<StreakLeaderboardEntryDto> result = leaderboardService.getSuperstreakTop3();
+
+            // Assert
+            assertEquals(2, result.size());
+            assertEquals(1L, result.get(0).rank());
+            assertEquals(9, result.get(0).currentSuperstreak());
+            assertEquals(2L, result.get(1).rank());
+            assertEquals(40L, result.get(1).playerId());
+            verify(playerRepository)
+                    .findTop3ByCurrentSuperstreakGreaterThanOrderByCurrentSuperstreakDescLongestSuperstreakDescIdAsc(0);
+        }
+    }
+
+    @Nested
+    class GetStreakPagedLeaderboardTests {
+
+        @Test
+        void getStreakPagedLeaderboard_assignsOffsetBasedRanksAndPreservesTotal() {
+            // Arrange
+            int page = 2;
+            PageRequest pageable = PageRequest.of(page, 10);
+            Player first = playerWithStreaks(50L, 6, 2);
+            Player second = playerWithStreaks(60L, 6, 1);
+            Page<Player> playerPage = new PageImpl<>(List.of(first, second), pageable, 42);
+            when(playerRepository
+                    .findByCurrentStreakGreaterThanOrderByCurrentStreakDescLongestStreakDescIdAsc(0, pageable))
+                    .thenReturn(playerPage);
+
+            // Act
+            Page<StreakLeaderboardEntryDto> result = leaderboardService.getStreakPagedLeaderboard(page);
+
+            // Assert
+            assertEquals(42, result.getTotalElements());
+            assertEquals(21L, result.getContent().get(0).rank()); // offset 20 + 1
+            assertEquals(22L, result.getContent().get(1).rank());
+            assertEquals(50L, result.getContent().get(0).playerId());
+            verify(playerRepository)
+                    .findByCurrentStreakGreaterThanOrderByCurrentStreakDescLongestStreakDescIdAsc(0, pageable);
+        }
+    }
+
+    @Nested
+    class GetSuperstreakPagedLeaderboardTests {
+
+        @Test
+        void getSuperstreakPagedLeaderboard_assignsOffsetBasedRanksAndPreservesTotal() {
+            // Arrange
+            int page = 0;
+            PageRequest pageable = PageRequest.of(page, 10);
+            Player first = playerWithStreaks(70L, 1, 8);
+            Page<Player> playerPage = new PageImpl<>(List.of(first), pageable, 1);
+            when(playerRepository
+                    .findByCurrentSuperstreakGreaterThanOrderByCurrentSuperstreakDescLongestSuperstreakDescIdAsc(0, pageable))
+                    .thenReturn(playerPage);
+
+            // Act
+            Page<StreakLeaderboardEntryDto> result = leaderboardService.getSuperstreakPagedLeaderboard(page);
+
+            // Assert
+            assertEquals(1, result.getTotalElements());
+            assertEquals(1L, result.getContent().get(0).rank());
+            assertEquals(8, result.getContent().get(0).currentSuperstreak());
+            verify(playerRepository)
+                    .findByCurrentSuperstreakGreaterThanOrderByCurrentSuperstreakDescLongestSuperstreakDescIdAsc(0, pageable);
         }
     }
 }
