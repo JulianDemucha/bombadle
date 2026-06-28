@@ -1,5 +1,6 @@
 package com.bombadle.repository;
 
+import com.bombadle.dto.FullLeaderboardEntryDto;
 import com.bombadle.dto.LeaderboardEntryDto;
 import com.bombadle.entity.Score;
 import com.bombadle.enums.GameMode;
@@ -35,11 +36,11 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
-                p.totalSuccessfulGuesses
+                p.currentStreak
             )
             FROM Score s
             JOIN s.player p
-            WHERE s.gameMode = :gameMode 
+            WHERE s.gameMode = :gameMode
             ORDER BY s.scoreTimestamp ASC
             LIMIT 3
             """)
@@ -57,7 +58,7 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
-                p.totalSuccessfulGuesses
+                p.currentStreak
             )
             FROM Score s
             JOIN s.player p
@@ -78,6 +79,8 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
 
     Optional<Score> findByPlayerIdAndGameMode(Long playerId, GameMode gameMode);
 
+    long countByGameMode(GameMode gameMode);
+
     @Query("""
                 SELECT COUNT(s) + 1
                 FROM Score s 
@@ -90,14 +93,15 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
     Long findRankByPlayerId(@Param("playerId") Long playerId);
 
     @Query(value = """
-            SELECT new com.bombadle.dto.LeaderboardEntryDto(
+            SELECT new com.bombadle.dto.FullLeaderboardEntryDto(
                 p.id,
                 ROW_NUMBER() OVER(ORDER BY s.scoreTimestamp ASC),
                 p.displayName,
                 p.avatarImage,
                 s.scoreTimestamp,
                 s.numberOfTries,
-                p.totalSuccessfulGuesses
+                p.currentStreak,
+                p.currentSuperstreak
             )
             FROM Score s
             JOIN s.player p
@@ -109,7 +113,7 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
                     FROM Score s
                     WHERE s.gameMode = :gameMode
                     """)
-    Page<LeaderboardEntryDto> findPagedLeaderboard(@Param("gameMode") GameMode gameMode, Pageable pageable);
+    Page<FullLeaderboardEntryDto> findPagedLeaderboard(@Param("gameMode") GameMode gameMode, Pageable pageable);
 
     @EntityGraph(attributePaths = "player")
     Page<Score> findAll(Pageable pageable);

@@ -6,6 +6,8 @@ const MODES = [
     { mode: 'classic', label: 'Klasyczny' },
     { mode: 'quotes', label: 'Cytaty' },
     { mode: 'images', label: 'Zdjęcia' },
+    { mode: 'streak', label: 'Seria' },
+    { mode: 'superstreak', label: 'Superseria' },
 ];
 
 function LeaderboardModeSwitcher({ currentMode }) {

@@ -147,6 +147,12 @@ class DailyResetIT extends BaseIT {
         // Act
         dailyResetService.executeDailyReset();
 
+        // evaluateDailyStreaks loads players into the persistence context, while the daily reset
+        // clears completed_modes_today via a bulk native update that bypasses it. Clear the context
+        // so the assertions below read the fresh database state instead of the stale L1 cache.
+        entityManager.flush();
+        entityManager.clear();
+
         // Assert
         Player resetActivePlayer = playerRepository.findById(activePlayer.getId()).orElseThrow();
         assertFalse(resetActivePlayer.hasGuessedToday(GameMode.CLASSIC));

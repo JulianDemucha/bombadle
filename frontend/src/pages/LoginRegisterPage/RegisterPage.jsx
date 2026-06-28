@@ -7,6 +7,8 @@ import Footer from "../../components/Footer.jsx";
 import AuthHeader from '../../components/AuthHeader';
 import axios from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
+import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
+import useAnonymousMergePrompt from "../../components/MergePrompt/useAnonymousMergePrompt.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const MIN_PASSWORD_LEN = 8;
@@ -90,6 +92,7 @@ function RegisterPage() {
     }, []);
 
     const navigate = useNavigate();
+    const merge = useAnonymousMergePrompt();
 
     const setUsernameError = useCallback((msg) => {
         setErrors(prev => ({...prev, username: msg}));
@@ -117,22 +120,37 @@ function RegisterPage() {
         fieldName: "email"
     });
 
-    const handleMergeConfirmation = () => {
-        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
-        if (anonymousGuesses && anonymousGuesses !== '[]') {
-            if (window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?")) {
-                const sessionId = localStorage.getItem('bombadle_anonymous_session_id');
-                if (sessionId) {
-                    document.cookie = `bombadle_anonymous_session_id=${sessionId}; path=/; max-age=60`;
+    const performRegister = async () => {
+        setLoading(true);
+        try {
+            await axios.post("/api/auth/register", {email: email, username: username, password: password});
+            // Register does not authenticate immediately (the user must verify their email first),
+            // so AuthProvider's clear-on-authenticated won't fire here — clear explicitly.
+            merge.clearAnonymousProgress();
+            navigate('/verify-email', { state: { email } });
+
+        } catch (err) {
+            if (err?.response) {
+                const {status, data} = err.response;
+                if (status === 409) {
+                    const msg = data?.message || "Email lub nazwa użytkownika już istnieją.";
+                    if (data?.field === "email") {
+                        setErrors(prev => ({...prev, email: msg}));
+                    } else if (data?.field === "username") {
+                        setErrors(prev => ({...prev, username: msg}));
+                    } else {
+                        setErrors(prev => ({...prev, general: msg}));
+                    }
+                } else if (status === 422 && data?.errors) {
+                    setErrors(prev => ({...prev, ...data.errors}));
                 } else {
-                    document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
+                    setErrors(prev => ({...prev, general: data?.message || "Błąd podczas rejestracji."}));
                 }
-                
-                localStorage.removeItem('anonymousGuessList');
-                localStorage.removeItem('anonymousWinTime');
-                localStorage.removeItem('lastPlayedDate');
-                localStorage.removeItem('bombadle_anonymous_session_id');
+            } else {
+                setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
             }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -180,45 +198,19 @@ function RegisterPage() {
             return;
         }
 
-        handleMergeConfirmation();
-        setLoading(true);
-        try {
-            await axios.post("/api/auth/register", {email: email, username: username, password: password});
-            navigate('/verify-email', { state: { email } });
-
-        } catch (err) {
-            if (err?.response) {
-                const {status, data} = err.response;
-                if (status === 409) {
-                    const msg = data?.message || "Email lub nazwa użytkownika już istnieją.";
-                    if (data?.field === "email") {
-                        setErrors(prev => ({...prev, email: msg}));
-                    } else if (data?.field === "username") {
-                        setErrors(prev => ({...prev, username: msg}));
-                    } else {
-                        setErrors(prev => ({...prev, general: msg}));
-                    }
-                } else if (status === 422 && data?.errors) {
-                    setErrors(prev => ({...prev, ...data.errors}));
-                } else {
-                    setErrors(prev => ({...prev, general: data?.message || "Błąd podczas rejestracji."}));
-                }
-            } else {
-                setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
-            }
-        } finally {
-            setLoading(false);
-        }
+        merge.requestAuth(() => performRegister());
     };
 
     const handleGoogleLogin = () => {
-        handleMergeConfirmation();
-        window.location.href = 'https://localhost:8443/oauth2/authorization/google';
+        merge.requestAuth(() => {
+            window.location.href = 'https://localhost:8443/oauth2/authorization/google';
+        });
     };
 
     return (
         <div className="login-register-page">
             <AuthHeader />
+            <MergePrompt isOpen={merge.isOpen} onConfirm={merge.confirm} onDecline={merge.decline} />
             <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>REJESTRACJA</h1>
 

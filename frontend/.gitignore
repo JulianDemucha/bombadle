@@ -26,3 +26,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local-only preview/debug scaffolding: plain-HTTP, no-backend Vite config used to
+# load the app in a headless browser for layout checks. Not for committing.
+vite.measure.config.mjs

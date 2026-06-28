@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
+import { syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
 import confetti from 'canvas-confetti';
 import {
@@ -25,6 +26,7 @@ const STAGE_2_GUESS_ENDPOINT = '/api/card-guessing/quotes/guess';
 
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/QUOTES_STAGE_2/top3';
 const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/QUOTES_STAGE_2/player';
+const LEADERBOARD_TODAY_SOLVERS_ENDPOINT = '/api/leaderboard/QUOTES_STAGE_2/today-solvers';
 
 const formatTimeLabel = (value) => {
     if (!value) return '--:--';
@@ -38,7 +40,6 @@ const buildFallbackCurrentUserRow = (user, attempts, timeLabel) => ({
     name: user?.displayName || user?.login || 'Ty',
     time: timeLabel || '--:--',
     attempts: attempts > 0 ? attempts : '-',
-    wins: user?.totalGuesses ?? '?',
     avatar: user?.avatarImage ? `/avatar/${user.avatarImage}.jpg` : '/avatar/AVATAR_DEFAULT.jpg',
     isCurrentUser: true
 });
@@ -91,6 +92,7 @@ function useQuotesModeGame() {
 
     const [isLeaderboardExpanded, setIsLeaderboardExpanded] = useState(false);
     const [topThree, setTopThree] = useState([]);
+    const [todaySolvers, setTodaySolvers] = useState(0);
     const [currentUserRow, setCurrentUserRow] = useState(null);
     const [isCurrentUserInTopThree, setIsCurrentUserInTopThree] = useState(false);
 
@@ -124,6 +126,12 @@ function useQuotesModeGame() {
             const isCurrentInTopThree = topThreeRows.some((row) => row.isCurrentUser);
             setIsCurrentUserInTopThree(isCurrentInTopThree);
 
+            const solversResponse = await apiFetch(LEADERBOARD_TODAY_SOLVERS_ENDPOINT);
+            if (solversResponse.ok && solversResponse.data) {
+                const { loggedIn = 0, anonymous = 0 } = solversResponse.data;
+                setTodaySolvers(loggedIn + anonymous);
+            }
+
             if (isStageTwoWon && user && !isCurrentInTopThree) {
                 const userId = user?.id ?? user?.playerId;
                 if (userId) {
@@ -148,11 +156,8 @@ function useQuotesModeGame() {
                     }
                 }
             } else if (isStageTwoWon && !user) {
-                const winTime = localStorage.getItem('anonymousWinTime_QUOTES');
-                latestWinTimeLabelRef.current = formatTimeLabel(winTime ? parseInt(winTime, 10) : null);
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
-                fallbackRow.wins = '?';
-                setCurrentUserRow(fallbackRow);
+                setCurrentUserRow({ ...fallbackRow, currentStreak: 1 });
             } else {
                 setCurrentUserRow(null);
             }
@@ -211,15 +216,16 @@ function useQuotesModeGame() {
                     setStageTwoGuesses(mappedS2.reverse());
                 }
 
+                // Dla anonima pobieramy sesję raz: ustawia flagi "won" + cookie i zwraca dto,
+                // z którego czytamy czas zgadnięcia (scoreTimestamps), bo GuessAttempt nie ma timestampu.
+                const anonymousSession = user ? null : await syncAnonymousWonModes();
+
                 if (gameState.isStageTwoPassed) {
                     setIsLeaderboardExpanded(true);
                     if (!user) {
                         setIsAnonymousAndWon(true);
-                        const winTime = localStorage.getItem('anonymousWinTime_QUOTES');
-                        if (winTime) {
-                            latestWinTimeLabelRef.current = formatTimeLabel(parseInt(winTime, 10));
-                        }
-                    } else if (user && user.todayScoresTimestamps?.['QUOTES_STAGE_2']) {
+                        latestWinTimeLabelRef.current = formatTimeLabel(anonymousSession?.scoreTimestamps?.['QUOTES_STAGE_2']);
+                    } else if (user.todayScoresTimestamps?.['QUOTES_STAGE_2']) {
                         latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['QUOTES_STAGE_2']);
                     }
                 }
@@ -284,7 +290,6 @@ function useQuotesModeGame() {
 
                 if (!user) {
                     setIsAnonymousAndWon(true);
-                    localStorage.setItem('anonymousWinTime_QUOTES', winTimestamp.toString());
                 }
                 setIsAnimatingSuccess(true);
 
@@ -321,6 +326,7 @@ function useQuotesModeGame() {
         stageTwoRef,
         isLeaderboardExpanded,
         topThree,
+        todaySolvers,
         currentUserRow,
         isCurrentUserInTopThree
     };

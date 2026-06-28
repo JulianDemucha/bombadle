@@ -2,6 +2,7 @@ package com.bombadle.service.player;
 
 import com.bombadle.dto.PlayerDto;
 import com.bombadle.entity.Player;
+import com.bombadle.enums.GameMode;
 import com.bombadle.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -86,6 +87,14 @@ public class PlayerService {
     public Boolean existsByEmail(String email) {
         if (email == null) return false;
         return repo.existsByEmail(email.toLowerCase());
+    }
+
+    /**
+     * Number of logged-in players that solved the given mode today. Backed by the daily-reset
+     * semantics of {@code completedModesToday}, so the count is inherently scoped to the current day.
+     */
+    public long countSolversForMode(GameMode gameMode) {
+        return repo.countByCompletedModeToday(gameMode.name());
     }
 
 }

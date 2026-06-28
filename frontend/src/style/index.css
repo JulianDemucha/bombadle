@@ -17,9 +17,19 @@
 }
 
 
+/* The wallpaper is ALSO put on <html> (the canvas). The canvas is painted across the
+   whole viewport at every scroll position, including the horizontal-overflow area that
+   sits beyond <body>'s box — that area used to expose the solid html background colour
+   as a strip on the right. Keeping the identical fixed/cover image on <body> too means
+   the wallpaper always renders even if the canvas image fails for any reason. */
 html {
     background-color: #9E5F40;
     min-height: 100%;
+    background-image: url('../../public/img/background_img_alt.png');
+    background-repeat: no-repeat;
+    background-position: center top;
+    background-size: cover;
+    background-attachment: fixed;
 }
 
 body {

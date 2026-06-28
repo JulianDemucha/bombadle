@@ -70,9 +70,9 @@
 
 .leaderboard-header {
     display: grid;
-    grid-template-columns: 30px 1fr 60px 50px 50px;
+    grid-template-columns: 28px minmax(0, 1fr) 54px 44px 46px;
     gap: 6px;
-    padding: 4px;
+    padding: 6px;
     border-bottom: 2px solid #2b2b2b;
     font-size: 0.85rem;
     font-family: 'PixelifySans', monospace !important;
@@ -86,12 +86,28 @@
     font-family: 'PixelifySans', monospace !important;
 }
 
+/* line the GRACZ label up with the player pill (which has its own left padding/border) */
+.leaderboard-header .text-left {
+    padding-left: 7px;
+}
+
+/* Above mobile breakpoint: match streak value font-size to row font-size */
+.leaderboard-row .streak-flame--sm .streak-flame__value {
+    font-size: 17px;
+}
+
+/* Current-user row has white text — streak value must follow */
+.leaderboard-row.current-user .streak-flame__value {
+    color: inherit;
+}
+
 .leaderboard-row {
     display: grid;
-    grid-template-columns: 30px 1fr 60px 50px 50px;
+    grid-template-columns: 28px minmax(0, 1fr) 54px 44px 46px;
     gap: 6px;
     align-items: center;
     padding: 6px;
+    min-height: 52px;
     background-color: rgba(90, 95, 61, 0.15);
     border-radius: 4px;
     font-family: 'Courier New', monospace;
@@ -279,6 +295,13 @@
     line-height: 1.1;
 }
 
+/* Between 400px and 499px: cap wrapper to reduce excess space in player column */
+@media (min-width: 400px) and (max-width: 499px) {
+    .leaderboard-wrapper {
+        max-width: 380px;
+    }
+}
+
 @media (max-width: 500px) {
     .leaderboard-wrapper {
         width: calc(100% - 16px) !important;
@@ -289,5 +312,9 @@
         column-gap: 2px;
         font-size: 14px;
         padding: 6px 2px !important;
+    }
+
+    .leaderboard-row .streak-flame--sm .streak-flame__value {
+        font-size: 14px;
     }
 }

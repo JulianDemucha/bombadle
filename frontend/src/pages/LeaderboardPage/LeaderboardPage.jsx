@@ -5,6 +5,10 @@ import {useNavigate, useParams} from 'react-router-dom';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import LeaderboardModeSwitcher from '../../components/LeaderboardModeSwitcher';
+import StreakFlame from '../../components/StreakFlame';
+import InfoTooltip from '../../components/InfoTooltip';
+import { STREAK_TOOLTIP, SUPERSTREAK_TOOLTIP } from '../../components/streakInfo';
+import TodaySolversInfo from './components/TodaySolversInfo';
 
 const LeaderboardColumn = ({players, startIndex, isLoading}) => {
     const filledPlayers = [...players];
@@ -18,7 +22,8 @@ const LeaderboardColumn = ({players, startIndex, isLoading}) => {
                 <span className="text-center">#</span>
                 <span className="text-left">Gracz</span>
                 <span className="text-center">Próby</span>
-                <span className="text-center">Wygrane</span>
+                <span className="text-center">Seria<InfoTooltip text={STREAK_TOOLTIP} /></span>
+                <span className="text-center leaderboard-header__super">SUPER<InfoTooltip text={SUPERSTREAK_TOOLTIP} /><br />SERIA</span>
                 <span className="text-center">Czas</span>
             </div>
             {filledPlayers.map((player, idx) => {
@@ -33,6 +38,7 @@ const LeaderboardColumn = ({players, startIndex, isLoading}) => {
                             <div className="leaderboard-player empty-player">
                                 <span>---</span>
                             </div>
+                            <span className="text-center">-</span>
                             <span className="text-center">-</span>
                             <span className="text-center">-</span>
                             <span className="text-center">--:--</span>
@@ -52,7 +58,8 @@ const LeaderboardColumn = ({players, startIndex, isLoading}) => {
                             <span className="text-left text-ellipsis">{player.playerDisplayName}</span>
                         </div>
                         <span className="text-center">{player.numberOfTries}</span>
-                        <span className="text-center">{player.wins}</span>
+                        <span className="text-center"><StreakFlame value={player.currentStreak} /></span>
+                        <span className="text-center"><StreakFlame value={player.currentSuperstreak} variant="super" /></span>
                         <span className="text-center">{new Date(player.scoreTimeStamp).toLocaleTimeString('pl-PL', {
                             hour: '2-digit',
                             minute: '2-digit'
@@ -70,6 +77,8 @@ const LeaderboardPage = () => {
 
     const {
         leaderboardData,
+        loggedInSolvers,
+        anonymousSolvers,
         loading,
         error,
         currentPage,
@@ -130,10 +139,12 @@ const LeaderboardPage = () => {
                 </button>
                 <h1>{getTitle()}</h1>
                 <LeaderboardModeSwitcher currentMode={currentMode}/>
+
                 <div className="leaderboard-table-full">
                     <LeaderboardColumn players={leftColumn} startIndex={globalStartIndex} isLoading={isLoading}/>
                     <LeaderboardColumn players={rightColumn} startIndex={globalStartIndex + 5} isLoading={isLoading}/>
                 </div>
+                <TodaySolversInfo loggedIn={loggedInSolvers} anonymous={anonymousSolvers}/>
                 <div className="pagination-controls">
                     <button onClick={goToFirstPage} disabled={first || isLoading}>&lt;&lt;</button>
                     <button onClick={goToPreviousPage} disabled={first || isLoading}>&lt;</button>

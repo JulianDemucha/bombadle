@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
+import { syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
 import confetti from 'canvas-confetti';
 import {
@@ -22,6 +23,7 @@ const GUESS_ENDPOINT_BASE = '/api/card-guessing/images/guess';
 
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/IMAGES/top3';
 const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/IMAGES/player';
+const LEADERBOARD_TODAY_SOLVERS_ENDPOINT = '/api/leaderboard/IMAGES/today-solvers';
 
 const formatTimeLabel = (value) => {
     if (!value) return '--:--';
@@ -48,15 +50,11 @@ const triggerWinAnimation = () => {
     fire(0.1, { spread: 120, decay: 0.91, scalar: 0.8, origin: { x: 0.5, y: 1 }, startVelocity: 60, angle: 90 });
 };
 
-const pickGuessTimestamp = (entry) =>
-    entry?.scoreTimeStamp || entry?.timestamp || entry?.timeStamp || entry?.createdAt || entry?.guessAttempt?.scoreTimeStamp || null;
-
 const buildFallbackCurrentUserRow = (user, attempts, timeLabel) => ({
     rank: '-',
     name: user?.displayName || user?.login || 'Ty',
     time: timeLabel || '--:--',
     attempts: attempts > 0 ? attempts : '-',
-    wins: user?.totalGuesses ?? '?',
     avatar: user?.avatarImage ? `/avatar/${user.avatarImage}.jpg` : '/avatar/AVATAR_DEFAULT.jpg',
     isCurrentUser: true
 });
@@ -87,6 +85,7 @@ function useImagesModeGame() {
     const [isLeaderboardExpanded, setIsLeaderboardExpanded] = useState(false);
     const [isAnimatingSuccess, setIsAnimatingSuccess] = useState(false);
     const [topThree, setTopThree] = useState([]);
+    const [todaySolvers, setTodaySolvers] = useState(0);
     const [currentUserRow, setCurrentUserRow] = useState(null);
     const [isCurrentUserInTopThree, setIsCurrentUserInTopThree] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -164,6 +163,12 @@ function useImagesModeGame() {
             const isCurrentInTopThree = topThreeRows.some((row) => row.isCurrentUser);
             setIsCurrentUserInTopThree(isCurrentInTopThree);
 
+            const solversResponse = await apiFetch(LEADERBOARD_TODAY_SOLVERS_ENDPOINT);
+            if (solversResponse.ok && solversResponse.data) {
+                const { loggedIn = 0, anonymous = 0 } = solversResponse.data;
+                setTodaySolvers(loggedIn + anonymous);
+            }
+
             if (isWon && user && !isCurrentInTopThree) {
                 const userId = user?.id ?? user?.playerId;
                 if (userId) {
@@ -188,12 +193,8 @@ function useImagesModeGame() {
                     }
                 }
             } else if (isWon && !user) {
-                const winTime = localStorage.getItem('anonymousWinTime_IMAGES');
-                if (winTime) latestWinTimeLabelRef.current = formatTimeLabel(parseInt(winTime, 10));
-
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
-                fallbackRow.wins = '?';
-                setCurrentUserRow(fallbackRow);
+                setCurrentUserRow({ ...fallbackRow, currentStreak: 1 });
             } else {
                 setCurrentUserRow(null);
             }
@@ -231,6 +232,10 @@ function useImagesModeGame() {
                 const response = await apiFetch(GET_GUESS_LIST_ENDPOINT);
                 const items = pickGuessListItems(response.data);
 
+                // Dla anonima pobieramy sesję raz: ustawia flagi "won" + cookie i zwraca dto,
+                // z którego czytamy czas zgadnięcia (scoreTimestamps), bo GuessAttempt nie ma timestampu.
+                const anonymousSession = user ? null : await syncAnonymousWonModes();
+
                 if (user && user.completedModesToday?.includes('IMAGES')) {
                     setIsWon(true);
                     setIsLeaderboardExpanded(true);
@@ -244,10 +249,16 @@ function useImagesModeGame() {
                     const isLastGuessCorrect = extractGuessAttempt(lastGuess)?.name?.match === 'MATCH';
 
                     if (isLastGuessCorrect) {
-                        latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
                         setIsWon(true);
                         setIsLeaderboardExpanded(true);
-                        if (!user) setIsAnonymousAndWon(true);
+                        if (user) {
+                            if (user.todayScoresTimestamps?.['IMAGES']) {
+                                latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['IMAGES']);
+                            }
+                        } else {
+                            setIsAnonymousAndWon(true);
+                            latestWinTimeLabelRef.current = formatTimeLabel(anonymousSession?.scoreTimestamps?.['IMAGES']);
+                        }
                     }
 
                     const mappedRows = items.map((item, index) => {
@@ -309,7 +320,6 @@ function useImagesModeGame() {
 
                 if (!user) {
                     setIsAnonymousAndWon(true);
-                    localStorage.setItem('anonymousWinTime_IMAGES', winTimestamp.toString());
                 }
                 setIsAnimatingSuccess(true);
 
@@ -340,6 +350,7 @@ function useImagesModeGame() {
         isLeaderboardExpanded,
         isAnimatingSuccess,
         topThree,
+        todaySolvers,
         currentUserRow,
         isCurrentUserInTopThree,
         handleSelectCharacterId,

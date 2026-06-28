@@ -1,0 +1,53 @@
+.daily-reset-timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: fit-content;
+    max-width: calc(100% - 24px);
+    box-sizing: border-box;
+    margin: 0.5rem auto -12px;
+    padding: 6px 20px;
+    font-family: 'PixelifySans', monospace;
+    background-color: rgba(173, 140, 115, 0.9);
+    border: 3px solid #5a463a;
+    border-radius: 10px;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+    position: relative;
+    z-index: 5;
+    text-align: center;
+}
+
+.classic-mode-page > .daily-reset-timer {
+    margin-top: calc(0.5rem - 20px);
+}
+
+.daily-reset-timer__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #4f4035;
+}
+
+.daily-reset-timer__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #2b2b2b;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 1135px) {
+    .daily-reset-timer {
+        gap: 2px;
+        margin: 1.4rem auto -12px;
+    }
+
+    .classic-mode-page > .daily-reset-timer {
+        margin-top: calc(1.4rem - 20px);
+    }
+
+}

@@ -7,6 +7,8 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.cache.CacheService;
+import com.bombadle.service.stats.DailySolverStatisticService;
+import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import com.bombadle.service.player.PlayerDeletionService;
 import com.bombadle.service.admin.AdminChangeQueueService;
@@ -40,6 +42,8 @@ public class DailyResetService {
     private final CurrentCardStateService currentCardStateService;
     private final ScoreMaintenanceService scoreMaintenanceService;
     private final QuoteService quoteService;
+    private final PlayerStatisticsService playerStatisticsService;
+    private final DailySolverStatisticService dailySolverStatisticService;
 
     /* Cron:  seconds, minutes, hours, day (of the month), month, day (of the week) */
     @Scheduled(cron = "0 0 7 * * *", zone = "Europe/Warsaw")
@@ -48,6 +52,8 @@ public class DailyResetService {
     public void executeDailyReset() {
         log.info("7:00 - Daily reset triggered: selecting new characters and resetting scores.");
 
+        playerStatisticsService.evaluateDailyStreaks();
+        dailySolverStatisticService.captureClosingDay();
         clearPreviousDayState();
         pickNewDailyEntities();
         refreshCaches();
