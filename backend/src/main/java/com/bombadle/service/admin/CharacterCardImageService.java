@@ -22,9 +22,9 @@ import java.util.Locale;
 @Service
 public class CharacterCardImageService {
 
-    private final String imageDir = "src/main/resources/static/images/character_cards";
-    private final String pendingDir = imageDir + "/pending";
-    private final String guessImagesDir = "src/main/resources/static/images/images_mode";
+    private String imageDir = "src/main/resources/static/images/character_cards";
+    private String pendingDir = imageDir + "/pending";
+    private String guessImagesDir = "src/main/resources/static/images/images_mode";
 
     // ── Staging ──────────────────────────────────────────────────────────────
 

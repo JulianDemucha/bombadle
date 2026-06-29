@@ -9,6 +9,7 @@ import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerDeletionService;
+import com.bombadle.service.feedback.FeedbackService;
 import com.bombadle.service.stats.DailySolverStatisticService;
 import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
@@ -57,6 +58,8 @@ class DailyResetServiceTest {
     private PlayerStatisticsService playerStatisticsService;
     @Mock
     private DailySolverStatisticService dailySolverStatisticService;
+    @Mock
+    private FeedbackService feedbackService;
 
     @InjectMocks
     private DailyResetService dailyResetService;

@@ -10,6 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,21 +29,26 @@ class CharacterCardImageServiceTest {
 
     private Path imageDirPath;
     private Path pendingDirPath;
+    private Path guessImagesDirPath;
 
     @BeforeEach
     void setUp() {
-        imageDirPath = tempDir.resolve("images");
+        imageDirPath = tempDir.resolve("character_cards");
         pendingDirPath = imageDirPath.resolve("pending");
+        guessImagesDirPath = tempDir.resolve("images_mode");
 
         ReflectionTestUtils.setField(imageService, "imageDir", imageDirPath.toString());
         ReflectionTestUtils.setField(imageService, "pendingDir", pendingDirPath.toString());
+        ReflectionTestUtils.setField(imageService, "guessImagesDir", guessImagesDirPath.toString());
     }
+
+    // ── storePendingImage ─────────────────────────────────────────────────────
 
     @Nested
     class StorePendingImageTests {
 
         @Test
-        void storePendingImage_validFile_createsFileInPendingDir() throws IOException {
+        void validFile_createsFileInPendingDir() throws IOException {
             MockMultipartFile file = new MockMultipartFile("file", "sigma_image.jpg", "image/jpeg", "test data".getBytes());
 
             String resultPath = imageService.storePendingImage(file);
@@ -52,42 +59,28 @@ class CharacterCardImageServiceTest {
         }
 
         @Test
-        void storePendingImage_nullFile_throwsIllegalArgumentException() {
+        void nullFile_throwsIllegalArgumentException() {
             assertThrows(IllegalArgumentException.class, () ->
                     imageService.storePendingImage(null)
             );
         }
-    }
-
-    @Nested
-    class ApplyPendingImageTests {
 
         @Test
-        void applyPendingImage_validPath_movesFileToImageDir() throws IOException {
-            Files.createDirectories(pendingDirPath);
-            Path tempFile = Files.createFile(pendingDirPath.resolve("sigma_temp.jpg"));
-
-            imageService.applyPendingImage(tempFile.toString(), "Sigma Card");
-
-            assertFalse(Files.exists(tempFile));
-            assertTrue(Files.exists(imageDirPath.resolve("sigma_card.jpg")));
-        }
-
-        @Test
-        void applyPendingImage_nonExistentPath_throwsIllegalArgumentException() {
-            String nonExistentPath = pendingDirPath.resolve("beta_ghost.jpg").toString();
-
+        void emptyFile_throwsIllegalArgumentException() {
+            MockMultipartFile emptyFile = new MockMultipartFile("file", "empty.jpg", "image/jpeg", new byte[0]);
             assertThrows(IllegalArgumentException.class, () ->
-                    imageService.applyPendingImage(nonExistentPath, "sigma_card")
+                    imageService.storePendingImage(emptyFile)
             );
         }
     }
+
+    // ── deletePendingImage ────────────────────────────────────────────────────
 
     @Nested
     class DeletePendingImageTests {
 
         @Test
-        void deletePendingImage_existingFile_deletesFile() throws IOException {
+        void existingFile_deletesFile() throws IOException {
             Files.createDirectories(pendingDirPath);
             Path tempFile = Files.createFile(pendingDirPath.resolve("sigma_to_delete.jpg"));
 
@@ -97,47 +90,128 @@ class CharacterCardImageServiceTest {
         }
 
         @Test
-        void deletePendingImage_nonExistentFile_doesNotThrow() {
+        void nonExistentFile_doesNotThrow() {
             assertDoesNotThrow(() ->
                     imageService.deletePendingImage("beta_non_existent.jpg")
             );
         }
-    }
-
-    @Nested
-    class RenameImageTests {
 
         @Test
-        void renameImage_existingFile_renamesFile() throws IOException {
-            Files.createDirectories(imageDirPath);
-            Path oldFile = Files.createFile(imageDirPath.resolve("beta_name.jpg"));
+        void nullPath_doesNotThrow() {
+            assertDoesNotThrow(() -> imageService.deletePendingImage(null));
+        }
+    }
 
-            imageService.renameImage("Beta Name", "Sigma Name");
+    // ── buildImageSrc ─────────────────────────────────────────────────────────
 
-            assertFalse(Files.exists(oldFile));
-            assertTrue(Files.exists(imageDirPath.resolve("sigma_name.jpg")));
+    @Nested
+    class BuildImageSrcTests {
+
+        @Test
+        void buildsCorrectIdBasedPath() {
+            assertEquals("/images/character_cards/42.jpg", imageService.buildImageSrc(42L));
+            assertEquals("/images/character_cards/1.jpg", imageService.buildImageSrc(1L));
+        }
+    }
+
+    // ── scaleAndApplyDisplayImage ─────────────────────────────────────────────
+
+    @Nested
+    class ScaleAndApplyDisplayImageTests {
+
+        @Test
+        void validImage_creates150x150JpegAtFinalLocation() throws IOException {
+            Files.createDirectories(pendingDirPath);
+            Path tempImg = pendingDirPath.resolve("source.jpg");
+            BufferedImage source = new BufferedImage(400, 300, BufferedImage.TYPE_INT_RGB);
+            ImageIO.write(source, "jpeg", tempImg.toFile());
+
+            imageService.scaleAndApplyDisplayImage(tempImg.toString(), 42L);
+
+            Path finalPath = imageDirPath.resolve("42.jpg");
+            assertTrue(Files.exists(finalPath));
+            assertFalse(Files.exists(tempImg), "temp file should be deleted");
+
+            BufferedImage result = ImageIO.read(finalPath.toFile());
+            assertNotNull(result);
+            assertEquals(150, result.getWidth());
+            assertEquals(150, result.getHeight());
         }
 
         @Test
-        void renameImage_nonExistentFile_doesNotThrow() {
-            assertDoesNotThrow(() ->
-                    imageService.renameImage("beta_missing", "sigma_new")
+        void nullPath_doesNothing() throws IOException {
+            assertDoesNotThrow(() -> imageService.scaleAndApplyDisplayImage(null, 42L));
+        }
+
+        @Test
+        void nonExistentFile_throwsIllegalArgumentException() {
+            assertThrows(IllegalArgumentException.class, () ->
+                    imageService.scaleAndApplyDisplayImage("non_existent.jpg", 42L)
             );
         }
     }
 
+    // ── deleteDisplayImage ────────────────────────────────────────────────────
+
     @Nested
-    class UtilityTests {
+    class DeleteDisplayImageTests {
 
         @Test
-        void buildImageSrc_buildsCorrectPath() {
-            assertEquals("/images/character_cards/sigma_card.jpg", imageService.buildImageSrc("Sigma Card"));
+        void existingFile_deletesFile() throws IOException {
+            Files.createDirectories(imageDirPath);
+            Path imgFile = Files.createFile(imageDirPath.resolve("5.jpg"));
+
+            imageService.deleteDisplayImage(5L);
+
+            assertFalse(Files.exists(imgFile));
         }
 
         @Test
-        void buildSlug_handlesSpecialCharacters() {
+        void nonExistentFile_doesNotThrow() {
+            assertDoesNotThrow(() -> imageService.deleteDisplayImage(99L));
+        }
+    }
+
+    // ── deleteGuessImageDir ───────────────────────────────────────────────────
+
+    @Nested
+    class DeleteGuessImageDirTests {
+
+        @Test
+        void existingDirectory_deletesRecursively() throws IOException {
+            Path cardDir = guessImagesDirPath.resolve("5");
+            Files.createDirectories(cardDir);
+            Files.createFile(cardDir.resolve("lvl_1.jpg"));
+            Files.createFile(cardDir.resolve("lvl_9.jpg"));
+
+            imageService.deleteGuessImageDir(5L);
+
+            assertFalse(Files.exists(cardDir));
+        }
+
+        @Test
+        void nonExistentDirectory_doesNotThrow() {
+            assertDoesNotThrow(() -> imageService.deleteGuessImageDir(99L));
+        }
+    }
+
+    // ── buildSlug ─────────────────────────────────────────────────────────────
+
+    @Nested
+    class BuildSlugTests {
+
+        @Test
+        void handlesSpecialCharacters() {
             assertEquals("a_o_z_z_c_n", imageService.buildSlug("ą ó ł ż ź ć ń"));
+        }
+
+        @Test
+        void normalizesSpacesAndCase() {
             assertEquals("sigma_card_with_spaces", imageService.buildSlug("  Sigma Card with Spaces  "));
+        }
+
+        @Test
+        void stripsNonAlphanumeric() {
             assertEquals("special_chars", imageService.buildSlug("!@#$%^&*()special_chars"));
         }
     }

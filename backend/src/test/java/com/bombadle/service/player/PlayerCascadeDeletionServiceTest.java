@@ -2,6 +2,7 @@ package com.bombadle.service.player;
 
 import com.bombadle.entity.Player;
 import com.bombadle.service.auth.cookie.RefreshTokenService;
+import com.bombadle.service.feedback.FeedbackService;
 import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
@@ -33,6 +34,9 @@ class PlayerCascadeDeletionServiceTest {
 
     @Mock
     private PlayerStatisticsService playerStatisticsService;
+
+    @Mock
+    private FeedbackService feedbackService;
 
     @InjectMocks
     private PlayerCascadeDeletionService playerCascadeDeletionService;
