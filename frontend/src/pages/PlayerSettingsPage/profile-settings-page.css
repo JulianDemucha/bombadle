@@ -53,6 +53,18 @@
     outline-offset: 2px;
 }
 
+.settings-panel-wrapper .back-arrow-button--feedback {
+    background-color: var(--accent);
+    color: antiquewhite;
+    font-family: monospace;
+    border-color: black;
+}
+
+.settings-panel-wrapper .back-arrow-button--feedback:hover {
+    background-color: var(--primary);
+    box-shadow: 4px 4px 0 black;
+}
+
 .settings-panel-wrapper .back-arrow-icon {
     width: 1.2rem;
     height: 1.2rem;

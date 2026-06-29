@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import AvatarPicker from "./AvatarPicker.jsx";
 import StatisticsSummaryCard from "./components/StatisticsSummaryCard.jsx";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog.jsx";
+import FeedbackModal from "../../components/FeedbackModal/FeedbackModal.jsx";
+import { useFeedback } from "../../components/FeedbackModal/useFeedback.js";
 
 export default function PlayerSettingsPage() {
     const [displayName, setDisplayName] = useState("");
@@ -29,6 +31,8 @@ export default function PlayerSettingsPage() {
     const [saveMessage, setSaveMessage] = useState(null); // { type: 'error' | 'success', text }
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showDeletedInfo, setShowDeletedInfo] = useState(false);
+
+    const feedbackHook = useFeedback();
 
     const context = useAuth();
     const user = context.user;
@@ -222,6 +226,14 @@ export default function PlayerSettingsPage() {
                     </svg>
                     <span className="back-arrow-text"></span>
                 </button>
+                <button
+                    type="button"
+                    className="back-arrow-button back-arrow-button--feedback"
+                    style={{ marginLeft: 'auto' }}
+                    onClick={feedbackHook.handleOpen}
+                >
+                    Zgłoś opinię
+                </button>
             </div>
 
             <StatisticsSummaryCard />
@@ -373,6 +385,8 @@ export default function PlayerSettingsPage() {
                     </button>
                 </div>
             </div>
+
+            <FeedbackModal hook={feedbackHook} />
 
             <ConfirmDialog
                 isOpen={showDeleteConfirm}

@@ -12,6 +12,7 @@ import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import com.bombadle.service.player.PlayerDeletionService;
 import com.bombadle.service.admin.AdminChangeQueueService;
+import com.bombadle.service.feedback.FeedbackService;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +46,7 @@ public class DailyResetService {
     private final QuoteService quoteService;
     private final PlayerStatisticsService playerStatisticsService;
     private final DailySolverStatisticService dailySolverStatisticService;
+    private final FeedbackService feedbackService;
 
     /* Cron:  seconds, minutes, hours, day (of the month), month, day (of the week) */
     @Scheduled(cron = "0 0 7 * * *", zone = "Europe/Warsaw")
@@ -67,6 +70,7 @@ public class DailyResetService {
         scoreMaintenanceService.resetAllScores();
         scoreService.deleteAllInBatch();
         playerDeletionService.deleteMarkedForDeletion(Duration.ofHours(48));
+        feedbackService.deleteOlderThan(Instant.now().minus(Duration.ofDays(7)));
         log.info("All scores and previous day states have been cleared.");
     }
 
