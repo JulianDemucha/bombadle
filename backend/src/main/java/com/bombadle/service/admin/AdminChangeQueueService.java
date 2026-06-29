@@ -168,6 +168,7 @@ public class AdminChangeQueueService {
         } else if (actionType.startsWith("update_card")) {
             PendingCardUpdatePayload payload = objectMapper.readValue(change.getPayload(), PendingCardUpdatePayload.class);
             imageService.deletePendingImage(payload.tempImagePath());
+            imageService.deletePendingImage(payload.tempGuessImagePath());
         }
     }
 

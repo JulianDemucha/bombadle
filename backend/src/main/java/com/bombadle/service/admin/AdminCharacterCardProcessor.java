@@ -4,6 +4,7 @@ import com.bombadle.dto.queue.PendingCardCreatePayload;
 import com.bombadle.dto.queue.PendingCardDeletePayload;
 import com.bombadle.dto.queue.PendingCardUpdatePayload;
 import com.bombadle.dto.request.AdminCharacterCardRequest;
+import com.bombadle.dto.request.AdminCharacterCardUpdateRequest;
 import com.bombadle.dto.request.AdminQuoteRequest;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.Quote;
@@ -61,7 +62,7 @@ public class AdminCharacterCardProcessor {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                applyDisplayImage(tempImagePath, cardId, true);
+                applyDisplayImage(tempImagePath, cardId);
                 applyGuessImages(tempGuessImagePath, cardId);
             }
         });
@@ -74,23 +75,46 @@ public class AdminCharacterCardProcessor {
         CharacterCard card = characterCardRepository.findById(payload.id())
                 .orElseThrow(() -> new IllegalArgumentException("Character card not found: " + payload.id()));
 
-        AdminCharacterCardRequest req = payload.card();
+        AdminCharacterCardUpdateRequest req = payload.card();
+        Long cardId = card.getId();
         String nextName = req.name() != null && !req.name().isBlank() ? req.name() : card.getName();
 
         if (!nextName.equals(card.getName()) && characterCardRepository.existsByName(nextName)) {
             throw new IllegalArgumentException("Character card name already exists: " + nextName);
         }
 
-        Long cardId = card.getId();
-        saveCardFields(card, req, nextName);
+        saveCardFieldsFromUpdate(card, req, nextName);
+
+        // Remove quotes first so there's no overlap if the same quote appears in both lists
+        if (req.quoteIdsToRemove() != null) {
+            for (Long quoteId : req.quoteIdsToRemove()) {
+                quoteRepository.findById(quoteId).ifPresent(quote -> {
+                    if (!quote.getCharacterCard().getId().equals(cardId)) {
+                        throw new IllegalArgumentException(
+                                "Quote " + quoteId + " does not belong to card " + cardId);
+                    }
+                    quoteRepository.delete(quote);
+                });
+            }
+        }
+
+        if (req.quotesToAdd() != null && !req.quotesToAdd().isEmpty()) {
+            createQuotes(card, req.quotesToAdd());
+        }
 
         String tempImagePath = payload.tempImagePath();
-        if (tempImagePath != null) {
+        String tempGuessImagePath = payload.tempGuessImagePath();
+
+        if (tempImagePath != null || tempGuessImagePath != null) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    // Simple move — Stage 4 will upgrade this to scaleAndApply
-                    applyDisplayImage(tempImagePath, cardId, false);
+                    if (tempImagePath != null) {
+                        applyDisplayImage(tempImagePath, cardId);
+                    }
+                    if (tempGuessImagePath != null) {
+                        applyGuessImages(tempGuessImagePath, cardId);
+                    }
                 }
             });
         }
@@ -119,6 +143,14 @@ public class AdminCharacterCardProcessor {
         return saved;
     }
 
+    private CharacterCard saveCardFieldsFromUpdate(CharacterCard card, AdminCharacterCardUpdateRequest req, String finalName) {
+        applyCardFieldsFromUpdate(card, req);
+        card.setName(finalName);
+        CharacterCard saved = characterCardRepository.saveAndFlush(card);
+        saved.setImageSrc(imageService.buildImageSrc(saved.getId()));
+        return saved;
+    }
+
     private void createQuotes(CharacterCard card, List<AdminQuoteRequest> quoteRequests) {
         if (quoteRequests == null || quoteRequests.isEmpty()) return;
         for (AdminQuoteRequest req : quoteRequests) {
@@ -131,6 +163,30 @@ public class AdminCharacterCardProcessor {
                     .appearanceEpisode(req.appearanceEpisode())
                     .build();
             quoteRepository.save(quote);
+        }
+    }
+
+    private void applyCardFieldsFromUpdate(CharacterCard card, AdminCharacterCardUpdateRequest req) {
+        if (req.gender() != null && !req.gender().isBlank()) {
+            card.setGender(Gender.valueOf(req.gender()));
+        }
+        if (req.race() != null && !req.race().isBlank()) {
+            card.setRace(Race.valueOf(req.race()));
+        }
+        if (req.alive() != null) {
+            card.setAlive(req.alive());
+        }
+        if (req.colors() != null) {
+            card.setColors(parseEnumSet(req.colors(), Color.class));
+        }
+        if (req.affiliations() != null) {
+            card.setAffiliations(parseEnumSet(req.affiliations(), Affiliation.class));
+        }
+        if (req.firstAppearanceEpisode() != null) {
+            card.setFirstAppearanceEpisode(req.firstAppearanceEpisode());
+        }
+        if (req.aliases() != null) {
+            card.setAliases(new HashSet<>(req.aliases()));
         }
     }
 
@@ -168,14 +224,10 @@ public class AdminCharacterCardProcessor {
 
     // ── afterCommit file-op helpers ───────────────────────────────────────────
 
-    private void applyDisplayImage(String tempPath, Long cardId, boolean scale) {
+    private void applyDisplayImage(String tempPath, Long cardId) {
         if (tempPath == null) return;
         try {
-            if (scale) {
-                imageService.scaleAndApplyDisplayImage(tempPath, cardId);
-            } else {
-                imageService.applyPendingImage(tempPath, cardId);
-            }
+            imageService.scaleAndApplyDisplayImage(tempPath, cardId);
         } catch (IOException e) {
             log.error("Failed to apply display image for card {}", cardId, e);
         }

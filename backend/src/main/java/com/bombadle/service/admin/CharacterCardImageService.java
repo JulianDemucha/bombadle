@@ -80,7 +80,6 @@ public class CharacterCardImageService {
         Files.deleteIfExists(src);
     }
 
-    /** Simple move — used by the update path until Stage 4 adds scaling there too. */
     public void applyPendingImage(String tempPath, Long id) throws IOException {
         if (tempPath == null) return;
         Path src = Paths.get(tempPath);

@@ -1,6 +1,7 @@
 package com.bombadle.service.admin;
 
 import com.bombadle.dto.request.AdminCharacterCardRequest;
+import com.bombadle.dto.request.AdminCharacterCardUpdateRequest;
 import com.bombadle.dto.request.AdminQuoteRequest;
 import com.bombadle.exception.AdminOperationNotAllowedException;
 import com.bombadle.repository.CharacterCardRepository;
@@ -42,7 +43,7 @@ public class AdminCharacterCardService {
         adminAuditService.logAction(actorId, "create_card_pending", request.name());
     }
 
-    public void enqueueUpdate(long actorId, long id, AdminCharacterCardRequest request, MultipartFile image, String currentName) throws IOException {
+    public void enqueueUpdate(long actorId, long id, AdminCharacterCardUpdateRequest request, MultipartFile image, MultipartFile guessImage, String currentName) throws IOException {
         if (request == null) {
             throw new AdminOperationNotAllowedException("Update payload is required");
         }
@@ -54,9 +55,16 @@ public class AdminCharacterCardService {
                 && changeQueueService.hasPendingCardName(request.name(), id)) {
             throw new IllegalArgumentException("Character card name already pending: " + request.name());
         }
+        if (request.quotesToAdd() != null) {
+            for (AdminQuoteRequest quote : request.quotesToAdd()) {
+                validateQuote(quote);
+            }
+        }
         String tempImagePath = image != null && !image.isEmpty() ? imageService.storePendingImage(image) : null;
+        String tempGuessImagePath = guessImage != null && !guessImage.isEmpty() ? imageService.storePendingGuessImage(guessImage) : null;
         String actionKey = "card:" + id;
-        changeQueueService.enqueue("update_card_" + id, actionKey, new PendingCardUpdatePayload(id, request, tempImagePath));
+        changeQueueService.enqueue("update_card_" + id, actionKey,
+                new PendingCardUpdatePayload(id, request, tempImagePath, tempGuessImagePath));
         adminAuditService.logAction(actorId, "update_card_" + id, null);
     }
 
