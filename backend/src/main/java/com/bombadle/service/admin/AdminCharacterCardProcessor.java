@@ -38,7 +38,7 @@ public class AdminCharacterCardProcessor {
         }
 
         CharacterCard card = CharacterCard.createNewEmpty();
-        finalizeCardProcessing(card, req, req.name(), payload.tempImagePath(), null);
+        finalizeCardProcessing(card, req, req.name(), payload.tempImagePath());
 
         log.info("Successfully processed pending creation for card: {}", req.name());
     }
@@ -55,7 +55,7 @@ public class AdminCharacterCardProcessor {
             throw new IllegalArgumentException("Character card name already exists: " + nextName);
         }
 
-        finalizeCardProcessing(card, req, nextName, payload.tempImagePath(), payload.previousName());
+        finalizeCardProcessing(card, req, nextName, payload.tempImagePath());
 
         log.info("Successfully processed pending update for card ID: {}", payload.id());
     }
@@ -74,20 +74,18 @@ public class AdminCharacterCardProcessor {
             CharacterCard card,
             AdminCharacterCardRequest req,
             String finalName,
-            String tempImagePath,
-            String previousName
+            String tempImagePath
     ) throws IOException {
 
         applyCardFields(card, req);
         card.setName(finalName);
-        card.setImageSrc(imageService.buildImageSrc(finalName));
 
-        characterCardRepository.save(card);
+        // Flush first so the ID is assigned before we build imageSrc
+        CharacterCard saved = characterCardRepository.saveAndFlush(card);
+        saved.setImageSrc(imageService.buildImageSrc(saved.getId()));
 
         if (tempImagePath != null) {
-            imageService.applyPendingImage(tempImagePath, finalName);
-        } else if (previousName != null && !previousName.equals(finalName)) {
-            imageService.renameImage(previousName, finalName);
+            imageService.applyPendingImage(tempImagePath, saved.getId());
         }
     }
 

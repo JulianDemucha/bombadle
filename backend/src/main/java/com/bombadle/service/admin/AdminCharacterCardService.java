@@ -52,7 +52,7 @@ public class AdminCharacterCardService {
         }
         String tempImagePath = image != null && !image.isEmpty() ? imageService.storePendingImage(image) : null;
         String actionKey = "card:" + id;
-        changeQueueService.enqueue("update_card_" + id, actionKey, new PendingCardUpdatePayload(id, request, tempImagePath, currentName));
+        changeQueueService.enqueue("update_card_" + id, actionKey, new PendingCardUpdatePayload(id, request, tempImagePath));
         adminAuditService.logAction(actorId, "update_card_" + id, null);
     }
 

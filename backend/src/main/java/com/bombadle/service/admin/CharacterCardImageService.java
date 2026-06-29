@@ -29,15 +29,15 @@ public class CharacterCardImageService {
         return target.toString();
     }
 
-    public String buildImageSrc(String name) {
-        return "/images/character_cards/" + slugify(name) + ".jpg";
+    public String buildImageSrc(Long id) {
+        return "/images/character_cards/" + id + ".jpg";
     }
 
     public String buildSlug(String name) {
         return slugify(name);
     }
 
-    public void applyPendingImage(String tempPath, String name) throws IOException {
+    public void applyPendingImage(String tempPath, Long id) throws IOException {
         if (tempPath == null) {
             return;
         }
@@ -47,7 +47,7 @@ public class CharacterCardImageService {
         }
         Path finalDirPath = Paths.get(imageDir);
         Files.createDirectories(finalDirPath);
-        Path dest = finalDirPath.resolve(slugify(name) + ".jpg");
+        Path dest = finalDirPath.resolve(id + ".jpg");
         Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
     }
 
@@ -59,14 +59,9 @@ public class CharacterCardImageService {
         Files.deleteIfExists(src);
     }
 
-    public void renameImage(String oldName, String newName) throws IOException {
-        Path finalDirPath = Paths.get(imageDir);
-        Path src = finalDirPath.resolve(slugify(oldName) + ".jpg");
-        if (!Files.exists(src)) {
-            return;
-        }
-        Path dest = finalDirPath.resolve(slugify(newName) + ".jpg");
-        Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
+    public void deleteDisplayImage(Long id) throws IOException {
+        Path target = Paths.get(imageDir).resolve(id + ".jpg");
+        Files.deleteIfExists(target);
     }
 
     private String slugify(String input) {
