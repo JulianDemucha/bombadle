@@ -1,6 +1,7 @@
 package com.bombadle.service.admin;
 
 import com.bombadle.dto.request.AdminCharacterCardRequest;
+import com.bombadle.dto.request.AdminQuoteRequest;
 import com.bombadle.exception.AdminOperationNotAllowedException;
 import com.bombadle.repository.CharacterCardRepository;
 import com.bombadle.dto.queue.PendingCardCreatePayload;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +22,7 @@ public class AdminCharacterCardService {
     private final AdminChangeQueueService changeQueueService;
     private final CharacterCardImageService imageService;
 
-    public void enqueueCreate(long actorId, AdminCharacterCardRequest request, MultipartFile image) throws IOException {
+    public void enqueueCreate(long actorId, AdminCharacterCardRequest request, MultipartFile image, MultipartFile guessImage) throws IOException {
         validateCreate(request);
         if (characterCardRepository.existsByName(request.name())) {
             throw new IllegalArgumentException("Character card name already exists: " + request.name());
@@ -34,8 +36,10 @@ public class AdminCharacterCardService {
             throw new IllegalArgumentException("Character card creation already pending: " + request.name());
         }
         String tempImagePath = imageService.storePendingImage(image);
-        changeQueueService.enqueue("create_card", actionKey, new PendingCardCreatePayload(request, tempImagePath));
-        adminAuditService.logAction(actorId, "create_card_pending", null);
+        String tempGuessImagePath = imageService.storePendingGuessImage(guessImage);
+        changeQueueService.enqueue("create_card", actionKey,
+                new PendingCardCreatePayload(request, tempImagePath, tempGuessImagePath));
+        adminAuditService.logAction(actorId, "create_card_pending", request.name());
     }
 
     public void enqueueUpdate(long actorId, long id, AdminCharacterCardRequest request, MultipartFile image, String currentName) throws IOException {
@@ -90,7 +94,7 @@ public class AdminCharacterCardService {
         adminAuditService.logAction(actorId, "cancel_delete_card_" + id, null);
     }
 
-    public java.util.List<com.bombadle.dto.AdminPendingCardChangeDto> listPendingChanges() {
+    public List<com.bombadle.dto.AdminPendingCardChangeDto> listPendingChanges() {
         return changeQueueService.listPendingCardChanges();
     }
 
@@ -103,6 +107,33 @@ public class AdminCharacterCardService {
         }
         if (request.gender() == null || request.gender().isBlank()) {
             throw new IllegalArgumentException("Gender is required");
+        }
+        if (request.quotes() == null || request.quotes().isEmpty()) {
+            throw new IllegalArgumentException("At least one quote is required");
+        }
+        for (AdminQuoteRequest quote : request.quotes()) {
+            validateQuote(quote);
+        }
+    }
+
+    private void validateQuote(AdminQuoteRequest quote) {
+        if (quote.quoteBeginning() == null || quote.quoteBeginning().isBlank()) {
+            throw new IllegalArgumentException("Quote beginning is required");
+        }
+        if (quote.options() == null || quote.options().isEmpty()) {
+            throw new IllegalArgumentException("Quote options are required");
+        }
+        if (quote.correctAnswer() == null || quote.correctAnswer().isBlank()) {
+            throw new IllegalArgumentException("Quote correct answer is required");
+        }
+        if (!quote.options().contains(quote.correctAnswer())) {
+            throw new IllegalArgumentException("Correct answer must be one of the options: " + quote.correctAnswer());
+        }
+        if (quote.target() == null || quote.target().isBlank()) {
+            throw new IllegalArgumentException("Quote target is required");
+        }
+        if (quote.appearanceEpisode() == null) {
+            throw new IllegalArgumentException("Quote appearance episode is required");
         }
     }
 }

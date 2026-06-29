@@ -24,9 +24,10 @@ public class AdminCharacterCardController {
     public ResponseEntity<Void> createCard(
             @AuthenticationPrincipal PlayerPrincipal actor,
             @RequestPart("card") AdminCharacterCardRequest request,
-            @RequestPart("image") MultipartFile image
+            @RequestPart("image") MultipartFile image,
+            @RequestPart("guessImage") MultipartFile guessImage
     ) throws Exception {
-        adminCharacterCardService.enqueueCreate(actor.getPlayerId(), request, image);
+        adminCharacterCardService.enqueueCreate(actor.getPlayerId(), request, image, guessImage);
         return ResponseEntity.accepted().build();
     }
 
