@@ -14,6 +14,7 @@ import com.bombadle.enums.Gender;
 import com.bombadle.enums.QuoteTarget;
 import com.bombadle.enums.Race;
 import com.bombadle.repository.CharacterCardRepository;
+import com.bombadle.repository.CurrentCardStateRepository;
 import com.bombadle.repository.QuoteRepository;
 import com.bombadle.service.cache.CacheService;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class AdminCharacterCardProcessor {
 
     private final CharacterCardRepository characterCardRepository;
     private final QuoteRepository quoteRepository;
+    private final CurrentCardStateRepository currentCardStateRepository;
     private final CharacterCardImageService imageService;
     private final GuessImageGeneratorService guessImageGenerator;
     private final CacheService cacheService;
@@ -85,8 +87,9 @@ public class AdminCharacterCardProcessor {
 
         saveCardFieldsFromUpdate(card, req, nextName);
 
-        // Remove quotes first so there's no overlap if the same quote appears in both lists
-        if (req.quoteIdsToRemove() != null) {
+        if (req.quoteIdsToRemove() != null && !req.quoteIdsToRemove().isEmpty()) {
+            // Null out any CurrentCardState references before the quotes are deleted
+            removeDanglingQuoteRefsFromCurrentCardState(req.quoteIdsToRemove());
             for (Long quoteId : req.quoteIdsToRemove()) {
                 quoteRepository.findById(quoteId).ifPresent(quote -> {
                     if (!quote.getCharacterCard().getId().equals(cardId)) {
@@ -124,12 +127,70 @@ public class AdminCharacterCardProcessor {
 
     @Transactional
     public void processDelete(PendingCardDeletePayload payload) {
-        if (!characterCardRepository.existsById(payload.id())) {
-            log.warn("Attempted to delete card ID {}, but it does not exist", payload.id());
+        Long cardId = payload.id();
+
+        if (!characterCardRepository.existsById(cardId)) {
+            log.warn("Attempted to delete card ID {}, but it does not exist", cardId);
             return;
         }
-        characterCardRepository.deleteById(payload.id());
-        log.info("Successfully processed pending deletion for card ID: {}", payload.id());
+
+        // Remove FK references in CurrentCardState before cascade-deleting quotes/card
+        removeDanglingRefsFromCurrentCardState(cardId);
+        characterCardRepository.deleteById(cardId);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                deleteCardFiles(cardId);
+            }
+        });
+
+        log.info("Successfully processed pending deletion for card ID: {}", cardId);
+    }
+
+    // ── CurrentCardState dangling-ref cleanup ─────────────────────────────────
+
+    private void removeDanglingRefsFromCurrentCardState(Long cardId) {
+        currentCardStateRepository.findById(1).ifPresent(state -> {
+            boolean dirty = false;
+
+            dirty |= state.getCurrentCards().values().removeIf(c -> c.getId().equals(cardId));
+            dirty |= state.getPreviousCards().values().removeIf(c -> c.getId().equals(cardId));
+
+            if (state.getCurrentQuote() != null
+                    && state.getCurrentQuote().getCharacterCard().getId().equals(cardId)) {
+                state.setCurrentQuote(null);
+                dirty = true;
+            }
+            if (state.getPreviousQuote() != null
+                    && state.getPreviousQuote().getCharacterCard().getId().equals(cardId)) {
+                state.setPreviousQuote(null);
+                dirty = true;
+            }
+
+            if (dirty) {
+                currentCardStateRepository.save(state);
+            }
+        });
+    }
+
+    private void removeDanglingQuoteRefsFromCurrentCardState(List<Long> quoteIds) {
+        currentCardStateRepository.findById(1).ifPresent(state -> {
+            boolean dirty = false;
+
+            if (state.getCurrentQuote() != null && quoteIds.contains(state.getCurrentQuote().getId())) {
+                state.setCurrentQuote(null);
+                dirty = true;
+            }
+            if (state.getPreviousQuote() != null && quoteIds.contains(state.getPreviousQuote().getId())) {
+                state.setPreviousQuote(null);
+                dirty = true;
+            }
+
+            if (dirty) {
+                currentCardStateRepository.save(state);
+            }
+        });
     }
 
     // ── Shared DB helpers ─────────────────────────────────────────────────────
@@ -248,6 +309,19 @@ public class AdminCharacterCardProcessor {
             } catch (IOException e) {
                 log.warn("Failed to delete staged guess image for card {}", cardId, e);
             }
+        }
+    }
+
+    private void deleteCardFiles(Long cardId) {
+        try {
+            imageService.deleteDisplayImage(cardId);
+        } catch (IOException e) {
+            log.error("Failed to delete display image for card {}", cardId, e);
+        }
+        try {
+            imageService.deleteGuessImageDir(cardId);
+        } catch (IOException e) {
+            log.error("Failed to delete guess image directory for card {}", cardId, e);
         }
     }
 }

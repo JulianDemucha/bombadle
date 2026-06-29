@@ -46,6 +46,11 @@ public class AdminChangeQueueService {
                 var existing = repo.findFirstByActionKey(actionKey);
                 if (existing.isPresent()) {
                     AdminPendingChange change = existing.get();
+                    try {
+                        cleanupPendingPayload(change);
+                    } catch (IOException e) {
+                        log.warn("Failed to cleanup old payload for actionKey {}", actionKey, e);
+                    }
                     change.setActionType(actionType);
                     change.setPayload(json);
                     change.setCreatedAt(Instant.now());
