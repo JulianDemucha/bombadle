@@ -10,6 +10,8 @@ import StatisticsSummaryCard from "./components/StatisticsSummaryCard.jsx";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog.jsx";
 import FeedbackModal from "../../components/FeedbackModal/FeedbackModal.jsx";
 import { useFeedback } from "../../components/FeedbackModal/useFeedback.js";
+import InfoTooltip from "../../components/InfoTooltip.jsx";
+import useAccountDeletion from "./hooks/useAccountDeletion.js";
 
 export default function PlayerSettingsPage() {
     const [displayName, setDisplayName] = useState("");
@@ -22,17 +24,10 @@ export default function PlayerSettingsPage() {
     const [pwdError, setPwdError] = useState("");
     const [pwdSuccess, setPwdSuccess] = useState("");
 
-    const [deleteMode, setDeleteMode] = useState("idle"); // 'idle' | 'otp'
-    const [deleteCode, setDeleteCode] = useState("");
-    const [deleteError, setDeleteError] = useState("");
-    const [deleteResendDisabled, setDeleteResendDisabled] = useState(false);
-    const [deleteCountdown, setDeleteCountdown] = useState(0);
-
     const [saveMessage, setSaveMessage] = useState(null); // { type: 'error' | 'success', text }
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [showDeletedInfo, setShowDeletedInfo] = useState(false);
 
     const feedbackHook = useFeedback();
+    const deletion = useAccountDeletion();
 
     const context = useAuth();
     const user = context.user;
@@ -53,16 +48,6 @@ export default function PlayerSettingsPage() {
             setAvatar(user.avatarImage ?? null);
         }
     }, [user]);
-
-    useEffect(() => {
-        let timer;
-        if (deleteCountdown > 0) {
-            timer = setTimeout(() => setDeleteCountdown(deleteCountdown - 1), 1000);
-        } else {
-            setDeleteResendDisabled(false);
-        }
-        return () => clearTimeout(timer);
-    }, [deleteCountdown]);
 
     const handleAvatarSelected = (avatarUrl) => {
         setAvatar(avatarUrl);
@@ -129,73 +114,6 @@ export default function PlayerSettingsPage() {
         } catch (err) {
             setPwdError(err.response?.data?.message || "Wystąpił błąd podczas zapisywania hasła.");
         } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleInitiateDelete = () => {
-        setShowDeleteConfirm(true);
-    };
-
-    const confirmDeleteRequest = async () => {
-        setShowDeleteConfirm(false);
-        setSaving(true);
-        setDeleteError("");
-        try {
-            await axios.post("/api/players/me/delete-request");
-            setDeleteMode("otp");
-            setDeleteResendDisabled(true);
-            setDeleteCountdown(60);
-        } catch (err) {
-            if (err.response?.status === 429) {
-                const waitTime = err.response.data['seconds-to-wait'] || 60;
-                setDeleteError(`Zbyt wiele prób. Kod z poprzedniego żądania jest wciąż ważny.`);
-                setDeleteMode("otp"); // Przepuszczamy do formularza, bo kod już poszedł wcześniej
-                setDeleteResendDisabled(true);
-                setDeleteCountdown(waitTime);
-            } else {
-                setDeleteError("Nie udało się rozpocząć procedury usuwania. Spróbuj ponownie.");
-            }
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleDeleteResend = async () => {
-        setSaving(true);
-        setDeleteError("");
-        try {
-            await axios.post("/api/players/me/delete-request");
-            setDeleteResendDisabled(true);
-            setDeleteCountdown(60);
-        } catch (err) {
-            if (err.response?.status === 429) {
-                const waitTime = err.response.data['seconds-to-wait'] || 60;
-                setDeleteError(`Zbyt wiele prób. Możesz wysłać kolejny kod za ${waitTime} sekund.`);
-                setDeleteResendDisabled(true);
-                setDeleteCountdown(waitTime);
-            } else {
-                setDeleteError("Nie udało się wysłać kodu. Spróbuj ponownie.");
-            }
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleConfirmDelete = async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        setDeleteError("");
-        try {
-            await axios.post("/api/players/me/delete-confirm", { code: deleteCode });
-            setSaving(false);
-            setShowDeletedInfo(true);
-        } catch (err) {
-            if (err.response?.status === 403 || err.response?.status === 404 || err.response?.status === 410) {
-                setDeleteError("Nieprawidłowy lub wygasły kod weryfikacyjny.");
-            } else {
-                setDeleteError("Błąd serwera. Nie udało się usunąć konta.");
-            }
             setSaving(false);
         }
     };
@@ -324,43 +242,56 @@ export default function PlayerSettingsPage() {
                 <div className="form-section" style={{ marginTop: "30px" }}>
                     <h3>Strefa niebezpieczna</h3>
 
-                    {deleteMode === "idle" && (
+                    {deletion.deleteMode === "idle" && (
                         <div>
                             <p>Ta operacja jest nieodwracalna. Wszystkie twoje dane zostaną trwale usunięte!</p>
-                            {deleteError && <div className="form-error" style={{marginTop: "10px"}}>{deleteError}</div>}
+                            {deletion.deleteError && <div className="form-error" style={{marginTop: "10px"}}>{deletion.deleteError}</div>}
                             <br />
-                            <button type="button" className="btn btn-danger" onClick={handleInitiateDelete} disabled={saving}>
+                            <button type="button" className="btn btn-danger" onClick={deletion.handleInitiateDelete} disabled={deletion.saving}>
                                 Rozpocznij usuwanie konta
                             </button>
                         </div>
                     )}
 
-                    {deleteMode === "otp" && (
-                        <form onSubmit={handleConfirmDelete} style={{ marginTop: "15px", padding: "15px", border: "1px dashed #dc3545", borderRadius: "8px" }}>
+                    {deletion.deleteMode === "otp" && (
+                        <form onSubmit={deletion.handleConfirmDelete} style={{ marginTop: "15px", padding: "15px", border: "1px dashed #dc3545", borderRadius: "8px" }}>
                             <p>Na adres <strong>{user.email}</strong> wysłaliśmy kod. Wprowadź go, aby definitywnie usunąć konto.</p>
                             <div className="form-group" style={{marginTop: "10px"}}>
                                 <label>Kod OTP</label>
                                 <input
                                     type="text"
-                                    value={deleteCode}
-                                    onChange={e => setDeleteCode(e.target.value)}
+                                    value={deletion.deleteCode}
+                                    onChange={e => deletion.setDeleteCode(e.target.value)}
                                     required
                                     maxLength={6}
                                 />
                             </div>
-                            {deleteError && <div className="form-error">{deleteError}</div>}
+
+                            <div className="form-group form-group--checkbox">
+                                <label className="account-deletion__checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={deletion.deleteAllDataNow}
+                                        onChange={e => deletion.setDeleteAllDataNow(e.target.checked)}
+                                    />
+                                    Chcę usunąć wszystkie dane teraz
+                                </label>
+                                <InfoTooltip text="Jeśli pole zostanie niezaznaczone, Twoje dane będą zachowane przez 7 dni i w tym czasie będziesz mógł odzyskać konto. Po 7 dniach zostaną usunięte trwale. Jeśli zaznaczysz to pole, wszystkie dane zostaną usunięte natychmiast i bezpowrotnie." />
+                            </div>
+
+                            {deletion.deleteError && <div className="form-error">{deletion.deleteError}</div>}
 
                             <div style={{ display: "flex", gap: "10px", marginTop: "15px", flexWrap: "wrap" }}>
-                                <button type="submit" className="btn btn-danger" disabled={saving}>Potwierdzam usunięcie</button>
+                                <button type="submit" className="btn btn-danger" disabled={deletion.saving}>Potwierdzam usunięcie</button>
                                 <button
                                     type="button"
                                     className="btn btn-secondary"
-                                    onClick={handleDeleteResend}
-                                    disabled={deleteResendDisabled || saving}
+                                    onClick={deletion.handleDeleteResend}
+                                    disabled={deletion.deleteResendDisabled || deletion.saving}
                                 >
-                                    {deleteResendDisabled ? `Wyślij ponownie za ${deleteCountdown}s` : 'Wyślij kod ponownie'}
+                                    {deletion.deleteResendDisabled ? `Wyślij ponownie za ${deletion.deleteCountdown}s` : 'Wyślij kod ponownie'}
                                 </button>
-                                <button type="button" className="btn btn-secondary" onClick={() => { setDeleteMode("idle"); setDeleteError(""); }}>Anuluj</button>
+                                <button type="button" className="btn btn-secondary" onClick={deletion.cancelOtp}>Anuluj</button>
                             </div>
                         </form>
                     )}
@@ -389,22 +320,22 @@ export default function PlayerSettingsPage() {
             <FeedbackModal hook={feedbackHook} />
 
             <ConfirmDialog
-                isOpen={showDeleteConfirm}
+                isOpen={deletion.showDeleteConfirm}
                 title="Usunąć konto?"
                 message="Czy na pewno chcesz usunąć konto? Otrzymasz kod potwierdzający na e-mail."
                 confirmLabel="Tak, usuń"
                 cancelLabel="Anuluj"
                 variant="danger"
-                onConfirm={confirmDeleteRequest}
-                onCancel={() => setShowDeleteConfirm(false)}
+                onConfirm={deletion.confirmDeleteRequest}
+                onCancel={deletion.cancelDeleteConfirm}
             />
 
             <ConfirmDialog
-                isOpen={showDeletedInfo}
+                isOpen={deletion.showDeletedInfo}
                 title="Konto zostało usunięte"
                 message="Przykro nam, że odchodzisz!"
                 confirmLabel="OK"
-                onConfirm={() => { setShowDeletedInfo(false); logout(); }}
+                onConfirm={() => { deletion.dismissDeletedInfo(); logout(); }}
             />
 
             <Footer />
