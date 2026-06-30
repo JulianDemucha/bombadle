@@ -35,13 +35,13 @@ bombadle:
     specs:
       character-card-compare:
         ttl: 1d
-        max-size: 100 # number of cards
+        max-size: 150 # for target 50 cards x 3 ranked modes (CLASSIC, QUOTES_STAGE_2, IMAGES)
       previous-character-card:
         ttl: 1d
         max-size: 4 # number of game modes
       top-3-leaderboard:
         ttl: 1d
-        max-size: 1 # only one leaderboard
+        max-size: 4 # number of game modes - was incorrectly 1 even though the cache key is per-mode
       full-leaderboard:
         ttl: 1h
         max-size: 1000
@@ -50,16 +50,16 @@ bombadle:
         max-size: 4 # number of game modes
       guess-list:
         ttl: 1h
-        max-size: 100 # avg number of daily users +
+        max-size: 200 # ~200 daily active users
       player-basic-statistics:
         ttl: 1h
-        max-size: 100 # avg number of daily users +
+        max-size: 200 # ~200 daily active users
       player-detailed-statistics:
         ttl: 1h
-        max-size: 100 # avg number of daily users +
+        max-size: 200 # ~200 daily active users
       player-chart-statistics:
         ttl: 1h
-        max-size: 100 # avg number of daily users +
+        max-size: 200 # ~200 daily active users
       search-index:
         ttl: 1h
         max-size: 1
