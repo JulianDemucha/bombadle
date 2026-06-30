@@ -123,5 +123,7 @@ public class DailyResetService {
         log.info("All caches have been evicted.");
         cacheService.reloadCardCompareCache();
         log.info("Card comparison caches have been cleared and reloaded.");
+        cacheService.reloadSearchIndexCache();
+        log.info("Search index cache has been cleared and reloaded.");
     }
 }

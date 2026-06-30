@@ -36,6 +36,9 @@ bombadle:
       character-card-compare:
         ttl: 1d
         max-size: 100 # number of cards
+      previous-character-card:
+        ttl: 1d
+        max-size: 4 # number of game modes
       top-3-leaderboard:
         ttl: 1d
         max-size: 1 # only one leaderboard

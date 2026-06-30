@@ -1,6 +1,7 @@
 package com.bombadle.service.game;
 
 import com.bombadle.config.CurrentGameStateWrapper;
+import com.bombadle.dto.PreviousCharacterCardDto;
 import com.bombadle.entity.CharacterCard;
 import com.bombadle.entity.CurrentCardState;
 import com.bombadle.entity.Quote;
@@ -8,10 +9,13 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.repository.CurrentCardStateRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +39,25 @@ public class CurrentCardStateService {
         return repo.findById(1).orElseThrow(() -> new IllegalStateException("Global card state not found"));
     }
 
+    /**
+     * Changes exactly once per day, at {@link #updateCurrentState}, which evicts this cache.
+     */
+    @Cacheable(value = "previous-character-card", key = "#mode")
+    public Optional<PreviousCharacterCardDto> getPreviousCharacterCard(GameMode mode) {
+        CharacterCard prevCard = getCurrentCardState().getPreviousCards().get(mode);
+
+        if (prevCard == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(PreviousCharacterCardDto.builder()
+                .name(prevCard.getName())
+                .imageSrc(prevCard.getImageSrc())
+                .build());
+    }
+
     @Transactional
+    @CacheEvict(value = "previous-character-card", allEntries = true)
     public void updateCurrentState(Map<GameMode, CharacterCard> newCards, Quote newQuote) {
         CurrentCardState state = repo.findById(1).orElseGet(() -> {
             CurrentCardState newState = new CurrentCardState();
