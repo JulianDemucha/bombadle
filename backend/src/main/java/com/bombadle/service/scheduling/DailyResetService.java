@@ -23,7 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -82,30 +84,38 @@ public class DailyResetService {
         }
         currentGameStateWrapper.setQuote(newQuote);
 
+        CharacterCard quoteCard = newQuote.getCharacterCard();
+        if (quoteCard == null) {
+            throw new IllegalStateException("Picked quote has no associated character card");
+        }
+
         Map<GameMode, CharacterCard> newDailyCards = new HashMap<>();
+        List<Long> usedCardIds = new ArrayList<>();
+
+        applyDailyCard(newDailyCards, usedCardIds, GameMode.QUOTES_STAGE_2, quoteCard);
 
         for (GameMode mode : GameMode.values()) {
-            if (mode == GameMode.QUOTES_STAGE_1) {
+            if (mode == GameMode.QUOTES_STAGE_1 || mode == GameMode.QUOTES_STAGE_2) {
                 continue;
             }
 
-            CharacterCard newCard;
-            if (mode == GameMode.QUOTES_STAGE_2) {
-                newCard = newQuote.getCharacterCard();
-            } else {
-                newCard = characterCardService.findRandomCard();
-            }
-
+            CharacterCard newCard = characterCardService.findRandomCardExcluding(usedCardIds);
             if (newCard == null) {
                 throw new IllegalStateException("No character cards in the database for mode: " + mode);
             }
 
-            newDailyCards.put(mode, newCard);
-            currentGameStateWrapper.set(mode, newCard);
-            log.info("New Character card picked for {}: {}", mode, newCard.getName());
+            applyDailyCard(newDailyCards, usedCardIds, mode, newCard);
         }
 
         currentCardStateService.updateCurrentState(newDailyCards, newQuote);
+    }
+
+    private void applyDailyCard(Map<GameMode, CharacterCard> newDailyCards, List<Long> usedCardIds,
+                                 GameMode mode, CharacterCard card) {
+        newDailyCards.put(mode, card);
+        usedCardIds.add(card.getId());
+        currentGameStateWrapper.set(mode, card);
+        log.info("New Character card picked for {}: {}", mode, card.getName());
     }
 
     private void refreshCaches() {

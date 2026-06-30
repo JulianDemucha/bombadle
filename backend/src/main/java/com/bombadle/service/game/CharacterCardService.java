@@ -31,4 +31,8 @@ public class CharacterCardService {
         return repo.findRandomCard();
     }
 
+    public CharacterCard findRandomCardExcluding(List<Long> excludedIds) {
+        return repo.findRandomCardExcluding(excludedIds);
+    }
+
 }
