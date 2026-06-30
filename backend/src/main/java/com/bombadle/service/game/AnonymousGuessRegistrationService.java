@@ -4,6 +4,7 @@ import com.bombadle.dto.GuessAttempt;
 import com.bombadle.entity.AnonymousGuessList;
 import com.bombadle.entity.AnonymousSession;
 import com.bombadle.enums.GameMode;
+import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.player.AnonymousSessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AnonymousGuessRegistrationService {
     private final AnonymousSessionService anonymousSessionService;
+    private final CacheService cacheService;
 
     @Transactional
     public UUID registerGuessAndGetSessionId(AnonymousSession anonymousSession, GuessAttempt guessAttempt, GameMode gameMode) {
@@ -34,6 +36,7 @@ public class AnonymousGuessRegistrationService {
         if (guessAttempt.isCorrect()) {
             anonymousSession.markModeAsCompleted(gameMode);
             anonymousSession.addScoreTimestamp(gameMode, Instant.now());
+            cacheService.evictCacheEntry("today-solvers", gameMode.name());
         }
 
         anonymousSession.setLastActiveAt(Instant.now());

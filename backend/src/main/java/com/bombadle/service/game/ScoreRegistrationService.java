@@ -44,6 +44,7 @@ public class ScoreRegistrationService {
         playerStatisticsService.recordDailyStatistic(player, savedScore);
 
         clearLeaderboardCaches(gameMode, Instant.now());
+        cacheService.evictCacheEntry("today-solvers", gameMode.name());
     }
 
     @Transactional
@@ -65,12 +66,13 @@ public class ScoreRegistrationService {
         playerStatisticsService.recordDailyStatistic(player, savedScore);
 
         clearLeaderboardCaches(gameMode, timestamp);
+        cacheService.evictCacheEntry("today-solvers", gameMode.name());
 
         return savedScore;
     }
 
     private void clearLeaderboardCaches(GameMode gameMode, Instant newTimestamp) {
-        cacheService.clear("paged-leaderboard");
+        cacheService.clear("full-leaderboard");
 
         List<LeaderboardEntryDto> currentTop3 = leaderboardService.getTop3Leaderboard(gameMode);
 

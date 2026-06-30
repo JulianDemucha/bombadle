@@ -4,6 +4,7 @@ import com.bombadle.dto.ClassicGuessAttempt;
 import com.bombadle.entity.AnonymousGuessList;
 import com.bombadle.entity.AnonymousSession;
 import com.bombadle.enums.GameMode;
+import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.player.AnonymousSessionService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ class AnonymousGuessRegistrationServiceTest {
 
     @Mock
     private AnonymousSessionService anonymousSessionService;
+
+    @Mock
+    private CacheService cacheService;
 
     @InjectMocks
     private AnonymousGuessRegistrationService anonymousGuessRegistrationService;
@@ -55,6 +59,7 @@ class AnonymousGuessRegistrationServiceTest {
             verify(session, never()).addScoreTimestamp(any(), any());
             verify(session).setLastActiveAt(any(Instant.class));
             verify(anonymousSessionService).save(session);
+            verify(cacheService, never()).evictCacheEntry(anyString(), any());
         }
 
         @Test
@@ -81,6 +86,7 @@ class AnonymousGuessRegistrationServiceTest {
             verify(session).addScoreTimestamp(eq(gameMode), any(Instant.class));
             verify(session).setLastActiveAt(any(Instant.class));
             verify(anonymousSessionService).save(session);
+            verify(cacheService).evictCacheEntry("today-solvers", gameMode.name());
         }
     }
 }

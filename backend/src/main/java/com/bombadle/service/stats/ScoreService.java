@@ -8,6 +8,7 @@ import com.bombadle.service.cache.CacheService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -61,13 +62,19 @@ public class ScoreService {
         return repo.findById(id);
     }
 
-    @CacheEvict(value = "top-3-leaderboard", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "top-3-leaderboard", allEntries = true),
+            @CacheEvict(value = "full-leaderboard", allEntries = true)
+    })
     public void deleteScoreById(Long id) {
         repo.deleteById(id);
     }
 
     @Transactional
-    @CacheEvict(value = "top-3-leaderboard", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "top-3-leaderboard", allEntries = true),
+            @CacheEvict(value = "full-leaderboard", allEntries = true)
+    })
     public void deleteAllInBatch() {
         repo.deleteAllInBatch();
     }
@@ -77,6 +84,10 @@ public class ScoreService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "top-3-leaderboard", allEntries = true),
+            @CacheEvict(value = "full-leaderboard", allEntries = true)
+    })
     public void deleteAllByPlayerId(Long playerId) {
         repo.deleteByPlayerId(playerId);
     }

@@ -5,6 +5,7 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.player.PlayerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -20,6 +21,7 @@ public class TodaySolversService {
     private final PlayerService playerService;
     private final AnonymousSessionService anonymousSessionService;
 
+    @Cacheable(value = "today-solvers", key = "#gameMode.name()")
     public TodaySolversDto getTodaySolvers(GameMode gameMode) {
         long loggedIn = playerService.countSolversForMode(gameMode);
         long anonymous = anonymousSessionService.countSolversForMode(gameMode);

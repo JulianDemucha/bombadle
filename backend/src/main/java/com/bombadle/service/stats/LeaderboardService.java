@@ -37,7 +37,7 @@ public class LeaderboardService {
         return repo.findTop3(gameMode);
     }
 
-    @Cacheable(value = "classic-leaderboard", key = "#gameMode.name() + '-' + #page")
+    @Cacheable(value = "full-leaderboard", key = "#gameMode.name() + '-' + #page")
     public Page<FullLeaderboardEntryDto> getPagedLeaderboard(GameMode gameMode, int page) {
         return repo.findPagedLeaderboard(gameMode, PageRequest.of(page, 10));
     }

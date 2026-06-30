@@ -102,7 +102,7 @@ public class AdminUserService {
             playerRepository.save(target);
             adminAuditService.logAction(actorId, actionType.toString(), null);
             if (profileChanged) {
-                cacheService.clear("paged-leaderboard"); // ZMIANA NAZWY CACHE
+                cacheService.clear("full-leaderboard");
                 cacheService.clear("top-3-leaderboard");
             }
         }

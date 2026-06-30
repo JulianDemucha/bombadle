@@ -42,9 +42,12 @@ bombadle:
       top-3-leaderboard:
         ttl: 1d
         max-size: 1 # only one leaderboard
-      classic-leaderboard:
+      full-leaderboard:
         ttl: 1h
         max-size: 1000
+      today-solvers:
+        ttl: 1h
+        max-size: 4 # number of game modes
       guess-list:
         ttl: 1h
         max-size: 100 # avg number of daily users +

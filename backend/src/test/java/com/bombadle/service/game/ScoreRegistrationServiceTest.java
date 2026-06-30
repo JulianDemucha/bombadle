@@ -77,8 +77,9 @@ class ScoreRegistrationServiceTest {
             verify(player).addTodayScore(gameMode, savedScore);
             verify(playerService).save(player);
             verify(playerStatisticsService).recordDailyStatistic(player, savedScore);
-            verify(cacheService).clear("paged-leaderboard");
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).evictCacheEntry("top-3-leaderboard", gameMode.name());
+            verify(cacheService).evictCacheEntry("today-solvers", gameMode.name());
         }
     }
 
@@ -111,8 +112,9 @@ class ScoreRegistrationServiceTest {
             verify(player).addTodayScore(gameMode, savedScore);
             verify(playerService).save(player);
             verify(playerStatisticsService).recordDailyStatistic(player, savedScore);
-            verify(cacheService).clear("paged-leaderboard");
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).evictCacheEntry("top-3-leaderboard", gameMode.name()); // USUNIĘTO NEVER()
+            verify(cacheService).evictCacheEntry("today-solvers", gameMode.name());
         }
     }
 }

@@ -63,7 +63,7 @@ class AdminUserServiceTest {
             verify(playerRepository).save(userTarget);
             verify(adminAuditService).logAction(eq(1L), contains("_change_login_to_sigma_login"), isNull());
 
-            verify(cacheService).clear("paged-leaderboard");
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).clear("top-3-leaderboard");
         }
 
@@ -82,7 +82,7 @@ class AdminUserServiceTest {
             verify(playerRepository).save(userTarget);
             verify(adminAuditService).logAction(eq(1L), contains("_change_avatar_to_AVATAR_BOMBA"), isNull());
 
-            verify(cacheService).clear("paged-leaderboard");
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).clear("top-3-leaderboard");
         }
     }
