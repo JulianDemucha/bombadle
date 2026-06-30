@@ -47,7 +47,7 @@ public class EmailConfirmationService {
 
     public void confirmPlayerSelfDeletion(VerificationCodeRequest request, PlayerPrincipal playerPrincipal) {
         verificationTokenService.verifyAndConsume(playerPrincipal.getPlayerId(), EmailVerificationType.ACCOUNT_DELETION, request.code());
-        playerDeletionService.deletePlayerSelf(playerPrincipal.getPlayerId());
+        playerDeletionService.deletePlayerSelf(playerPrincipal.getPlayerId(), request.deleteAllDataNow());
         log.info("Player {} has been deleted.", playerPrincipal.getUsername());
     }
 

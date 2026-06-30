@@ -16,6 +16,8 @@ public interface PlayerDailyStatisticRepository extends JpaRepository<PlayerDail
 
     boolean existsByPlayerIdAndGameModeAndPuzzleDate(Long playerId, GameMode gameMode, LocalDate puzzleDate);
 
+    List<PlayerDailyStatistic> findAllByPlayerId(Long playerId);
+
     /**
      * Returns each of the player's recorded solves paired with the finalized end-of-day solver count
      * for its (gameMode, puzzleDate), via a LEFT JOIN to {@link com.bombadle.entity.DailySolverStatistic}.
