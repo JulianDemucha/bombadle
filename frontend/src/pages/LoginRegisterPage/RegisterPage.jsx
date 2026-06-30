@@ -9,6 +9,8 @@ import axios from "../../api/axios.js";
 import {useNavigate} from "react-router-dom";
 import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
 import useAnonymousMergePrompt from "../../components/MergePrompt/useAnonymousMergePrompt.js";
+import AccountRecoveryModal from "../../components/AccountRecovery/AccountRecoveryModal.jsx";
+import useAccountRecovery from "../../components/AccountRecovery/useAccountRecovery.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const MIN_PASSWORD_LEN = 8;
@@ -93,6 +95,7 @@ function RegisterPage() {
 
     const navigate = useNavigate();
     const merge = useAnonymousMergePrompt();
+    const recovery = useAccountRecovery();
 
     const setUsernameError = useCallback((msg) => {
         setErrors(prev => ({...prev, username: msg}));
@@ -211,6 +214,7 @@ function RegisterPage() {
         <div className="login-register-page">
             <AuthHeader />
             <MergePrompt isOpen={merge.isOpen} onConfirm={merge.confirm} onDecline={merge.decline} />
+            <AccountRecoveryModal {...recovery} />
             <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>REJESTRACJA</h1>
 
@@ -316,6 +320,15 @@ function RegisterPage() {
 
                 <div className="loginFooter">
                     Masz już konto? <a href="/login">Zaloguj się</a>
+                </div>
+                <div className="loginFooter">
+                    <button
+                        type="button"
+                        onClick={recovery.open}
+                        style={{fontSize: "0.8rem", background: "none", border: "none", padding: 0, color: "inherit", textDecoration: "underline", cursor: "pointer"}}
+                    >
+                        Usunąłeś konto? Odzyskaj je
+                    </button>
                 </div>
             </form>
 

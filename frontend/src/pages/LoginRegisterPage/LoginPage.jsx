@@ -8,6 +8,8 @@ import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../auth/UseAuth.jsx";
 import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
 import useAnonymousMergePrompt from "../../components/MergePrompt/useAnonymousMergePrompt.js";
+import AccountRecoveryModal from "../../components/AccountRecovery/AccountRecoveryModal.jsx";
+import useAccountRecovery from "../../components/AccountRecovery/useAccountRecovery.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
@@ -24,6 +26,7 @@ function LoginPage() {
     const navigate = useNavigate();
     const {reload} = useAuth();
     const merge = useAnonymousMergePrompt();
+    const recovery = useAccountRecovery();
 
     useEffect(() => {
         document.body.classList.add('scrollable-page');
@@ -121,6 +124,7 @@ function LoginPage() {
         <div className="login-register-page">
             <AuthHeader />
             <MergePrompt isOpen={merge.isOpen} onConfirm={merge.confirm} onDecline={merge.decline} />
+            <AccountRecoveryModal {...recovery} />
             <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>LOGOWANIE</h1>
 
@@ -155,6 +159,14 @@ function LoginPage() {
 
                 <div className="loginFooter" style={{textAlign: "right", marginTop: "-10px", marginBottom: "15px"}}>
                     <a href="/forgot-password" style={{fontSize: "0.8rem"}}>Zapomniałeś hasła?</a>
+                    {" | "}
+                    <button
+                        type="button"
+                        onClick={recovery.open}
+                        style={{fontSize: "0.8rem", background: "none", border: "none", padding: 0, color: "inherit", textDecoration: "underline", cursor: "pointer"}}
+                    >
+                        Usunąłeś konto? Odzyskaj je
+                    </button>
                 </div>
 
                 <button type="submit" disabled={loading}>
