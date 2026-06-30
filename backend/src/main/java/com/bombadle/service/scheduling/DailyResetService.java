@@ -70,6 +70,7 @@ public class DailyResetService {
         scoreMaintenanceService.resetAllScores();
         scoreService.deleteAllInBatch();
         playerDeletionService.deleteMarkedForDeletion(Duration.ofHours(48));
+        playerDeletionService.purgeExpiredDeletedAccountSnapshots(Duration.ofDays(7));
         feedbackService.deleteOlderThan(Instant.now().minus(Duration.ofDays(7)));
         log.info("All scores and previous day states have been cleared.");
     }

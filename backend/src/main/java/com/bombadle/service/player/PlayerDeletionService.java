@@ -70,6 +70,19 @@ public class PlayerDeletionService {
     }
 
     @Transactional
+    public void purgeExpiredDeletedAccountSnapshots(Duration retention) {
+        Instant cutoff = Instant.now().minus(retention);
+        List<DeletedAccount> expired = deletedAccountRepository.findAllByDeletedAtBefore(cutoff);
+        if (expired.isEmpty()) {
+            return;
+        }
+        List<Long> deletedAccountIds = expired.stream().map(DeletedAccount::getId).toList();
+        deletedAccountStatisticRepository.deleteAllByDeletedAccountIdIn(deletedAccountIds);
+        deletedAccountRepository.deleteAll(expired);
+        log.info("Purged {} expired deleted-account snapshot(s).", expired.size());
+    }
+
+    @Transactional
     public void deletePlayerSelf(long playerId, boolean deleteAllDataNow) {
         Player target = playerService.getPlayerById(playerId);
         if (deleteAllDataNow) {
