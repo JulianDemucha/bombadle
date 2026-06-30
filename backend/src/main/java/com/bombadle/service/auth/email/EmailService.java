@@ -66,6 +66,23 @@ public class EmailService {
         sendEmailSafely(message, toAddress);
     }
 
+    public void sendAccountRecoveryEmail(String toAddress, String otpCode) {
+        emailRateLimitService.enforceRateLimit(toAddress);
+        log.info("Sending account recovery email to: {}", toAddress);
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(emailConfig.fromAddress());
+        message.setTo(toAddress);
+        message.setSubject("Odzyskiwanie konta - Bombadle");
+
+        message.setText("Otrzymaliśmy prośbę o odzyskanie Twojego konta.\n\n" +
+                "Twój kod do odzyskania konta to: " + otpCode +
+                "\n\nKod jest ważny przez " + getExpirationMinutes() + " minut. " +
+                "Jeśli to nie Ty prosiłeś o odzyskanie konta, zignoruj tę wiadomość.");
+
+        sendEmailSafely(message, toAddress);
+    }
+
     private void sendEmailSafely(SimpleMailMessage message, String toAddress) {
         try {
             mailSender.send(message);

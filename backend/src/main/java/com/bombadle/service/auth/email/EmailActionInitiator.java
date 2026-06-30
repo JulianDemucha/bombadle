@@ -1,9 +1,12 @@
 package com.bombadle.service.auth.email;
 
 import com.bombadle.config.ApplicationConfigProperties;
+import com.bombadle.entity.AccountRecoveryToken;
+import com.bombadle.entity.DeletedAccount;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.VerificationToken;
 import com.bombadle.enums.EmailVerificationType;
+import com.bombadle.repository.DeletedAccountRepository;
 import com.bombadle.service.player.PlayerCredentialsService;
 import com.bombadle.service.player.PlayerService;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmailActionInitiator {
 
     private final VerificationTokenService tokenService;
+    private final AccountRecoveryTokenService accountRecoveryTokenService;
     private final EmailService emailService;
     private final ApplicationConfigProperties.EmailConfig emailConfig;
     private final PlayerService playerService;
     private final PlayerCredentialsService playerCredentialsService;
+    private final DeletedAccountRepository deletedAccountRepository;
 
     @Async
     @Transactional
@@ -67,6 +72,20 @@ public class EmailActionInitiator {
         emailService.sendAccountDeletionConfirmationEmail(player.getEmail(), token.getVerificationCode());
         playerCredentialsService.recordEmailSent(player.getId());
         log.info("Account deletion process initiated for: {}", player.getEmail());
+    }
+
+    @Async
+    @Transactional
+    public void initiateAccountRecovery(String email) {
+        DeletedAccount deletedAccount = deletedAccountRepository.findByEmail(email.toLowerCase()).orElseThrow(
+                () -> new UsernameNotFoundException("Deleted account not found")
+        );
+
+        AccountRecoveryToken token = accountRecoveryTokenService.generateNewToken(
+                deletedAccount.getId(), EmailVerificationType.ACCOUNT_RECOVERY, getExpirationMinutes());
+
+        emailService.sendAccountRecoveryEmail(deletedAccount.getEmail(), token.getVerificationCode());
+        log.info("Account recovery process initiated for: {}", deletedAccount.getEmail());
     }
 
     private int getExpirationMinutes(){

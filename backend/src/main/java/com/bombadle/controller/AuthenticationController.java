@@ -84,6 +84,18 @@ public class AuthenticationController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/initiate-recover-account")
+    public ResponseEntity<Void> initiateRecoverAccount(@RequestBody @Valid AccountRecoveryRequest request) {
+        emailActionInitiator.initiateAccountRecovery(request.email());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/confirm-recover-account")
+    public ResponseEntity<Void> confirmRecoverAccount(@RequestBody @Valid AccountRecoveryConfirmRequest request) {
+        emailConfirmationService.confirmAccountRecovery(request);
+        return ResponseEntity.ok().build();
+    }
+
     //todo: switch to @RequestBody, so potential email won't log from url
     @GetMapping("/check/email")
     public ResponseEntity<Map<String, Object>> checkPlayerByEmail(@RequestParam String email) {
