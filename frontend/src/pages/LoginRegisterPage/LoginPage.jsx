@@ -3,7 +3,7 @@ import './GoogleButton.css'
 import React, {useEffect, useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import AuthHeader from '../../components/AuthHeader';
-import axios from "../../api/axios.js";
+import {apiFetch} from "../../api/api.js";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../auth/UseAuth.jsx";
 import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
@@ -12,6 +12,10 @@ import AccountRecoveryModal from "../../components/AccountRecovery/AccountRecove
 import useAccountRecovery from "../../components/AccountRecovery/useAccountRecovery.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const MIN_PASSWORD_LEN = 8;
+const MAX_PASSWORD_LEN = 24;
+const EMPTY_ERRORS = {email: "", password: "", general: ""};
+const GENERIC_ERROR_MESSAGE = "Wystąpił błąd, spróbuj ponownie.";
 
 function LoginPage() {
     const [email, setEmail] = useState("");
@@ -38,37 +42,35 @@ function LoginPage() {
     const performLogin = async () => {
         setLoading(true);
 
-        try {
-            const res = await axios.post("/api/auth/authenticate", {email, password});
+        const res = await apiFetch("/api/auth/authenticate", {
+            method: "POST",
+            body: JSON.stringify({email, password}),
+        });
 
-            if (res.status === 201 || res.status === 200) {
-                // reload() -> AuthProvider.loadUser() clears anonymous progress once /me returns a user.
-                await reload();
-                navigate("/");
-            }
+        if (res.ok) {
+            // reload() -> AuthProvider.loadUser() clears anonymous progress once /me returns a user.
+            await reload();
+            navigate("/");
+            return;
+        }
 
-        } catch (err) {
-            if (err?.response) {
-                const {status, data} = err.response;
-                if (status === 403 && data?.error === "Unverified Email" && data?.email) {
-                    setUnverifiedEmail(data.email);
-                } else if (status === 401 || status === 403) {
-                    setErrors(prev => ({...prev, general: data?.message || "Nieprawidłowy email lub hasło."}));
-                } else if (status === 409) {
-                    setErrors(prev => ({...prev, general: data?.message || "Błąd podczas logowania."}));
-                } else {
-                     setErrors(prev => ({...prev, general: data?.message || "Wystąpił błąd."}));
-                }
-            } else {
-                setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
-            }
-        } finally {
-            setLoading(false);
+        setLoading(false);
+
+        if (res.status === 403 && res.data?.error === "Unverified Email" && res.data?.email) {
+            setUnverifiedEmail(res.data.email);
+        } else if (res.status === 401 || res.status === 403) {
+            setErrors(prev => ({...prev, general: res.data?.message || "Nieprawidłowy email lub hasło."}));
+        } else if (res.status === -1 || res.status === -2) {
+            setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
+        } else {
+            setErrors(prev => ({...prev, general: res.data?.message || GENERIC_ERROR_MESSAGE}));
         }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        setErrors(EMPTY_ERRORS);
 
         if (!email || !password) {
             setErrors(prev => ({...prev, general: "Wypełnij wymagane pola."}));
@@ -77,6 +79,11 @@ function LoginPage() {
 
         if (!validateEmail(email)) {
             setErrors(prev => ({...prev, email: "Nieprawidłowy adres e-mail."}));
+            return;
+        }
+
+        if (password.length < MIN_PASSWORD_LEN || password.length > MAX_PASSWORD_LEN) {
+            setErrors(prev => ({...prev, password: `Hasło musi mieć od ${MIN_PASSWORD_LEN} do ${MAX_PASSWORD_LEN} znaków.`}));
             return;
         }
 
@@ -91,14 +98,18 @@ function LoginPage() {
 
     const handleSendActivationCode = async () => {
         setLoading(true);
-        try {
-             await axios.post('/api/auth/initiate-verify-email', { email: unverifiedEmail });
-             navigate('/verify-email', { state: { email: unverifiedEmail } });
-        } catch(err) {
-             setErrors(prev => ({...prev, general: "Nie udało się wysłać kodu. Spróbuj ponownie."}));
-        } finally {
-             setLoading(false);
+        const res = await apiFetch('/api/auth/initiate-verify-email', {
+            method: "POST",
+            body: JSON.stringify({email: unverifiedEmail}),
+        });
+        setLoading(false);
+
+        if (res.ok) {
+            navigate('/verify-email', { state: { email: unverifiedEmail } });
+            return;
         }
+
+        setErrors(prev => ({...prev, general: res.data?.message || "Nie udało się wysłać kodu. Spróbuj ponownie."}));
     }
 
     if (unverifiedEmail) {
@@ -153,6 +164,7 @@ function LoginPage() {
                         required
                         aria-describedby="password-error"
                     />
+                    {errors.password && <div id="password-error" className="field-error">{errors.password}</div>}
                 </div>
 
                 {errors.general && <div className="form-error" role="alert">{errors.general}</div>}

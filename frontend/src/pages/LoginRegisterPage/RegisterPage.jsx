@@ -6,6 +6,7 @@ import React, {useCallback, useEffect, useRef, useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import AuthHeader from '../../components/AuthHeader';
 import axios from "../../api/axios.js";
+import {apiFetch} from "../../api/api.js";
 import {useNavigate} from "react-router-dom";
 import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
 import useAnonymousMergePrompt from "../../components/MergePrompt/useAnonymousMergePrompt.js";
@@ -17,6 +18,7 @@ const MIN_PASSWORD_LEN = 8;
 const MAX_PASSWORD_LEN = 24;
 const MIN_USERNAME_LEN = 3;
 const MAX_USERNAME_LEN = 16;
+const GENERIC_ERROR_MESSAGE = "Wystąpił błąd, spróbuj ponownie.";
 
 function useDebouncedCheck({value, minLen = 1, url, fieldSetter, delay = 500, fieldName}) {
     const controllerRef = useRef(null);
@@ -125,35 +127,32 @@ function RegisterPage() {
 
     const performRegister = async () => {
         setLoading(true);
-        try {
-            await axios.post("/api/auth/register", {email: email, username: username, password: password});
+
+        const res = await apiFetch("/api/auth/register", {
+            method: "POST",
+            body: JSON.stringify({email, username, password}),
+        });
+
+        if (res.ok) {
             // Register does not authenticate immediately (the user must verify their email first),
             // so AuthProvider's clear-on-authenticated won't fire here — clear explicitly.
             merge.clearAnonymousProgress();
             navigate('/verify-email', { state: { email } });
+            return;
+        }
 
-        } catch (err) {
-            if (err?.response) {
-                const {status, data} = err.response;
-                if (status === 409) {
-                    const msg = data?.message || "Email lub nazwa użytkownika już istnieją.";
-                    if (data?.field === "email") {
-                        setErrors(prev => ({...prev, email: msg}));
-                    } else if (data?.field === "username") {
-                        setErrors(prev => ({...prev, username: msg}));
-                    } else {
-                        setErrors(prev => ({...prev, general: msg}));
-                    }
-                } else if (status === 422 && data?.errors) {
-                    setErrors(prev => ({...prev, ...data.errors}));
-                } else {
-                    setErrors(prev => ({...prev, general: data?.message || "Błąd podczas rejestracji."}));
-                }
-            } else {
-                setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
-            }
-        } finally {
-            setLoading(false);
+        setLoading(false);
+
+        if (res.status === 409) {
+            // The backend doesn't disambiguate which field conflicted (a single generic
+            // RegistrationConflictException covers both email and username), so this can only
+            // be shown as a general message — the live username/email availability checks below
+            // are what normally catch a specific field conflict before submit.
+            setErrors(prev => ({...prev, general: res.data?.message || "Email lub nazwa użytkownika już istnieją."}));
+        } else if (res.status === -1 || res.status === -2) {
+            setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
+        } else {
+            setErrors(prev => ({...prev, general: res.data?.message || GENERIC_ERROR_MESSAGE}));
         }
     };
 
