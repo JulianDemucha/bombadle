@@ -1,9 +1,12 @@
 package com.bombadle.service.auth.email;
 
 import com.bombadle.config.ApplicationConfigProperties;
+import com.bombadle.entity.AccountRecoveryToken;
+import com.bombadle.entity.DeletedAccount;
 import com.bombadle.entity.Player;
 import com.bombadle.entity.VerificationToken;
 import com.bombadle.enums.EmailVerificationType;
+import com.bombadle.repository.DeletedAccountRepository;
 import com.bombadle.service.player.PlayerCredentialsService;
 import com.bombadle.service.player.PlayerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +31,9 @@ class EmailActionInitiatorTest {
     private VerificationTokenService tokenService;
 
     @Mock
+    private AccountRecoveryTokenService accountRecoveryTokenService;
+
+    @Mock
     private EmailService emailService;
 
     @Mock
@@ -38,6 +44,9 @@ class EmailActionInitiatorTest {
 
     @Mock
     private PlayerCredentialsService playerCredentialsService;
+
+    @Mock
+    private DeletedAccountRepository deletedAccountRepository;
 
     @InjectMocks
     private EmailActionInitiator emailActionInitiator;
@@ -144,6 +153,38 @@ class EmailActionInitiatorTest {
             verify(tokenService).generateNewToken(player, EmailVerificationType.ACCOUNT_DELETION, 15);
             verify(emailService).sendAccountDeletionConfirmationEmail("test@mail.com", "123456");
             verify(playerCredentialsService).recordEmailSent(player.getId());
+        }
+    }
+
+    @Nested
+    class InitiateAccountRecoveryTests {
+
+        @Test
+        void initiateAccountRecovery_deletedAccountExists_generatesTokenAndSendsEmail() {
+            // Arrange
+            DeletedAccount deletedAccount = DeletedAccount.builder().id(5L).email("test@mail.com").build();
+            AccountRecoveryToken recoveryToken = AccountRecoveryToken.builder().verificationCode("654321").build();
+            when(deletedAccountRepository.findByEmail("test@mail.com")).thenReturn(Optional.of(deletedAccount));
+            when(emailConfig.otpExpiration()).thenReturn(Duration.ofMinutes(15));
+            when(accountRecoveryTokenService.generateNewToken(5L, EmailVerificationType.ACCOUNT_RECOVERY, 15))
+                    .thenReturn(recoveryToken);
+
+            // Act
+            emailActionInitiator.initiateAccountRecovery("test@mail.com");
+
+            // Assert
+            verify(accountRecoveryTokenService).generateNewToken(5L, EmailVerificationType.ACCOUNT_RECOVERY, 15);
+            verify(emailService).sendAccountRecoveryEmail("test@mail.com", "654321");
+        }
+
+        @Test
+        void initiateAccountRecovery_noDeletedAccount_throwsException() {
+            // Arrange
+            when(deletedAccountRepository.findByEmail("notfound@mail.com")).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(UsernameNotFoundException.class, () -> emailActionInitiator.initiateAccountRecovery("notfound@mail.com"));
+            verifyNoInteractions(accountRecoveryTokenService, emailService);
         }
     }
 }

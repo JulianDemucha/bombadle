@@ -1,14 +1,22 @@
 package com.bombadle.service.player;
 
+import com.bombadle.entity.DeletedAccount;
+import com.bombadle.entity.DeletedAccountStatistic;
 import com.bombadle.entity.Player;
+import com.bombadle.entity.PlayerDailyStatistic;
+import com.bombadle.enums.GameMode;
 import com.bombadle.enums.Role;
 import com.bombadle.exception.AdminOperationNotAllowedException;
 import com.bombadle.repository.DeletedAccountRepository;
+import com.bombadle.repository.DeletedAccountStatisticRepository;
+import com.bombadle.repository.PlayerDailyStatisticRepository;
 import com.bombadle.service.admin.AdminAuditService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,6 +36,10 @@ class PlayerDeletionServiceTest {
     private AdminAuditService adminAuditService;
     @Mock
     private DeletedAccountRepository deletedAccountRepository;
+    @Mock
+    private DeletedAccountStatisticRepository deletedAccountStatisticRepository;
+    @Mock
+    private PlayerDailyStatisticRepository playerDailyStatisticRepository;
     @Mock
     private PlayerService playerService;
     @Mock
@@ -125,16 +137,108 @@ class PlayerDeletionServiceTest {
     class DeletePlayerSelfTests {
 
         @Test
-        void deletePlayerSelf_validCall_deletesSelf() {
+        void deletePlayerSelf_deleteAllDataNowTrue_skipsSnapshotAndCascades() {
             // Arrange
             when(playerService.getPlayerById(2L)).thenReturn(user);
 
             // Act
-            playerDeletionService.deletePlayerSelf(2L);
+            playerDeletionService.deletePlayerSelf(2L, true);
 
             // Assert
             verify(playerCascadeDeletionService).deletePlayerWithCascade(user);
-            verify(deletedAccountRepository).save(any());
+            verifyNoInteractions(deletedAccountRepository, deletedAccountStatisticRepository, playerDailyStatisticRepository);
+        }
+
+        @Test
+        void deletePlayerSelf_deleteAllDataNowFalse_snapshotsBeforeCascade() {
+            // Arrange
+            when(playerService.getPlayerById(2L)).thenReturn(user);
+
+            DeletedAccount savedSnapshot = DeletedAccount.builder().id(42L).build();
+            when(deletedAccountRepository.save(any())).thenReturn(savedSnapshot);
+
+            PlayerDailyStatistic classicSolve1 = PlayerDailyStatistic.builder()
+                    .gameMode(GameMode.CLASSIC)
+                    .puzzleDate(java.time.LocalDate.of(2026, 1, 1))
+                    .solvedAt(Instant.parse("2026-01-01T10:00:00Z"))
+                    .numberOfTries(3)
+                    .leaderboardPosition(1)
+                    .totalParticipants(50)
+                    .build();
+            PlayerDailyStatistic classicSolve2 = PlayerDailyStatistic.builder()
+                    .gameMode(GameMode.CLASSIC)
+                    .puzzleDate(java.time.LocalDate.of(2026, 1, 2))
+                    .solvedAt(Instant.parse("2026-01-02T10:00:00Z"))
+                    .numberOfTries(5)
+                    .leaderboardPosition(10)
+                    .totalParticipants(50)
+                    .build();
+            PlayerDailyStatistic imagesSolve = PlayerDailyStatistic.builder()
+                    .gameMode(GameMode.IMAGES)
+                    .puzzleDate(java.time.LocalDate.of(2026, 1, 1))
+                    .solvedAt(Instant.parse("2026-01-01T11:00:00Z"))
+                    .numberOfTries(1)
+                    .leaderboardPosition(2)
+                    .totalParticipants(50)
+                    .build();
+            when(playerDailyStatisticRepository.findAllByPlayerId(2L))
+                    .thenReturn(List.of(classicSolve1, classicSolve2, imagesSolve));
+
+            // Act
+            playerDeletionService.deletePlayerSelf(2L, false);
+
+            // Assert
+            ArgumentCaptor<DeletedAccount> accountCaptor = ArgumentCaptor.forClass(DeletedAccount.class);
+            verify(deletedAccountRepository).save(accountCaptor.capture());
+            assertEquals(2L, accountCaptor.getValue().getOriginalPlayerId());
+            assertEquals(2L, accountCaptor.getValue().getDeletedByActorId());
+
+            ArgumentCaptor<DeletedAccountStatistic> statCaptor = ArgumentCaptor.forClass(DeletedAccountStatistic.class);
+            verify(deletedAccountStatisticRepository).save(statCaptor.capture());
+            DeletedAccountStatistic statistic = statCaptor.getValue();
+            assertEquals(42L, statistic.getDeletedAccountId());
+            assertEquals(2, statistic.getGuessesByMode().get(GameMode.CLASSIC));
+            assertEquals(1, statistic.getGuessesByMode().get(GameMode.IMAGES));
+            assertEquals(2, statistic.getTotalTop3Finishes());
+            assertEquals(3, statistic.getDailyStatisticsSnapshot().size());
+
+            InOrder inOrder = inOrder(playerDailyStatisticRepository, deletedAccountStatisticRepository, playerCascadeDeletionService);
+            inOrder.verify(playerDailyStatisticRepository).findAllByPlayerId(2L);
+            inOrder.verify(deletedAccountStatisticRepository).save(any());
+            inOrder.verify(playerCascadeDeletionService).deletePlayerWithCascade(user);
+        }
+    }
+
+    @Nested
+    class PurgeExpiredDeletedAccountSnapshotsTests {
+
+        @Test
+        void purgeExpiredDeletedAccountSnapshots_expiredFound_deletesStatisticsThenAccounts() {
+            // Arrange
+            DeletedAccount expired1 = DeletedAccount.builder().id(10L).build();
+            DeletedAccount expired2 = DeletedAccount.builder().id(11L).build();
+            when(deletedAccountRepository.findAllByDeletedAtBefore(any(Instant.class)))
+                    .thenReturn(List.of(expired1, expired2));
+
+            // Act
+            playerDeletionService.purgeExpiredDeletedAccountSnapshots(Duration.ofDays(7));
+
+            // Assert
+            verify(deletedAccountStatisticRepository).deleteAllByDeletedAccountIdIn(List.of(10L, 11L));
+            verify(deletedAccountRepository).deleteAll(List.of(expired1, expired2));
+        }
+
+        @Test
+        void purgeExpiredDeletedAccountSnapshots_noneExpired_doesNothing() {
+            // Arrange
+            when(deletedAccountRepository.findAllByDeletedAtBefore(any(Instant.class))).thenReturn(List.of());
+
+            // Act
+            playerDeletionService.purgeExpiredDeletedAccountSnapshots(Duration.ofDays(7));
+
+            // Assert
+            verifyNoInteractions(deletedAccountStatisticRepository);
+            verify(deletedAccountRepository, never()).deleteAll(any());
         }
     }
 }

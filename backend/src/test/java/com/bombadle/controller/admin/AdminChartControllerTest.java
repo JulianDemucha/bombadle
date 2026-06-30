@@ -18,8 +18,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AdminChartControllerTest {
@@ -33,8 +33,8 @@ class AdminChartControllerTest {
     @Test
     void getActivityChart_delegatesToServiceWithGivenParams_andReturns200() {
         AdminChartResponse<?> mockResponse = new AdminChartResponse<>(List.of());
-        when(adminChartService.getActivityChart(ActivityChartDensity.HOUR, ActivityChartPeriod.LAST_WEEK, true))
-                .thenReturn(mockResponse);
+        doReturn(mockResponse).when(adminChartService)
+                .getActivityChart(ActivityChartDensity.HOUR, ActivityChartPeriod.LAST_WEEK, true);
 
         ResponseEntity<AdminChartResponse<?>> response = controller.getActivityChart(
                 ActivityChartDensity.HOUR, ActivityChartPeriod.LAST_WEEK, true);
@@ -47,10 +47,9 @@ class AdminChartControllerTest {
     @Test
     void getDailySolversChart_delegatesToServiceWithGivenParams_andReturns200() {
         AdminChartResponse<?> mockResponse = new AdminChartResponse<>(List.of());
-        when(adminChartService.getDailySolversChart(
+        doReturn(mockResponse).when(adminChartService).getDailySolversChart(
                 DailySolversChartDensity.WEEK, DailySolversChartPeriod.LAST_3_MONTHS,
-                GameMode.IMAGES, true))
-                .thenReturn(mockResponse);
+                GameMode.IMAGES, true);
 
         ResponseEntity<AdminChartResponse<?>> response = controller.getDailySolversChart(
                 DailySolversChartDensity.WEEK, DailySolversChartPeriod.LAST_3_MONTHS,
@@ -66,10 +65,9 @@ class AdminChartControllerTest {
     @Test
     void getDailySolversChart_quotesStage1_delegatesToService() {
         AdminChartResponse<?> emptyResponse = new AdminChartResponse<>(List.of());
-        when(adminChartService.getDailySolversChart(
+        doReturn(emptyResponse).when(adminChartService).getDailySolversChart(
                 DailySolversChartDensity.DAY, DailySolversChartPeriod.LAST_MONTH,
-                GameMode.QUOTES_STAGE_1, false))
-                .thenReturn(emptyResponse);
+                GameMode.QUOTES_STAGE_1, false);
 
         ResponseEntity<AdminChartResponse<?>> response = controller.getDailySolversChart(
                 DailySolversChartDensity.DAY, DailySolversChartPeriod.LAST_MONTH,
