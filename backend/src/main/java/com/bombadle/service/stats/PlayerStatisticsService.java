@@ -11,6 +11,9 @@ import com.bombadle.repository.PlayerDailyStatisticRepository;
 import com.bombadle.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +48,11 @@ public class PlayerStatisticsService {
      * {@code QUOTES_STAGE_1} is intentionally skipped — it is not a ranked board, so a position snapshot would be meaningless.
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "player-basic-statistics", key = "#player.id"),
+            @CacheEvict(value = "player-detailed-statistics", key = "#player.id"),
+            @CacheEvict(value = "player-chart-statistics", key = "#player.id")
+    })
     public void recordDailyStatistic(Player player, Score score) {
         GameMode gameMode = score.getGameMode();
         if (gameMode == GameMode.QUOTES_STAGE_1) {
@@ -103,6 +111,7 @@ public class PlayerStatisticsService {
 
     /** Compact statistics for the settings card. */
     @Transactional(readOnly = true)
+    @Cacheable(value = "player-basic-statistics", key = "#playerId")
     public BasicStatisticsDto getBasicStatistics(long playerId) {
         Player player = getPlayerOrThrow(playerId);
         return new BasicStatisticsDto(
@@ -114,6 +123,7 @@ public class PlayerStatisticsService {
 
     /** Full statistics for the dedicated statistics page. */
     @Transactional(readOnly = true)
+    @Cacheable(value = "player-detailed-statistics", key = "#playerId")
     public DetailedStatisticsDto getDetailedStatistics(long playerId) {
         Player player = getPlayerOrThrow(playerId);
 
@@ -139,6 +149,7 @@ public class PlayerStatisticsService {
      * current in-progress day, which has no aggregate row yet.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "player-chart-statistics", key = "#playerId")
     public List<DailyStatisticDto> getChartStatistics(long playerId) {
         return playerDailyStatisticRepository.findChartRowsByPlayerId(playerId)
                 .stream()
@@ -158,6 +169,11 @@ public class PlayerStatisticsService {
      * player is cascade-deleted (the table has a foreign key to {@code player}).
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "player-basic-statistics", key = "#playerId"),
+            @CacheEvict(value = "player-detailed-statistics", key = "#playerId"),
+            @CacheEvict(value = "player-chart-statistics", key = "#playerId")
+    })
     public void deleteAllByPlayerId(Long playerId) {
         playerDailyStatisticRepository.deleteByPlayerId(playerId);
     }

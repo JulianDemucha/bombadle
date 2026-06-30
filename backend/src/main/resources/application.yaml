@@ -51,6 +51,15 @@ bombadle:
       guess-list:
         ttl: 1h
         max-size: 100 # avg number of daily users +
+      player-basic-statistics:
+        ttl: 1h
+        max-size: 100 # avg number of daily users +
+      player-detailed-statistics:
+        ttl: 1h
+        max-size: 100 # avg number of daily users +
+      player-chart-statistics:
+        ttl: 1h
+        max-size: 100 # avg number of daily users +
       search-index:
         ttl: 1h
         max-size: 1
