@@ -7,6 +7,7 @@ import com.bombadle.entity.GuessList;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.GameMode;
 import com.bombadle.repository.GuessListRepository;
+import com.bombadle.service.cache.CacheService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +26,9 @@ class GuessListServiceTest {
 
     @Mock
     private GuessListRepository guessListRepository;
+
+    @Mock
+    private CacheService cacheService;
 
     @InjectMocks
     private GuessListService guessListService;
@@ -151,7 +155,7 @@ class GuessListServiceTest {
         }
 
         @Test
-        void deleteAllByPlayerId_called_callsRepositoryDeleteAll() {
+        void deleteAllByPlayerId_called_callsRepositoryDeleteAllAndEvictsCacheForEveryMode() {
             // ARRANGE
             long playerId = 1L;
 
@@ -160,6 +164,9 @@ class GuessListServiceTest {
 
             // ASSERT
             verify(guessListRepository).deleteByPlayerId(playerId);
+            for (GameMode mode : GameMode.values()) {
+                verify(cacheService).evictCacheEntry("guess-list", playerId + "-" + mode);
+            }
         }
     }
 }

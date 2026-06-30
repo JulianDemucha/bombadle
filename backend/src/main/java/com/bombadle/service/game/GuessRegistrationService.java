@@ -19,7 +19,7 @@ public class GuessRegistrationService {
     @CacheEvict(value = "guess-list", key = "#player.getId()+'-'+#gameMode")
     public void registerGuess(Player player, GuessAttempt guessAttempt, GameMode gameMode) {
         GuessList guessList = guessListService.findByPlayerAndGameModeOrElseCreateNew(player, gameMode);
-        guessList.getGuesses().add(guessAttempt);
+        guessList.addGuess(guessAttempt);
 
         if (guessAttempt.isCorrect()) {
             scoreRegistrationService.registerPlayerWin(player.getId(), guessList.getGuesses().size(), gameMode);

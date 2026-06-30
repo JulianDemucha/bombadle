@@ -40,4 +40,13 @@ public class GuessList {
         this.player = player;
         this.guesses = new ArrayList<>();
     }
+
+    public void addGuess(GuessAttempt attempt) {
+        // Replacing the field with a new instance (not mutating in-place) is required so
+        // Hibernate's ImmutableMutabilityPlan dirty checker sees a changed reference and
+        // emits the UPDATE for the jsonb guesses column. In-place add() leaves snapshot == current.
+        List<GuessAttempt> updated = this.guesses == null ? new ArrayList<>() : new ArrayList<>(this.guesses);
+        updated.add(attempt);
+        this.guesses = updated;
+    }
 }
