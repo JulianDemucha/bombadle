@@ -78,7 +78,7 @@ const extractStageOneText = (item) => {
 };
 
 function useQuotesModeGame() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [characterCards, setCharacterCards] = useState([]);
     const [prompt, setPrompt] = useState(null);
 
@@ -235,8 +235,10 @@ function useQuotesModeGame() {
             }
         };
 
-        initGame();
-    }, [user]);
+        if (!authLoading) {
+            initGame();
+        }
+    }, [user, authLoading]);
 
     const handleGuessStageOne = useCallback(async (selectedText) => {
         if (isStageOneWon) return;

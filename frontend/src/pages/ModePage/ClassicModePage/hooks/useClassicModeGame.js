@@ -68,7 +68,7 @@ const findSelectedCard = ({ item, guessAttempt, cardsById, cardsByName }) => {
 };
 
 function useClassicModeGame() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [guesses, setGuesses] = useState([]);
     const [characterCards, setCharacterCards] = useState([]);
     const [isWon, setIsWon] = useState(false);
@@ -273,10 +273,10 @@ function useClassicModeGame() {
             }
         };
 
-        if (characterCards.length > 0) {
+        if (characterCards.length > 0 && !authLoading) {
             loadGame();
         }
-    }, [characterCards, user, cardsById, cardsByName]);
+    }, [characterCards, user, authLoading, cardsById, cardsByName]);
 
     const handleSelectCharacterId = useCallback(async (cardId) => {
         if (isWon || isAnimatingSuccess) return;
