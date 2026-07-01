@@ -50,7 +50,7 @@ bombadle:
         max-size: 4 # number of game modes
       guess-list:
         ttl: 1h
-        max-size: 200 # ~200 daily active users
+        max-size: 800 # ~200 daily active users x 4 modes
       player-basic-statistics:
         ttl: 1h
         max-size: 200 # ~200 daily active users
