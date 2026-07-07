@@ -171,14 +171,6 @@ function LoginPage() {
 
                 <div className="loginFooter" style={{textAlign: "right", marginTop: "-10px", marginBottom: "15px"}}>
                     <a href="/forgot-password" style={{fontSize: "0.8rem"}}>Zapomniałeś hasła?</a>
-                    {" | "}
-                    <button
-                        type="button"
-                        onClick={recovery.open}
-                        style={{fontSize: "0.8rem", background: "none", border: "none", padding: 0, color: "inherit", textDecoration: "underline", cursor: "pointer"}}
-                    >
-                        Usunąłeś konto? Odzyskaj je
-                    </button>
                 </div>
 
                 <button type="submit" disabled={loading}>
@@ -191,9 +183,23 @@ function LoginPage() {
                 <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
                     ZALOGUJ SIĘ PRZEZ GOOGLE
                 </button>
+                <p className="google-consent-note">
+                    Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"
+                                                              rel="noopener noreferrer">regulamin</a> i{" "}
+                    <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności</a>.
+                </p>
 
                 <div className="loginFooter">
                     Nie masz konta? <a href="/register">Zarejestruj się</a>
+                </div>
+                <div className="loginFooter">
+                    <button
+                        type="button"
+                        className="link-btn"
+                        onClick={recovery.open}
+                    >
+                        Usunąłeś konto niedawno? Odzyskaj je
+                    </button>
                 </div>
             </form>
             <Footer/>

@@ -297,7 +297,7 @@ function RegisterPage() {
                         />
                         <span className="checkmark" aria-hidden="true"/>
                         <span className="checkbox-text">
-            Akceptuję <a href="/src/pages/PrivacyPolicyPage/privacy_policy.html" target="_blank"
+            Akceptuję <a href="/privacy_policy.html" target="_blank"
                          rel="noopener noreferrer">politykę prywatności / RODO</a>
           </span>
                     </label>
@@ -316,6 +316,11 @@ function RegisterPage() {
                 <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
                     ZALOGUJ PRZEZ GOOGLE
                 </button>
+                <p className="google-consent-note">
+                    Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"
+                                                              rel="noopener noreferrer">regulamin</a> i{" "}
+                    <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności</a>.
+                </p>
 
                 <div className="loginFooter">
                     Masz już konto? <a href="/login">Zaloguj się</a>
@@ -323,10 +328,10 @@ function RegisterPage() {
                 <div className="loginFooter">
                     <button
                         type="button"
+                        className="link-btn"
                         onClick={recovery.open}
-                        style={{fontSize: "0.8rem", background: "none", border: "none", padding: 0, color: "inherit", textDecoration: "underline", cursor: "pointer"}}
                     >
-                        Usunąłeś konto? Odzyskaj je
+                        Usunąłeś konto niedawno? Odzyskaj je
                     </button>
                 </div>
             </form>
