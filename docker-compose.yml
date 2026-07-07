@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:16-alpine
@@ -12,10 +10,15 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   mailpit:
     image: axllent/mailpit
-    profiles: ["dev"]
+    profiles: [ "dev" ]
     container_name: bombadle-mailpit
     ports:
       - "8025:8025"
@@ -24,5 +27,64 @@ services:
       MP_MAX_MESSAGES: 500
     restart: unless-stopped
 
+  backend:
+    build: ./backend
+    container_name: bombadle-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8080"
+    environment:
+      DB_URL: ${DOCKER_DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SERVER_PORT: ${SERVER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      STORAGE_ROOT_PATH: ${STORAGE_ROOT_PATH}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL}
+      COOKIE_SECURE: ${COOKIE_SECURE}
+      COOKIE_SAME_SITE: ${COOKIE_SAME_SITE}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS}
+      MAIL_FROM: ${MAIL_FROM}
+    restart: unless-stopped
+
+  # produkcja: nginx serwuje zbudowany frontend i proxuje /api, /oauth2, /login, /images do backendu,
+  # terminuje realny TLS (Let's Encrypt) - patrz nginx/init-letsencrypt.sh
+  nginx:
+    build: ./frontend
+    profiles: [ "prod" ]
+    container_name: bombadle-nginx
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    profiles: [ "prod" ]
+    container_name: bombadle-certbot
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    entrypoint: [ "/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done" ]
+
 volumes:
   postgres_data:
+  certbot_certs:
+  certbot_webroot:
