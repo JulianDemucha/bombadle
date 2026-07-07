@@ -3,15 +3,19 @@ import '../style/logo.css';
 import '../pages/LoginRegisterPage/login-button.css';
 import '../pages/PlayerSettingsPage/profile-button.css';
 import NavImgButton from "./NavImgButton.jsx";
+import BackArrowButton from "./BackArrowButton.jsx";
 
 const handleImageError = (e) => {
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
 };
 
-function Header({logoClassName}) {
+function Header({logoClassName, showBackButton}) {
     logoClassName = logoClassName || 'logo logo-desktop';
     return (
         <header className="header-container">
+
+            {/*     BACK BUTTON     */}
+            {showBackButton && <BackArrowButton />}
 
             {/*     LOGO     */}
             <NavImgButton

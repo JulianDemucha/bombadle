@@ -35,7 +35,7 @@ function QuotesModePage() {
 
     return (
         <div className="quotes-mode-page classic-mode-page">
-            <Header/>
+            <Header showBackButton/>
             <DailyResetTimer/>
             <div className="classic-mode-content">
                 <ImgTextBanner text="Dokończ dzisiejszy cytat!" altText="Dokończ Cytat"/>

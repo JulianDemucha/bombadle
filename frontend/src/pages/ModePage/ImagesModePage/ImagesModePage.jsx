@@ -58,7 +58,7 @@ function ImagesModePage() {
 
     return (
         <div className="images-mode-page classic-mode-page">
-            <Header/>
+            <Header showBackButton/>
             <DailyResetTimer/>
             <div className="classic-mode-content">
                 <ImgTextBanner text="Zgadnij postać ze zdjęcia!" altText="Zgadnij ze zdjęcia"/>
