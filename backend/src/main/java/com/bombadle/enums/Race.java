@@ -7,5 +7,6 @@ public enum Race {
     Kutanoid,
     Chuj,
     Chujew,
-    Kurwczerw
+    Kurwczerw,
+    Nieznany
 }
