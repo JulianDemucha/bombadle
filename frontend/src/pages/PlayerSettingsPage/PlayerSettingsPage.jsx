@@ -12,6 +12,8 @@ import FeedbackModal from "../../components/FeedbackModal/FeedbackModal.jsx";
 import { useFeedback } from "../../components/FeedbackModal/useFeedback.js";
 import InfoTooltip from "../../components/InfoTooltip.jsx";
 import useAccountDeletion from "./hooks/useAccountDeletion.js";
+import PasswordStrengthMeter from "../../components/PasswordStrength/PasswordStrengthMeter.jsx";
+import { evaluatePassword, PASSWORD_COMPLEXITY_ERROR } from "../../components/PasswordStrength/passwordRules.js";
 
 export default function PlayerSettingsPage() {
     const [displayName, setDisplayName] = useState("");
@@ -90,6 +92,10 @@ export default function PlayerSettingsPage() {
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
+        if (!evaluatePassword(newPassword).meetsComplexity) {
+            setPwdError(PASSWORD_COMPLEXITY_ERROR);
+            return;
+        }
         setSaving(true);
         setPwdError("");
         setPwdSuccess("");
@@ -229,6 +235,7 @@ export default function PlayerSettingsPage() {
                                     required
                                     minLength={8}
                                 />
+                                <PasswordStrengthMeter password={newPassword} />
                             </div>
                             {pwdError && <div className="form-error">{pwdError}</div>}
                             <div style={{ display: "flex", gap: "10px" }}>

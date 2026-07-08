@@ -12,6 +12,8 @@ import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
 import useAnonymousMergePrompt from "../../components/MergePrompt/useAnonymousMergePrompt.js";
 import AccountRecoveryModal from "../../components/AccountRecovery/AccountRecoveryModal.jsx";
 import useAccountRecovery from "../../components/AccountRecovery/useAccountRecovery.js";
+import PasswordStrengthMeter from "../../components/PasswordStrength/PasswordStrengthMeter.jsx";
+import {evaluatePassword, PASSWORD_COMPLEXITY_ERROR} from "../../components/PasswordStrength/passwordRules.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const MIN_PASSWORD_LEN = 8;
@@ -192,6 +194,10 @@ function RegisterPage() {
             setErrors(prev => ({...prev, password: PASSWORD_TOO_LONG_ERROR}));
             return;
         }
+        if (!evaluatePassword(password).meetsComplexity) {
+            setErrors(prev => ({...prev, password: PASSWORD_COMPLEXITY_ERROR}));
+            return;
+        }
         if (!validateEmail(email)) {
             setErrors(prev => ({...prev, email: "Nieprawidłowy adres e-mail."}));
             return;
@@ -262,6 +268,7 @@ function RegisterPage() {
                         aria-describedby="password-error"
                     />
                     {errors.password && <div id="password-error" className="field-error">{errors.password}</div>}
+                    <PasswordStrengthMeter password={password} />
                 </div>
 
                 <div className="input-group">

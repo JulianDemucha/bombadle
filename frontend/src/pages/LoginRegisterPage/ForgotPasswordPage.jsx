@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import './login-register-page.css';
 import AuthHeader from '../../components/AuthHeader';
 import Footer from "../../components/Footer.jsx";
+import PasswordStrengthMeter from "../../components/PasswordStrength/PasswordStrengthMeter.jsx";
+import { evaluatePassword, PASSWORD_COMPLEXITY_ERROR } from "../../components/PasswordStrength/passwordRules.js";
 
 function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
@@ -65,6 +67,10 @@ function ForgotPasswordPage() {
 
     const handleConfirmReset = async (e) => {
         e.preventDefault();
+        if (!evaluatePassword(newPassword).meetsComplexity) {
+            setError(PASSWORD_COMPLEXITY_ERROR);
+            return;
+        }
         setLoading(true);
         setError('');
         setMessage('');
@@ -167,6 +173,7 @@ function ForgotPasswordPage() {
                             required
                             minLength={8}
                         />
+                        <PasswordStrengthMeter password={newPassword} />
                     </div>
                     {error && <div className="form-error">{error}</div>}
                     
