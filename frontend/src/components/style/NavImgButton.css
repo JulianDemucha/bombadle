@@ -1,0 +1,14 @@
+/* Positioning context for the overlay; kept block + width:100%-friendly so image sizing is unchanged. */
+.nav-img-button__frame {
+    position: relative;
+    display: block;
+    line-height: 0;
+}
+
+/* Transparent shield above the <img> so the browser hit-tests it, not the image (kills the Lens chip). */
+.nav-img-button__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    cursor: pointer;
+}

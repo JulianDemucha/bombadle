@@ -36,7 +36,7 @@ public class ActivityTrackingService {
         activeAnonymousBuffer.add(sessionId);
     }
 
-    @Scheduled(fixedRate = 600000) // 10 min
+    @Scheduled(cron = "0 0/10 * * * *", zone = "Europe/Warsaw") // every 10 min on wall-clock boundaries (:00, :10, ...)
     @Transactional
     public void flushActivityToDatabase() {
         Set<Long> playersToUpdate = activePlayersBuffer;
@@ -58,7 +58,7 @@ public class ActivityTrackingService {
         }
     }
 
-    @Scheduled(fixedRate = 3600000) // 60min
+    @Scheduled(cron = "0 0 * * * *", zone = "Europe/Warsaw") // every hour on the wall-clock hour (:00)
     @Transactional
     public void createActivitySnapshot() {
         Instant threshold = Instant.now().minus(1, ChronoUnit.HOURS);

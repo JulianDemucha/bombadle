@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import '../QuotesModePage.css';
 import GlobalLoader from '../../../../components/GlobalLoader.jsx';
+import { formatQuoteDialogue } from '../utils/quotesModeMappers.js';
 
 const QuoteStageOne = ({
                            prompt,
@@ -19,9 +20,11 @@ const QuoteStageOne = ({
     if (!prompt) return <GlobalLoader text="Wczytywanie cytatu..." />;
 
     const handleOptionClick = (optionText) => {
-        setClickedOption(optionText); // Zapisujemy, co zostało kliknięte
+        setClickedOption(optionText);
         handleGuessStageOne(optionText);
     };
+
+    const dialogueLines = formatQuoteDialogue(prompt.quoteBeginning);
 
     return (
         <div className="quote-stage-one-container">
@@ -29,7 +32,12 @@ const QuoteStageOne = ({
 
                 <div className="quote-text-container">
                     <p className="quote-text">
-                        {prompt.quoteBeginning}...
+                        {dialogueLines.map((line, index) => (
+                            <React.Fragment key={index}>
+                                {line}{index === dialogueLines.length - 1 ? '...' : ''}
+                                {index < dialogueLines.length - 1 && <br />}
+                            </React.Fragment>
+                        ))}
                     </p>
                     <div className="quote-meta">
                         <span className="quote-episode">Odcinek: {prompt.appearanceEpisode}</span>

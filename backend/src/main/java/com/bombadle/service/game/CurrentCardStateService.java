@@ -14,15 +14,21 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class CurrentCardStateService {
 
+    /** Base "Kapitan Bomba" card (seeded by V9); backfills previousCards on a fresh DB. */
+    private static final long FALLBACK_CHARACTER_CARD_ID = 1L;
+
     private final CurrentCardStateRepository repo;
     private final CurrentGameStateWrapper currentGameStateWrapper;
+    private final CharacterCardService characterCardService;
 
     @PostConstruct
     public void setUpCurrentCardIfStateExists() {
@@ -68,9 +74,30 @@ public class CurrentCardStateService {
         state.getPreviousCards().putAll(state.getCurrentCards());
         state.setPreviousQuote(state.getCurrentQuote());
 
+        // Fresh boot has no current card to carry forward: backfill missing previousCards entries
+        // with the base card so /previous-character-card isn't empty. previousCards only, not quote.
+        applyPreviousCardFallback(state, newCards.keySet());
+
         state.getCurrentCards().putAll(newCards);
         state.setCurrentQuote(newQuote);
 
         repo.save(state);
+    }
+
+    private void applyPreviousCardFallback(CurrentCardState state, Set<GameMode> modes) {
+        CharacterCard fallbackCard = null;
+        for (GameMode mode : modes) {
+            if (state.getPreviousCards().get(mode) == null) {
+                if (fallbackCard == null) {
+                    fallbackCard = characterCardService.findCharacterCardById(FALLBACK_CHARACTER_CARD_ID)
+                            .orElseGet(() -> characterCardService.findRandomCardExcluding(List.of(-1L)));
+
+                    if (fallbackCard == null) {
+                        throw new IllegalStateException("No character cards found in the database for fallback");
+                    }
+                }
+                state.getPreviousCards().put(mode, fallbackCard);
+            }
+        }
     }
 }

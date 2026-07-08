@@ -96,7 +96,7 @@ class AnonymousToRegisteredUserMergeIT extends BaseIT{
         RegisterRequest registerRequest = RegisterRequest.builder()
                 .username("SigmaUserTest")
                 .email("integration@test.com")
-                .password("SecurePassword123")
+                .password("SecurePassword123!")
                 .build();
 
         Cookie triggerMergeCookie = new Cookie("TRIGGER_MERGE", "true");

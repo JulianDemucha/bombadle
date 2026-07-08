@@ -10,4 +10,5 @@ public enum Affiliation {
     Kosmici_Sprzymierzeni,
     Chorazy_Gwiezdnej_Floty,
     Admiralowie_Gwiezdnej_Floty,
+    Boguslaw_Lecina_Uslugi_Budowlano_Remontowe
 }

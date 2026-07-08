@@ -26,10 +26,9 @@ public class CookieService {
                 .maxAge(maxAgeSeconds)
                 .sameSite(cookieConfig.sameSite());
 
-        // prod
-        // if (cookieConfig.domain() != null && !cookieConfig.domain().isBlank()) {
-        //    builder.domain(cookieConfig.domain());
-        // }
+         if (cookieConfig.domain() != null && !cookieConfig.domain().isBlank()) {
+            builder.domain(cookieConfig.domain());
+         }
 
         return builder.build();
     }

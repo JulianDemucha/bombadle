@@ -1,34 +1,21 @@
-.login-with-google-btn {
-    transition: background-color .3s, box-shadow .3s;
-
-    /* Stały, większy padding z lewej strony, żeby tekst nie najeżdżał na ikonę */
-    padding: 12px 16px 12px 48px;
-    border: none;
-    border-radius: 6px; /* Warto dodać dla spójności, jeśli jeszcze nie masz */
-
-    color: #757575;
-    /* Sztywny, czytelny rozmiar ikony zarówno na PC jak i na mobilce */
-    background-size: 24px 24px;
-    background-image: url(../../assets/google.svg);
-    background-color: white;
-    background-repeat: no-repeat;
-    /* 12px od lewej krawędzi, a w pionie idealny środek (center) */
-    background-position: 12px center;
-
-    /* Utrzymanie odpowiedniej szerokości przycisku na telefonach */
+/* Scoped under .login-container to outweigh the generic "button" rule and fix the Google button's
+   sizing: full width (was capped at 320px) + left gutter for the icon (was overridden). */
+.login-register-page .login-container .login-with-google-btn {
     width: 100%;
-    max-width: 320px;
+    max-width: none;
+    padding: 12px 16px 12px 40px; /* left gutter holds the logo */
 
-    &:disabled {
-        filter: grayscale(100%);
-        background-color: #ebebeb;
-        box-shadow: 0 -1px 0 rgba(0, 0, 0, .04), 0 1px 1px rgba(0, 0, 0, .25);
-        cursor: not-allowed;
-    }
+    background-image: url(../../assets/google.svg);
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
+    background-position: 12px center;
 }
 
+/* Narrow screens: shrink font + gutter so the long label stays on one line. */
 @media (max-width: 400px) {
-    .login-with-google-btn {
-        font-size: 0.85rem !important;
+    .login-register-page .login-container .login-with-google-btn {
+        padding-left: 36px;
+        font-size: 0.85rem;
+        background-position: 10px center;
     }
 }
