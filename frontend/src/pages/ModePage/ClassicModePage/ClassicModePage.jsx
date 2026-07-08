@@ -11,6 +11,7 @@ import Top3Leaderboard from '../../../components/Top3Leaderboard.jsx';
 import NavImgButton from '../../../components/NavImgButton.jsx';
 import DailyResetTimer from '../../../components/DailyResetTimer.jsx';
 import useClassicModeGame from './hooks/useClassicModeGame.js';
+import loginButtonImage from '../../../assets/buttons/login_button.png';
 
 function ClassicModePage() {
     const {
@@ -71,7 +72,7 @@ function ClassicModePage() {
 
                 <NavImgButton
                     to="/login"
-                    imgSrc="/src/assets/buttons/login_button.png"
+                    imgSrc={loginButtonImage}
                     altText="Zaloguj się"
                     className="image-button login-mobile"
                     hideIfAuthenticated={true}

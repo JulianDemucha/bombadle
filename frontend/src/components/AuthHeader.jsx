@@ -2,6 +2,8 @@ import React from 'react';
 import '../style/logo.css';
 import BackArrowButton from "./BackArrowButton.jsx";
 import NavImgButton from "./NavImgButton.jsx";
+import logoImage from '../assets/bombadle_logo.png';
+import logoMobileImage from '../assets/bombadle_logo_mobile.png';
 
 const handleImageError = (e) => {
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
@@ -14,14 +16,14 @@ function AuthHeader() {
 
             <NavImgButton
                 to="/"
-                imgSrc="/src/assets/bombadle_logo.png"
+                imgSrc={logoImage}
                 altText="logo"
                 className="logo logo-desktop"
                 onError={handleImageError}
             />
             <NavImgButton
                 to="/"
-                imgSrc="/src/assets/bombadle_logo_mobile.png"
+                imgSrc={logoMobileImage}
                 altText="logoMobile"
                 className="logo logo-mobile"
                 onError={handleImageError}
