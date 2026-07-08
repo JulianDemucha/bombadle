@@ -40,7 +40,7 @@ echo "==> kasuje tymczasowy cert i wystepuje o prawdziwy z Let's Encrypt (ACME h
 $COMPOSE run --rm --entrypoint sh certbot -c "
   rm -rf /etc/letsencrypt/live/${DOMAIN} /etc/letsencrypt/archive/${DOMAIN} /etc/letsencrypt/renewal/${DOMAIN}.conf
 "
-$COMPOSE run --rm certbot certonly \
+$COMPOSE run --rm --entrypoint certbot certbot certonly \
   --webroot -w /var/www/certbot \
   -d "${DOMAIN}" \
   --email "${CERTBOT_EMAIL}" \
@@ -49,6 +49,9 @@ $COMPOSE run --rm certbot certonly \
 
 echo "==> restart nginx z prawdziwym certem"
 $COMPOSE restart nginx
+
+echo "==> startuje certbota w tle (petla auto-odnawiania co 12h)"
+$COMPOSE up -d certbot
 
 echo "gotowe - sprawdz https://${DOMAIN}"
 echo "certbot w kontenerze bedzie sam odnawial cert co 12h (jesli sie zblizy termin)."
