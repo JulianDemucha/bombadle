@@ -6,6 +6,7 @@ target/
 *.p12
 node_modules/
 
+static/images/character_cards/pending/
 .env
 mvn-test.log
 
