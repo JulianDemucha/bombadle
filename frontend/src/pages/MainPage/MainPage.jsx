@@ -7,6 +7,10 @@ import Header from "../../components/Header.jsx";
 import Top3SuperstreakBoard from "../../components/Top3SuperstreakBoard.jsx";
 import DailyResetTimer from "../../components/DailyResetTimer.jsx";
 import useSuperstreakTop3 from "./hooks/useSuperstreakTop3.js";
+import classicButtonImage from '../../assets/buttons/button_classic.png';
+import quoteButtonImage from '../../assets/buttons/button_quote_mode.png';
+import imagesButtonImage from '../../assets/buttons/button_images_mode.png';
+import loginButtonImage from '../../assets/buttons/login_button.png';
 
 function MainPage() {
     const { topThree, loading } = useSuperstreakTop3();
@@ -24,7 +28,7 @@ function MainPage() {
 
                 <NavImgButton
                     to="/Classic"
-                    imgSrc="src/assets/buttons/button_classic.png"
+                    imgSrc={classicButtonImage}
                     altText="Tryb 'Klasyczny'"
                     className="image-button image-button-responsive"
                     onError={handleImageError}
@@ -32,7 +36,7 @@ function MainPage() {
 
                 <NavImgButton
                     to="/Quotes"
-                    imgSrc="src/assets/buttons/button_quote_mode.png"
+                    imgSrc={quoteButtonImage}
                     altText="Tryb 'Cytaty'"
                     className="image-button image-button-responsive"
                     onError={handleImageError}
@@ -40,7 +44,7 @@ function MainPage() {
 
                 <NavImgButton
                     to="/Images"
-                    imgSrc="src/assets/buttons/button_images_mode.png"
+                    imgSrc={imagesButtonImage}
                     altText="Tryb 'Zdjęcia'"
                     className="image-button image-button-responsive"
                     onError={handleImageError}
@@ -48,7 +52,7 @@ function MainPage() {
 
                 <NavImgButton
                     to="/login"
-                    imgSrc="src/assets/buttons/login_button.png"
+                    imgSrc={loginButtonImage}
                     altText="Zaloguj się"
                     className="image-button login-mobile"
                     onError={handleImageError}

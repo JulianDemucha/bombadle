@@ -10,6 +10,7 @@ import DailyResetTimer from '../../../components/DailyResetTimer.jsx';
 import PreviousCharacterCard from "../ClassicModePage/components/PreviousCharacterCard.jsx";
 import useImagesModeGame from './hooks/useImagesModeGame.js';
 import GlobalLoader from '../../../components/GlobalLoader.jsx';
+import loginButtonImage from '../../../assets/buttons/login_button.png';
 
 function ImagesModePage() {
     const {
@@ -146,7 +147,7 @@ function ImagesModePage() {
 
                 <NavImgButton
                     to="/login"
-                    imgSrc="/src/assets/buttons/login_button.png"
+                    imgSrc={loginButtonImage}
                     altText="Zaloguj się"
                     className="image-button login-mobile"
                     hideIfAuthenticated={true}

@@ -4,6 +4,10 @@ import '../pages/LoginRegisterPage/login-button.css';
 import '../pages/PlayerSettingsPage/profile-button.css';
 import NavImgButton from "./NavImgButton.jsx";
 import BackArrowButton from "./BackArrowButton.jsx";
+import logoImage from '../assets/bombadle_logo.png';
+import logoMobileImage from '../assets/bombadle_logo_mobile.png';
+import loginButtonImage from '../assets/buttons/login_button.png';
+import profileButtonImage from '../assets/buttons/profile_button.png';
 
 const handleImageError = (e) => {
     e.target.src = 'https://placehold.co/544x192/9E6B5D/FFFFFF?text=Przycisk&font=sans-serif';
@@ -20,7 +24,7 @@ function Header({logoClassName, showBackButton}) {
             {/*     LOGO     */}
             <NavImgButton
                 to="/"
-                imgSrc="/src/assets/bombadle_logo.png"
+                imgSrc={logoImage}
                 altText="logo"
                 className={logoClassName}
                 onError={handleImageError}
@@ -29,7 +33,7 @@ function Header({logoClassName, showBackButton}) {
             {/*     LOGIN BUTTON     */}
             <NavImgButton
                 to="/login"
-                imgSrc="/src/assets/buttons/login_button.png"
+                imgSrc={loginButtonImage}
                 altText="Zaloguj się"
                 className="image-button login-desktop"
                 onError={handleImageError}
@@ -39,7 +43,7 @@ function Header({logoClassName, showBackButton}) {
             {/*     PROFILE SETTINGS BUTTON     */}
             <NavImgButton
                 to="/profile"
-                imgSrc="/src/assets/buttons/profile_button.png"
+                imgSrc={profileButtonImage}
                 altText="Ustawienia Profilu"
                 className="image-button profile-button"
                 onError={handleImageError}
@@ -49,7 +53,7 @@ function Header({logoClassName, showBackButton}) {
             {/*     LOGO MOBILE     */}
             <NavImgButton
                 to="/"
-                imgSrc="/src/assets/bombadle_logo_mobile.png"
+                imgSrc={logoMobileImage}
                 altText="logoMobile"
                 className="logo logo-mobile"
                 onError={handleImageError}
