@@ -4,6 +4,7 @@ import com.bombadle.entity.AnonymousSession;
 import com.bombadle.entity.GuessList;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.GameMode;
+import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.game.ScoreRegistrationService;
 import com.bombadle.service.player.AnonymousSessionService;
@@ -21,6 +22,7 @@ public class AnonymousMergeService {
     private final AnonymousSessionService anonymousSessionService;
     private final GuessListService guessListService;
     private final ScoreRegistrationService scoreRegistrationService;
+    private final CacheService cacheService;
 
     @Transactional
     public void handleAnonymousSessionMerge(Player player, UUID anonymousSessionId, Boolean triggerMerge) {
@@ -60,6 +62,7 @@ public class AnonymousMergeService {
                     .player(player)
                     .build();
             guessListService.save(newGuessList);
+            cacheService.evictCacheEntry("guess-list", player.getId() + "-" + gameMode);
 
             if (isCorrect) {
                 scoreRegistrationService.registerPlayerWinWithTimestamp(

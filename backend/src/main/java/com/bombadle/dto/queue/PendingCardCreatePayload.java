@@ -4,7 +4,7 @@ import com.bombadle.dto.request.AdminCharacterCardRequest;
 
 public record PendingCardCreatePayload(
         AdminCharacterCardRequest card,
-        String tempImagePath
+        String tempImagePath,
+        String tempGuessImagePath
 ) {
 }
-

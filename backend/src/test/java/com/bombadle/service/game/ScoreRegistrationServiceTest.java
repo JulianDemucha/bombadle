@@ -7,6 +7,7 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.stats.LeaderboardService;
+import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ class ScoreRegistrationServiceTest {
 
     @Mock
     private LeaderboardService leaderboardService;
+
+    @Mock
+    private PlayerStatisticsService playerStatisticsService;
 
     @InjectMocks
     private ScoreRegistrationService scoreRegistrationService;
@@ -72,8 +76,10 @@ class ScoreRegistrationServiceTest {
 
             verify(player).addTodayScore(gameMode, savedScore);
             verify(playerService).save(player);
-            verify(cacheService).clear("paged-leaderboard");
+            verify(playerStatisticsService).recordDailyStatistic(player, savedScore);
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).evictCacheEntry("top-3-leaderboard", gameMode.name());
+            verify(cacheService).evictCacheEntry("today-solvers", gameMode.name());
         }
     }
 
@@ -105,8 +111,10 @@ class ScoreRegistrationServiceTest {
 
             verify(player).addTodayScore(gameMode, savedScore);
             verify(playerService).save(player);
-            verify(cacheService).clear("paged-leaderboard");
+            verify(playerStatisticsService).recordDailyStatistic(player, savedScore);
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).evictCacheEntry("top-3-leaderboard", gameMode.name()); // USUNIĘTO NEVER()
+            verify(cacheService).evictCacheEntry("today-solvers", gameMode.name());
         }
     }
 }

@@ -35,16 +35,31 @@ bombadle:
     specs:
       character-card-compare:
         ttl: 1d
-        max-size: 100 # number of cards
+        max-size: 150 # for target 50 cards x 3 ranked modes (CLASSIC, QUOTES_STAGE_2, IMAGES)
+      previous-character-card:
+        ttl: 1d
+        max-size: 4 # number of game modes
       top-3-leaderboard:
         ttl: 1d
-        max-size: 1 # only one leaderboard
-      classic-leaderboard:
+        max-size: 4 # number of game modes - was incorrectly 1 even though the cache key is per-mode
+      full-leaderboard:
         ttl: 1h
         max-size: 1000
+      today-solvers:
+        ttl: 1h
+        max-size: 4 # number of game modes
       guess-list:
         ttl: 1h
-        max-size: 100 # avg number of daily users +
+        max-size: 800 # ~200 daily active users x 4 modes
+      player-basic-statistics:
+        ttl: 1h
+        max-size: 200 # ~200 daily active users
+      player-detailed-statistics:
+        ttl: 1h
+        max-size: 200 # ~200 daily active users
+      player-chart-statistics:
+        ttl: 1h
+        max-size: 200 # ~200 daily active users
       search-index:
         ttl: 1h
         max-size: 1
@@ -54,17 +69,11 @@ bombadle:
 
 server:
   port: ${SERVER_PORT}
-  ssl:
-    enabled: true
-    key-store: classpath:keystore.p12
-    key-store-password: sigma
-    key-store-type: PKCS12
-    key-alias: springboot
   servlet:
     session:
       cookie:
-        same-site: Lax
-        secure: true   # true = https
+        same-site: ${COOKIE_SAME_SITE:Lax}
+        secure: ${COOKIE_SECURE:false}
 
 spring:
   datasource:

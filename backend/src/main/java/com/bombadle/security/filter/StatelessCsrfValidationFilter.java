@@ -53,7 +53,10 @@ public class StatelessCsrfValidationFilter extends OncePerRequestFilter {
 
             if (headerToken == null || cookieToken == null || !headerToken.equals(cookieToken)) {
                 log.warn("StatelessCsrfFilter: CSRF validation failed for path {}", path);
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid CSRF Token");
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.getWriter().write(
+                        "{\"statusCode\":403,\"error\":\"CSRF_TOKEN_INVALID\",\"message\":\"Invalid or missing CSRF token\"}");
                 return;
             }
         }

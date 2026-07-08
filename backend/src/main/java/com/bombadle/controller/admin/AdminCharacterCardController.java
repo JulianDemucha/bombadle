@@ -3,6 +3,7 @@ package com.bombadle.controller.admin;
 import com.bombadle.config.PlayerPrincipal;
 import com.bombadle.dto.AdminPendingCardChangeDto;
 import com.bombadle.dto.request.AdminCharacterCardRequest;
+import com.bombadle.dto.request.AdminCharacterCardUpdateRequest;
 import com.bombadle.repository.CharacterCardRepository;
 import com.bombadle.service.admin.AdminCharacterCardService;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,10 @@ public class AdminCharacterCardController {
     public ResponseEntity<Void> createCard(
             @AuthenticationPrincipal PlayerPrincipal actor,
             @RequestPart("card") AdminCharacterCardRequest request,
-            @RequestPart("image") MultipartFile image
+            @RequestPart("image") MultipartFile image,
+            @RequestPart("guessImage") MultipartFile guessImage
     ) throws Exception {
-        adminCharacterCardService.enqueueCreate(actor.getPlayerId(), request, image);
+        adminCharacterCardService.enqueueCreate(actor.getPlayerId(), request, image, guessImage);
         return ResponseEntity.accepted().build();
     }
 
@@ -34,13 +36,14 @@ public class AdminCharacterCardController {
     public ResponseEntity<Void> updateCard(
             @PathVariable Long id,
             @AuthenticationPrincipal PlayerPrincipal actor,
-            @RequestPart("card") AdminCharacterCardRequest request,
-            @RequestPart(value = "image", required = false) MultipartFile image
+            @RequestPart("card") AdminCharacterCardUpdateRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "guessImage", required = false) MultipartFile guessImage
     ) throws Exception {
         String currentName = characterCardRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Character card not found: " + id))
                 .getName();
-        adminCharacterCardService.enqueueUpdate(actor.getPlayerId(), id, request, image, currentName);
+        adminCharacterCardService.enqueueUpdate(actor.getPlayerId(), id, request, image, guessImage, currentName);
         return ResponseEntity.accepted().build();
     }
 

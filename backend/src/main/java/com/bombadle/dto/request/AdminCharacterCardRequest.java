@@ -1,5 +1,6 @@
 package com.bombadle.dto.request;
 
+import java.util.List;
 import java.util.Set;
 
 public record AdminCharacterCardRequest(
@@ -10,7 +11,7 @@ public record AdminCharacterCardRequest(
         Set<String> colors,
         Set<String> affiliations,
         Integer firstAppearanceEpisode,
-        Set<String> aliases
+        Set<String> aliases,
+        List<AdminQuoteRequest> quotes
 ) {
 }
-

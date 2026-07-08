@@ -7,6 +7,7 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.player.PlayerService;
 import com.bombadle.service.stats.LeaderboardService;
+import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class ScoreRegistrationService {
     private final PlayerService playerService;
     private final CacheService cacheService;
     private final LeaderboardService leaderboardService;
+    private final PlayerStatisticsService playerStatisticsService;
 
     @Transactional
     public void registerPlayerWin(Long playerId, int numberOfTries, GameMode gameMode) {
@@ -39,7 +41,10 @@ public class ScoreRegistrationService {
         player.addTodayScore(gameMode, savedScore);
         playerService.save(player);
 
+        playerStatisticsService.recordDailyStatistic(player, savedScore);
+
         clearLeaderboardCaches(gameMode, Instant.now());
+        cacheService.evictCacheEntry("today-solvers", gameMode.name());
     }
 
     @Transactional
@@ -58,13 +63,16 @@ public class ScoreRegistrationService {
         player.addTodayScore(gameMode, savedScore);
         playerService.save(player);
 
+        playerStatisticsService.recordDailyStatistic(player, savedScore);
+
         clearLeaderboardCaches(gameMode, timestamp);
+        cacheService.evictCacheEntry("today-solvers", gameMode.name());
 
         return savedScore;
     }
 
     private void clearLeaderboardCaches(GameMode gameMode, Instant newTimestamp) {
-        cacheService.clear("paged-leaderboard");
+        cacheService.clear("full-leaderboard");
 
         List<LeaderboardEntryDto> currentTop3 = leaderboardService.getTop3Leaderboard(gameMode);
 

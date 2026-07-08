@@ -76,7 +76,7 @@ public class PlayerUpdateService {
 
         if (profileChanged) {
             log.info("Player {} updated profile, clearing paged and top-3 leaderboard caches", playerId);
-            cacheService.clear("paged-leaderboard");
+            cacheService.clear("full-leaderboard");
             cacheService.clear("top-3-leaderboard");
         } else if (isPlayerInTop3) {
             log.info("Player {} is in top 3, clearing top-3-leaderboard cache", playerId);

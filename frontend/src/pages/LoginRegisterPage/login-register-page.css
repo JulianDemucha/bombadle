@@ -166,6 +166,38 @@
     text-decoration: underline;
 }
 
+.login-register-page .google-consent-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--login_primary);
+    opacity: 0.75;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+.login-register-page .google-consent-note a {
+    color: var(--login_primary);
+    text-decoration: underline;
+}
+
+.login-register-page .login-container button.link-btn {
+    width: auto;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 0;
+    color: inherit;
+    font-weight: normal;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.login-register-page .login-container button.link-btn:hover {
+    box-shadow: none;
+    transform: none;
+}
+
 .checkboxes {
     display: flex;
     flex-direction: column;
@@ -237,6 +269,7 @@
     font-weight: 700;
     text-align: center;
     font-size: 14px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
 .form-success {
@@ -249,9 +282,13 @@
 
 .field-error {
     color: #b00020;
+    background-color: rgba(255, 255, 255, 0.4);
+    padding: 4px 8px;
+    border-radius: 4px;
     font-size: 12px;
     margin-top: 5px;
     font-weight: bold;
+    display: inline-block;
 }
 
 @media (max-width: 480px) {

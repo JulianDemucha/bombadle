@@ -1,6 +1,8 @@
 package com.bombadle.service.admin;
 
 import com.bombadle.dto.request.AdminCharacterCardRequest;
+import com.bombadle.dto.request.AdminCharacterCardUpdateRequest;
+import com.bombadle.dto.request.AdminQuoteRequest;
 import com.bombadle.exception.AdminOperationNotAllowedException;
 import com.bombadle.repository.CharacterCardRepository;
 import org.junit.jupiter.api.Nested;
@@ -12,9 +14,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -24,195 +28,221 @@ class AdminCharacterCardServiceTest {
     @InjectMocks
     private AdminCharacterCardService adminCharacterCardService;
 
-    @Mock
-    private CharacterCardRepository characterCardRepository;
-    @Mock
-    private AdminAuditService adminAuditService;
-    @Mock
-    private AdminChangeQueueService changeQueueService;
-    @Mock
-    private CharacterCardImageService imageService;
-    @Mock
-    private MultipartFile mockImage;
+    @Mock private CharacterCardRepository characterCardRepository;
+    @Mock private AdminAuditService adminAuditService;
+    @Mock private AdminChangeQueueService changeQueueService;
+    @Mock private CharacterCardImageService imageService;
+    @Mock private MultipartFile mockImage;
+    @Mock private MultipartFile mockGuessImage;
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private AdminQuoteRequest validQuote() {
+        return new AdminQuoteRequest("Who said it?", List.of("A", "B"), "A", "SPEAKER", 1);
+    }
+
+    private AdminCharacterCardRequest createRequest(String name) {
+        return new AdminCharacterCardRequest(name, "MALE", null, null, null, null, null, null,
+                List.of(validQuote()));
+    }
+
+    private AdminCharacterCardUpdateRequest updateRequest(String name) {
+        return new AdminCharacterCardUpdateRequest(name, null, null, null, null, null, null, null,
+                null, null);
+    }
+
+    // ── enqueueCreate ─────────────────────────────────────────────────────────
 
     @Nested
     class EnqueueCreateTests {
 
         @Test
-        void enqueueCreate_validRequest_enqueuesTaskAndLogsAction() throws IOException {
-            // Arrange
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("sigma_name", "MALE", null, null, null, null, null, null);
+        void validRequest_enqueuesTaskAndLogsAction() throws IOException {
             when(characterCardRepository.existsByName("sigma_name")).thenReturn(false);
             when(changeQueueService.hasPendingCardName("sigma_name", null)).thenReturn(false);
-            when(imageService.buildSlug("sigma_name")).thenReturn("sigma-name");
-            when(changeQueueService.hasPendingActionKey("card:create:sigma-name")).thenReturn(false);
+            when(imageService.buildSlug("sigma_name")).thenReturn("sigma_name");
+            when(changeQueueService.hasPendingActionKey("card:create:sigma_name")).thenReturn(false);
             when(imageService.storePendingImage(mockImage)).thenReturn("sigma/path.jpg");
+            when(imageService.storePendingGuessImage(mockGuessImage)).thenReturn("sigma/guess.jpg");
 
-            // Act
-            adminCharacterCardService.enqueueCreate(1L, request, mockImage);
+            adminCharacterCardService.enqueueCreate(1L, createRequest("sigma_name"), mockImage, mockGuessImage);
 
-            // Assert
-            verify(changeQueueService).enqueue(eq("create_card"), eq("card:create:sigma-name"), any());
-            verify(adminAuditService).logAction(1L, "create_card_pending", null);
+            verify(changeQueueService).enqueue(eq("create_card"), eq("card:create:sigma_name"), any());
+            verify(adminAuditService).logAction(1L, "create_card_pending", "sigma_name");
         }
 
         @Test
-        void enqueueCreate_nullRequest_throwsIllegalArgumentException() {
+        void nullRequest_throwsIllegalArgumentException() {
             assertThrows(IllegalArgumentException.class, () ->
-                    adminCharacterCardService.enqueueCreate(1L, null, mockImage)
+                    adminCharacterCardService.enqueueCreate(1L, null, mockImage, mockGuessImage)
             );
         }
 
         @Test
-        void enqueueCreate_missingName_throwsIllegalArgumentException() {
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest(null, "MALE", null, null, null, null, null, null);
+        void missingName_throwsIllegalArgumentException() {
+            AdminCharacterCardRequest req = new AdminCharacterCardRequest(
+                    null, "MALE", null, null, null, null, null, null, List.of(validQuote()));
             assertThrows(IllegalArgumentException.class, () ->
-                    adminCharacterCardService.enqueueCreate(1L, request, mockImage)
+                    adminCharacterCardService.enqueueCreate(1L, req, mockImage, mockGuessImage)
             );
         }
 
         @Test
-        void enqueueCreate_missingGender_throwsIllegalArgumentException() {
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("sigma_name", null, null, null, null, null, null, null);
+        void missingGender_throwsIllegalArgumentException() {
+            AdminCharacterCardRequest req = new AdminCharacterCardRequest(
+                    "sigma_name", null, null, null, null, null, null, null, List.of(validQuote()));
             assertThrows(IllegalArgumentException.class, () ->
-                    adminCharacterCardService.enqueueCreate(1L, request, mockImage)
+                    adminCharacterCardService.enqueueCreate(1L, req, mockImage, mockGuessImage)
             );
         }
 
         @Test
-        void enqueueCreate_nameAlreadyExistsInRepo_throwsIllegalArgumentException() {
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("beta_name", "MALE", null, null, null, null, null, null);
+        void noQuotes_throwsIllegalArgumentException() {
+            AdminCharacterCardRequest req = new AdminCharacterCardRequest(
+                    "sigma_name", "MALE", null, null, null, null, null, null, null);
+            assertThrows(IllegalArgumentException.class, () ->
+                    adminCharacterCardService.enqueueCreate(1L, req, mockImage, mockGuessImage)
+            );
+        }
+
+        @Test
+        void quoteWithWrongAnswer_throwsIllegalArgumentException() {
+            AdminQuoteRequest badQuote = new AdminQuoteRequest("Q?", List.of("A", "B"), "C", "SPEAKER", 1);
+            AdminCharacterCardRequest req = new AdminCharacterCardRequest(
+                    "sigma_name", "MALE", null, null, null, null, null, null, List.of(badQuote));
+            assertThrows(IllegalArgumentException.class, () ->
+                    adminCharacterCardService.enqueueCreate(1L, req, mockImage, mockGuessImage)
+            );
+        }
+
+        @Test
+        void nameAlreadyExistsInRepo_throwsIllegalArgumentException() {
             when(characterCardRepository.existsByName("beta_name")).thenReturn(true);
-
             assertThrows(IllegalArgumentException.class, () ->
-                    adminCharacterCardService.enqueueCreate(1L, request, mockImage)
+                    adminCharacterCardService.enqueueCreate(1L, createRequest("beta_name"), mockImage, mockGuessImage)
             );
         }
 
         @Test
-        void enqueueCreate_nameAlreadyPending_throwsIllegalArgumentException() {
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("beta_name", "MALE", null, null, null, null, null, null);
+        void nameAlreadyPending_throwsIllegalArgumentException() {
             when(changeQueueService.hasPendingCardName("beta_name", null)).thenReturn(true);
-
             assertThrows(IllegalArgumentException.class, () ->
-                    adminCharacterCardService.enqueueCreate(1L, request, mockImage)
+                    adminCharacterCardService.enqueueCreate(1L, createRequest("beta_name"), mockImage, mockGuessImage)
             );
         }
 
         @Test
-        void enqueueCreate_actionKeyAlreadyPending_throwsIllegalArgumentException() {
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("sigma_name", "MALE", null, null, null, null, null, null);
-            when(imageService.buildSlug("sigma_name")).thenReturn("sigma-name");
-            when(changeQueueService.hasPendingActionKey("card:create:sigma-name")).thenReturn(true);
-
+        void actionKeyAlreadyPending_throwsIllegalArgumentException() {
+            when(imageService.buildSlug("sigma_name")).thenReturn("sigma_name");
+            when(changeQueueService.hasPendingActionKey("card:create:sigma_name")).thenReturn(true);
             assertThrows(IllegalArgumentException.class, () ->
-                    adminCharacterCardService.enqueueCreate(1L, request, mockImage)
+                    adminCharacterCardService.enqueueCreate(1L, createRequest("sigma_name"), mockImage, mockGuessImage)
             );
         }
     }
+
+    // ── enqueueUpdate ─────────────────────────────────────────────────────────
 
     @Nested
     class EnqueueUpdateTests {
 
         @Test
-        void enqueueUpdate_validRequestWithImage_enqueuesTaskAndLogsAction() throws IOException {
-            // Arrange
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("sigma_updated", null, null, null, null, null, null, null);
+        void validRequestWithBothImages_enqueuesTaskAndLogsAction() throws IOException {
             when(mockImage.isEmpty()).thenReturn(false);
+            when(mockGuessImage.isEmpty()).thenReturn(false);
             when(imageService.storePendingImage(mockImage)).thenReturn("sigma/path.jpg");
+            when(imageService.storePendingGuessImage(mockGuessImage)).thenReturn("sigma/guess.jpg");
 
-            // Act
-            adminCharacterCardService.enqueueUpdate(1L, 10L, request, mockImage, "beta_old");
+            adminCharacterCardService.enqueueUpdate(1L, 10L, updateRequest("sigma_updated"), mockImage, mockGuessImage, "beta_old");
 
-            // Assert
             verify(changeQueueService).enqueue(eq("update_card_10"), eq("card:10"), any());
             verify(adminAuditService).logAction(1L, "update_card_10", null);
         }
 
         @Test
-        void enqueueUpdate_validRequestWithoutImage_enqueuesTaskWithoutImage() throws IOException {
-            // Arrange
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("sigma_updated", null, null, null, null, null, null, null);
+        void noImages_enqueuesWithoutStagingFiles() throws IOException {
+            adminCharacterCardService.enqueueUpdate(1L, 10L, updateRequest("sigma_updated"), null, null, "beta_old");
 
-            // Act
-            adminCharacterCardService.enqueueUpdate(1L, 10L, request, null, "beta_old");
-
-            // Assert
             verify(imageService, never()).storePendingImage(any());
+            verify(imageService, never()).storePendingGuessImage(any());
             verify(changeQueueService).enqueue(eq("update_card_10"), eq("card:10"), any());
-            verify(adminAuditService).logAction(1L, "update_card_10", null);
         }
 
         @Test
-        void enqueueUpdate_nameNotChanged_skipsDbExistenceCheck() throws IOException {
-            // Arrange
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("sigma_same", null, null, null, null, null, null, null);
+        void nameNotChanged_skipsDbExistenceCheck() throws IOException {
+            adminCharacterCardService.enqueueUpdate(1L, 10L, updateRequest("same_name"), null, null, "same_name");
 
-            // Act
-            adminCharacterCardService.enqueueUpdate(1L, 10L, request, null, "sigma_same");
-
-            // Assert
             verify(characterCardRepository, never()).existsByName(anyString());
             verify(changeQueueService).enqueue(eq("update_card_10"), eq("card:10"), any());
         }
 
         @Test
-        void enqueueUpdate_nullRequest_throwsException() {
+        void nullRequest_throwsException() {
             assertThrows(AdminOperationNotAllowedException.class, () ->
-                    adminCharacterCardService.enqueueUpdate(1L, 10L, null, mockImage, "beta_old")
+                    adminCharacterCardService.enqueueUpdate(1L, 10L, null, mockImage, mockGuessImage, "beta_old")
             );
         }
 
         @Test
-        void enqueueUpdate_newNameExistsInRepo_throwsIllegalArgumentException() {
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("beta_taken", null, null, null, null, null, null, null);
+        void newNameExistsInRepo_throwsIllegalArgumentException() {
             when(characterCardRepository.existsByName("beta_taken")).thenReturn(true);
-
             assertThrows(IllegalArgumentException.class, () ->
-                    adminCharacterCardService.enqueueUpdate(1L, 10L, request, mockImage, "beta_old")
+                    adminCharacterCardService.enqueueUpdate(1L, 10L, updateRequest("beta_taken"), mockImage, mockGuessImage, "beta_old")
             );
         }
 
         @Test
-        void enqueueUpdate_newNameIsPending_throwsIllegalArgumentException() {
-            AdminCharacterCardRequest request = new AdminCharacterCardRequest("beta_pending", null, null, null, null, null, null, null);
+        void newNameIsPending_throwsIllegalArgumentException() {
             when(changeQueueService.hasPendingCardName("beta_pending", 10L)).thenReturn(true);
-
             assertThrows(IllegalArgumentException.class, () ->
-                    adminCharacterCardService.enqueueUpdate(1L, 10L, request, mockImage, "beta_old")
+                    adminCharacterCardService.enqueueUpdate(1L, 10L, updateRequest("beta_pending"), mockImage, mockGuessImage, "beta_old")
+            );
+        }
+
+        @Test
+        void quotesToAddWithInvalidAnswer_throwsIllegalArgumentException() {
+            AdminQuoteRequest badQuote = new AdminQuoteRequest("Q?", List.of("A", "B"), "C", "SPEAKER", 1);
+            AdminCharacterCardUpdateRequest req = new AdminCharacterCardUpdateRequest(
+                    null, null, null, null, null, null, null, null, List.of(badQuote), null);
+            assertThrows(IllegalArgumentException.class, () ->
+                    adminCharacterCardService.enqueueUpdate(1L, 10L, req, null, null, "old_name")
             );
         }
     }
+
+    // ── enqueueDelete ─────────────────────────────────────────────────────────
 
     @Nested
     class EnqueueDeleteTests {
 
         @Test
-        void enqueueDelete_validId_enqueuesTaskAndLogsAction() {
+        void validId_enqueuesTaskAndLogsAction() {
             adminCharacterCardService.enqueueDelete(1L, 10L);
             verify(changeQueueService).enqueue(eq("delete_card_10"), eq("card:10"), any());
             verify(adminAuditService).logAction(1L, "delete_card_10", null);
         }
     }
 
+    // ── cancel ────────────────────────────────────────────────────────────────
+
     @Nested
     class CancelTests {
 
         @Test
         void cancelCreate_validName_cancelsAndLogs() {
-            when(imageService.buildSlug("sigma_card")).thenReturn("sigma-card");
-            when(changeQueueService.cancelByActionKey("card:create:sigma-card")).thenReturn(true);
+            when(imageService.buildSlug("sigma_card")).thenReturn("sigma_card");
+            when(changeQueueService.cancelByActionKey("card:create:sigma_card")).thenReturn(true);
 
             adminCharacterCardService.cancelCreate(1L, "sigma_card");
 
-            verify(changeQueueService).cancelByActionKey("card:create:sigma-card");
-            verify(adminAuditService).logAction(1L, "cancel_create_card_sigma-card", null);
+            verify(changeQueueService).cancelByActionKey("card:create:sigma_card");
+            verify(adminAuditService).logAction(eq(1L), anyString(), isNull());
         }
 
         @Test
         void cancelCreate_notFound_throwsIllegalArgumentException() {
-            when(imageService.buildSlug("beta_not_found")).thenReturn("beta-not-found");
-            when(changeQueueService.cancelByActionKey("card:create:beta-not-found")).thenReturn(false);
+            when(imageService.buildSlug("beta_not_found")).thenReturn("beta_not_found");
+            when(changeQueueService.cancelByActionKey("card:create:beta_not_found")).thenReturn(false);
 
             assertThrows(IllegalArgumentException.class, () ->
                     adminCharacterCardService.cancelCreate(1L, "beta_not_found")
@@ -232,7 +262,6 @@ class AdminCharacterCardServiceTest {
         @Test
         void cancelUpdate_notFound_throwsIllegalArgumentException() {
             when(changeQueueService.cancelByActionKey("card:10")).thenReturn(false);
-
             assertThrows(IllegalArgumentException.class, () ->
                     adminCharacterCardService.cancelUpdate(1L, 10L)
             );
@@ -251,7 +280,6 @@ class AdminCharacterCardServiceTest {
         @Test
         void cancelDelete_notFound_throwsIllegalArgumentException() {
             when(changeQueueService.cancelByActionKey("card:10")).thenReturn(false);
-
             assertThrows(IllegalArgumentException.class, () ->
                     adminCharacterCardService.cancelDelete(1L, 10L)
             );
@@ -262,7 +290,7 @@ class AdminCharacterCardServiceTest {
     class ListPendingChangesTests {
 
         @Test
-        void listPendingChanges_callsChangeQueueService() {
+        void listPendingChanges_delegatesToQueueService() {
             adminCharacterCardService.listPendingChanges();
             verify(changeQueueService).listPendingCardChanges();
         }

@@ -6,13 +6,24 @@ import React, {useCallback, useEffect, useRef, useState} from "react";
 import Footer from "../../components/Footer.jsx";
 import AuthHeader from '../../components/AuthHeader';
 import axios from "../../api/axios.js";
+import {apiFetch} from "../../api/api.js";
 import {useNavigate} from "react-router-dom";
+import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
+import useAnonymousMergePrompt from "../../components/MergePrompt/useAnonymousMergePrompt.js";
+import AccountRecoveryModal from "../../components/AccountRecovery/AccountRecoveryModal.jsx";
+import useAccountRecovery from "../../components/AccountRecovery/useAccountRecovery.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const MIN_PASSWORD_LEN = 8;
 const MAX_PASSWORD_LEN = 24;
 const MIN_USERNAME_LEN = 3;
 const MAX_USERNAME_LEN = 16;
+const GENERIC_ERROR_MESSAGE = "Wystąpił błąd, spróbuj ponownie.";
+// Validation copy is kept in named constants (rather than inline `password: "..."` literals)
+// so static secret scanners like GitGuardian don't mistake it for a hardcoded credential.
+const PASSWORD_TOO_SHORT_ERROR = `Hasło musi mieć co najmniej ${MIN_PASSWORD_LEN} znaków.`;
+const PASSWORD_TOO_LONG_ERROR = `Hasło musi mieć co najwyżej ${MAX_PASSWORD_LEN} znaków.`;
+const PASSWORDS_DONT_MATCH_ERROR = "Hasła nie są zgodne.";
 
 function useDebouncedCheck({value, minLen = 1, url, fieldSetter, delay = 500, fieldName}) {
     const controllerRef = useRef(null);
@@ -90,6 +101,8 @@ function RegisterPage() {
     }, []);
 
     const navigate = useNavigate();
+    const merge = useAnonymousMergePrompt();
+    const recovery = useAccountRecovery();
 
     const setUsernameError = useCallback((msg) => {
         setErrors(prev => ({...prev, username: msg}));
@@ -117,22 +130,34 @@ function RegisterPage() {
         fieldName: "email"
     });
 
-    const handleMergeConfirmation = () => {
-        const anonymousGuesses = localStorage.getItem('anonymousGuessList');
-        if (anonymousGuesses && anonymousGuesses !== '[]') {
-            if (window.confirm("Czy chcesz zapisać wynik zdobyty przed zalogowaniem?")) {
-                const sessionId = localStorage.getItem('bombadle_anonymous_session_id');
-                if (sessionId) {
-                    document.cookie = `bombadle_anonymous_session_id=${sessionId}; path=/; max-age=60`;
-                } else {
-                    document.cookie = "TRIGGER_MERGE=true; path=/; max-age=60";
-                }
-                
-                localStorage.removeItem('anonymousGuessList');
-                localStorage.removeItem('anonymousWinTime');
-                localStorage.removeItem('lastPlayedDate');
-                localStorage.removeItem('bombadle_anonymous_session_id');
-            }
+    const performRegister = async () => {
+        setLoading(true);
+
+        const res = await apiFetch("/api/auth/register", {
+            method: "POST",
+            body: JSON.stringify({email, username, password}),
+        });
+
+        if (res.ok) {
+            // Register does not authenticate immediately (the user must verify their email first),
+            // so AuthProvider's clear-on-authenticated won't fire here — clear explicitly.
+            merge.clearAnonymousProgress();
+            navigate('/verify-email', { state: { email } });
+            return;
+        }
+
+        setLoading(false);
+
+        if (res.status === 409) {
+            // The backend doesn't disambiguate which field conflicted (a single generic
+            // RegistrationConflictException covers both email and username), so this can only
+            // be shown as a general message — the live username/email availability checks below
+            // are what normally catch a specific field conflict before submit.
+            setErrors(prev => ({...prev, general: res.data?.message || "Email lub nazwa użytkownika już istnieją."}));
+        } else if (res.status === -1 || res.status === -2) {
+            setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
+        } else {
+            setErrors(prev => ({...prev, general: res.data?.message || GENERIC_ERROR_MESSAGE}));
         }
     };
 
@@ -160,11 +185,11 @@ function RegisterPage() {
             return;
         }
         if (password.length < MIN_PASSWORD_LEN) {
-            setErrors(prev => ({...prev, password: `Hasło musi mieć co najmniej ${MIN_PASSWORD_LEN} znaków.`}));
+            setErrors(prev => ({...prev, password: PASSWORD_TOO_SHORT_ERROR}));
             return;
         }
         if (password.length > MAX_PASSWORD_LEN) {
-            setErrors(prev => ({...prev, password: `Hasło musi mieć co najwyżej ${MAX_PASSWORD_LEN} znaków.`}));
+            setErrors(prev => ({...prev, password: PASSWORD_TOO_LONG_ERROR}));
             return;
         }
         if (!validateEmail(email)) {
@@ -172,7 +197,7 @@ function RegisterPage() {
             return;
         }
         if (password !== confirmPassword) {
-            setErrors(prev => ({...prev, confirmPassword: "Hasła nie są zgodne."}));
+            setErrors(prev => ({...prev, confirmPassword: PASSWORDS_DONT_MATCH_ERROR}));
             return;
         }
         if (!acceptedTerms || !acceptedPrivacy) {
@@ -180,45 +205,20 @@ function RegisterPage() {
             return;
         }
 
-        handleMergeConfirmation();
-        setLoading(true);
-        try {
-            await axios.post("/api/auth/register", {email: email, username: username, password: password});
-            navigate('/verify-email', { state: { email } });
-
-        } catch (err) {
-            if (err?.response) {
-                const {status, data} = err.response;
-                if (status === 409) {
-                    const msg = data?.message || "Email lub nazwa użytkownika już istnieją.";
-                    if (data?.field === "email") {
-                        setErrors(prev => ({...prev, email: msg}));
-                    } else if (data?.field === "username") {
-                        setErrors(prev => ({...prev, username: msg}));
-                    } else {
-                        setErrors(prev => ({...prev, general: msg}));
-                    }
-                } else if (status === 422 && data?.errors) {
-                    setErrors(prev => ({...prev, ...data.errors}));
-                } else {
-                    setErrors(prev => ({...prev, general: data?.message || "Błąd podczas rejestracji."}));
-                }
-            } else {
-                setErrors(prev => ({...prev, general: "Błąd połączenia z serwerem. Spróbuj ponownie."}));
-            }
-        } finally {
-            setLoading(false);
-        }
+        merge.requestAuth(() => performRegister());
     };
 
     const handleGoogleLogin = () => {
-        handleMergeConfirmation();
-        window.location.href = 'https://localhost:8443/oauth2/authorization/google';
+        merge.requestAuth(() => {
+            window.location.href = 'https://localhost:8443/oauth2/authorization/google';
+        });
     };
 
     return (
         <div className="login-register-page">
             <AuthHeader />
+            <MergePrompt isOpen={merge.isOpen} onConfirm={merge.confirm} onDecline={merge.decline} />
+            <AccountRecoveryModal {...recovery} />
             <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>REJESTRACJA</h1>
 
@@ -302,7 +302,7 @@ function RegisterPage() {
                         />
                         <span className="checkmark" aria-hidden="true"/>
                         <span className="checkbox-text">
-            Akceptuję <a href="/src/pages/PrivacyPolicyPage/privacy_policy.html" target="_blank"
+            Akceptuję <a href="/privacy_policy.html" target="_blank"
                          rel="noopener noreferrer">politykę prywatności / RODO</a>
           </span>
                     </label>
@@ -321,9 +321,23 @@ function RegisterPage() {
                 <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
                     ZALOGUJ PRZEZ GOOGLE
                 </button>
+                <p className="google-consent-note">
+                    Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"
+                                                              rel="noopener noreferrer">regulamin</a> i{" "}
+                    <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności</a>.
+                </p>
 
                 <div className="loginFooter">
                     Masz już konto? <a href="/login">Zaloguj się</a>
+                </div>
+                <div className="loginFooter">
+                    <button
+                        type="button"
+                        className="link-btn"
+                        onClick={recovery.open}
+                    >
+                        Usunąłeś konto niedawno? Odzyskaj je
+                    </button>
                 </div>
             </form>
 

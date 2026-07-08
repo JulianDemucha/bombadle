@@ -1,0 +1,5 @@
+# Dev only: Exposes backend port to host for local Vite. Ignored in prod/
+services:
+  backend:
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"

@@ -13,8 +13,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,9 +37,18 @@ class StatelessCsrfValidationFilterTest {
     private final String validToken = "valid-csrf-token";
     private final Cookie validCookie = new Cookie("XSRF-TOKEN", validToken);
 
+    private static final String EXPECTED_CSRF_ERROR_BODY =
+            "{\"statusCode\":403,\"error\":\"CSRF_TOKEN_INVALID\",\"message\":\"Invalid or missing CSRF token\"}";
+
     @BeforeEach
     void setUp() {
         filter = new StatelessCsrfValidationFilter(List.of("/api/auth", "/public"));
+    }
+
+    private StringWriter stubResponseWriter() throws IOException {
+        StringWriter stringWriter = new StringWriter();
+        when(response.getWriter()).thenReturn(new PrintWriter(stringWriter));
+        return stringWriter;
     }
 
     @Nested
@@ -90,8 +102,9 @@ class StatelessCsrfValidationFilterTest {
         }
 
         @Test
-        void doFilterInternal_protectedMethodWithoutCookies_sendsForbidden() throws ServletException, IOException {
+        void doFilterInternal_protectedMethodWithoutCookies_writesJsonForbiddenBody() throws ServletException, IOException {
             // Arrange
+            StringWriter body = stubResponseWriter();
             when(request.getRequestURI()).thenReturn("/api/data");
             when(request.getMethod()).thenReturn("POST");
             when(request.getCookies()).thenReturn(null);
@@ -101,13 +114,16 @@ class StatelessCsrfValidationFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Assert
-            verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid CSRF Token");
+            verify(response).setStatus(HttpServletResponse.SC_FORBIDDEN);
+            verify(response).setContentType("application/json");
+            assertEquals(EXPECTED_CSRF_ERROR_BODY, body.toString());
             verifyNoInteractions(filterChain);
         }
 
         @Test
-        void doFilterInternal_protectedMethodWithMissingCookieToken_sendsForbidden() throws ServletException, IOException {
+        void doFilterInternal_protectedMethodWithMissingCookieToken_writesJsonForbiddenBody() throws ServletException, IOException {
             // Arrange
+            StringWriter body = stubResponseWriter();
             when(request.getRequestURI()).thenReturn("/api/data");
             when(request.getMethod()).thenReturn("PUT");
             when(request.getCookies()).thenReturn(new Cookie[]{new Cookie("OTHER_COOKIE", "value")});
@@ -117,13 +133,16 @@ class StatelessCsrfValidationFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Assert
-            verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid CSRF Token");
+            verify(response).setStatus(HttpServletResponse.SC_FORBIDDEN);
+            verify(response).setContentType("application/json");
+            assertEquals(EXPECTED_CSRF_ERROR_BODY, body.toString());
             verifyNoInteractions(filterChain);
         }
 
         @Test
-        void doFilterInternal_protectedMethodWithMissingHeaderToken_sendsForbidden() throws ServletException, IOException {
+        void doFilterInternal_protectedMethodWithMissingHeaderToken_writesJsonForbiddenBody() throws ServletException, IOException {
             // Arrange
+            StringWriter body = stubResponseWriter();
             when(request.getRequestURI()).thenReturn("/api/data");
             when(request.getMethod()).thenReturn("DELETE");
             when(request.getCookies()).thenReturn(new Cookie[]{validCookie});
@@ -133,13 +152,16 @@ class StatelessCsrfValidationFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Assert
-            verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid CSRF Token");
+            verify(response).setStatus(HttpServletResponse.SC_FORBIDDEN);
+            verify(response).setContentType("application/json");
+            assertEquals(EXPECTED_CSRF_ERROR_BODY, body.toString());
             verifyNoInteractions(filterChain);
         }
 
         @Test
-        void doFilterInternal_protectedMethodWithMismatchedTokens_sendsForbidden() throws ServletException, IOException {
+        void doFilterInternal_protectedMethodWithMismatchedTokens_writesJsonForbiddenBody() throws ServletException, IOException {
             // Arrange
+            StringWriter body = stubResponseWriter();
             when(request.getRequestURI()).thenReturn("/api/data");
             when(request.getMethod()).thenReturn("PATCH");
             when(request.getCookies()).thenReturn(new Cookie[]{validCookie});
@@ -149,7 +171,9 @@ class StatelessCsrfValidationFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Assert
-            verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid CSRF Token");
+            verify(response).setStatus(HttpServletResponse.SC_FORBIDDEN);
+            verify(response).setContentType("application/json");
+            assertEquals(EXPECTED_CSRF_ERROR_BODY, body.toString());
             verifyNoInteractions(filterChain);
         }
     }

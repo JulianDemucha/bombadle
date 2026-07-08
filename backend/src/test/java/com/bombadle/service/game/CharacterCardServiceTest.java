@@ -90,4 +90,19 @@ class CharacterCardServiceTest {
         assertEquals(card, result);
         verify(repo).findRandomCard();
     }
+
+    @Test
+    void findRandomCardExcluding_called_delegatesToRepositoryWithSameExclusions() {
+        // Arrange
+        CharacterCard card = mock(CharacterCard.class);
+        List<Long> excludedIds = List.of(1L, 2L);
+        when(repo.findRandomCardExcluding(excludedIds)).thenReturn(card);
+
+        // Act
+        CharacterCard result = characterCardService.findRandomCardExcluding(excludedIds);
+
+        // Assert
+        assertEquals(card, result);
+        verify(repo).findRandomCardExcluding(excludedIds);
+    }
 }

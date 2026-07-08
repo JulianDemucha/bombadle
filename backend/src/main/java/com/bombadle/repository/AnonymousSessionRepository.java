@@ -24,4 +24,13 @@ public interface AnonymousSessionRepository extends JpaRepository<AnonymousSessi
     void updateLastActiveAtBulk(@Param("ids") Set<UUID> ids, @Param("now") Instant now);
 
     int countByLastActiveAtAfter(Instant threshold);
+
+    /**
+     * Counts anonymous sessions whose {@code completed_modes_today} JSONB array contains the given
+     * mode. The set is cleared by the daily reset (the table is truncated), so this is inherently a
+     * "solved today" count and needs no date filtering.
+     */
+    @Query(value = "SELECT COUNT(*) FROM anonymous_session WHERE jsonb_exists(completed_modes_today, :mode)",
+            nativeQuery = true)
+    long countByCompletedModeToday(@Param("mode") String mode);
 }

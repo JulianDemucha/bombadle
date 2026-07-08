@@ -5,6 +5,8 @@ import Footer from "../../../components/Footer.jsx";
 import ImgTextBanner from "../../../components/ImgTextBanner.jsx";
 import CharacterSearchBar from "../../../components/CharacterSearchBar.jsx";
 import Top3Leaderboard from '../../../components/Top3Leaderboard.jsx';
+import NavImgButton from '../../../components/NavImgButton.jsx';
+import DailyResetTimer from '../../../components/DailyResetTimer.jsx';
 import PreviousCharacterCard from "../ClassicModePage/components/PreviousCharacterCard.jsx";
 import useImagesModeGame from './hooks/useImagesModeGame.js';
 import GlobalLoader from '../../../components/GlobalLoader.jsx';
@@ -18,6 +20,7 @@ function ImagesModePage() {
         isLeaderboardExpanded,
         isAnimatingSuccess,
         topThree,
+        todaySolvers,
         currentUserRow,
         isCurrentUserInTopThree,
         handleSelectCharacterId,
@@ -55,7 +58,8 @@ function ImagesModePage() {
 
     return (
         <div className="images-mode-page classic-mode-page">
-            <Header/>
+            <Header showBackButton/>
+            <DailyResetTimer/>
             <div className="classic-mode-content">
                 <ImgTextBanner text="Zgadnij postać ze zdjęcia!" altText="Zgadnij ze zdjęcia"/>
 
@@ -122,6 +126,7 @@ function ImagesModePage() {
                             showSeparator={showSeparator}
                             currentUserRow={currentUserRow}
                             isAnonymousAndWon={isAnonymousAndWon}
+                            dailyCounterText={`dziś zgadło ${todaySolvers} graczy`}
                             leaderboardPath="/leaderboard/images"
                         />
                     ) : (
@@ -129,6 +134,7 @@ function ImagesModePage() {
                             topThree={topThree}
                             ctaLabel="Zobacz pełny ranking"
                             className={hasGuesses ? 'leaderboard-section--after-guesses' : ''}
+                            dailyCounterText={`dziś zgadło ${todaySolvers} graczy`}
                             leaderboardPath="/leaderboard/images"
                         />
                     )}
@@ -137,6 +143,15 @@ function ImagesModePage() {
                         <PreviousCharacterCard endpoint="/api/character-card/IMAGES/previous-character-card"/>
                     </div>
                 </div>
+
+                <NavImgButton
+                    to="/login"
+                    imgSrc="/src/assets/buttons/login_button.png"
+                    altText="Zaloguj się"
+                    className="image-button login-mobile"
+                    hideIfAuthenticated={true}
+                />
+
             </div>
             <Footer/>
         </div>

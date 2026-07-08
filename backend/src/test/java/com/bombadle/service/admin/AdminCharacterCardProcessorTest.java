@@ -4,26 +4,40 @@ import com.bombadle.dto.queue.PendingCardCreatePayload;
 import com.bombadle.dto.queue.PendingCardDeletePayload;
 import com.bombadle.dto.queue.PendingCardUpdatePayload;
 import com.bombadle.dto.request.AdminCharacterCardRequest;
+import com.bombadle.dto.request.AdminCharacterCardUpdateRequest;
+import com.bombadle.dto.request.AdminQuoteRequest;
 import com.bombadle.entity.CharacterCard;
-import com.bombadle.enums.Affiliation;
-import com.bombadle.enums.Color;
+import com.bombadle.entity.CurrentCardState;
+import com.bombadle.entity.Quote;
+import com.bombadle.enums.GameMode;
 import com.bombadle.enums.Gender;
-import com.bombadle.enums.Race;
 import com.bombadle.repository.CharacterCardRepository;
+import com.bombadle.repository.CurrentCardStateRepository;
+import com.bombadle.repository.QuoteRepository;
 import com.bombadle.service.cache.CacheService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,231 +46,368 @@ class AdminCharacterCardProcessorTest {
     @InjectMocks
     private AdminCharacterCardProcessor processor;
 
-    @Mock
-    private CharacterCardRepository repository;
+    @Mock private CharacterCardRepository characterCardRepository;
+    @Mock private QuoteRepository quoteRepository;
+    @Mock private CurrentCardStateRepository currentCardStateRepository;
+    @Mock private CharacterCardImageService imageService;
+    @Mock private GuessImageGeneratorService guessImageGenerator;
+    @Mock private CacheService cacheService;
 
-    @Mock
-    private CharacterCardImageService imageService;
+    @TempDir
+    Path tempDir;
 
-    @Mock
-    private CacheService cacheService;
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private AdminQuoteRequest validQuote() {
+        return new AdminQuoteRequest("Who said it?", List.of("A", "B"), "A", "SPEAKER", 1);
+    }
+
+    private AdminCharacterCardRequest createRequest(String name) {
+        return new AdminCharacterCardRequest(name, "MALE", null, null, null, null, null, null,
+                List.of(validQuote()));
+    }
+
+    private AdminCharacterCardUpdateRequest updateRequest(String name) {
+        return new AdminCharacterCardUpdateRequest(name, null, null, null, null, null, null, null,
+                null, null);
+    }
+
+    private CharacterCard cardWithId(Long id) {
+        CharacterCard c = CharacterCard.createNewEmpty();
+        c.setId(id);
+        c.setName("Existing Card");
+        c.setGender(Gender.MALE);
+        return c;
+    }
+
+    private void stubSaveAndFlushWithId(Long id) {
+        when(characterCardRepository.saveAndFlush(any())).thenAnswer(inv -> {
+            CharacterCard c = inv.getArgument(0);
+            c.setId(id);
+            return c;
+        });
+    }
+
+    private TransactionSynchronization captureRegisteredSynchronization(MockedStatic<TransactionSynchronizationManager> txMgr) {
+        ArgumentCaptor<TransactionSynchronization> captor = ArgumentCaptor.forClass(TransactionSynchronization.class);
+        txMgr.verify(() -> TransactionSynchronizationManager.registerSynchronization(captor.capture()));
+        return captor.getValue();
+    }
+
+    // ── processCreate ─────────────────────────────────────────────────────────
 
     @Nested
     class ProcessCreateTests {
 
         @Test
-        void processCreate_nameAlreadyExists_throwsIllegalArgumentException() {
-            // Arrange
-            AdminCharacterCardRequest req = new AdminCharacterCardRequest(
-                    "sigma_name", "MALE", "Czlowiek", true, Set.of("ZIELONY"),
-                    Set.of("Gwiezdna_Flota"), 1, Set.of()
-            );
-            PendingCardCreatePayload payload = new PendingCardCreatePayload(req, "sigma/path.jpg");
-            when(repository.existsByName("sigma_name")).thenReturn(true);
+        void nameAlreadyExists_throws_doesNotSave() {
+            when(characterCardRepository.existsByName("Sigma")).thenReturn(true);
+            PendingCardCreatePayload payload = new PendingCardCreatePayload(createRequest("Sigma"), "tmp.jpg", "guess.jpg");
 
-            // Act & Assert
-            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                    processor.processCreate(payload)
-            );
-
-            assertEquals("Character card name already exists: sigma_name", exception.getMessage());
-            verify(repository, never()).save(any());
+            assertThrows(IllegalArgumentException.class, () -> processor.processCreate(payload));
+            verify(characterCardRepository, never()).saveAndFlush(any());
         }
 
         @Test
-        void processCreate_validPayloadWithTempImage_savesCardAndAppliesImage() throws IOException {
-            // Arrange
-            AdminCharacterCardRequest req = new AdminCharacterCardRequest(
-                    "sigma_card", "MALE", "Czlowiek", true, Set.of("ZIELONY"),
-                    Set.of("Gwiezdna_Flota"), 1, Set.of("sigma_alias")
-            );
-            PendingCardCreatePayload payload = new PendingCardCreatePayload(req, "sigma/path.jpg");
-            when(repository.existsByName("sigma_card")).thenReturn(false);
-            when(imageService.buildImageSrc("sigma_card")).thenReturn("/images/sigma-card.png");
+        void validPayload_savesCardWithCorrectFields_andCreatesQuote() {
+            AdminCharacterCardRequest req = createRequest("Sigma");
+            PendingCardCreatePayload payload = new PendingCardCreatePayload(req, "tmp.jpg", "guess.jpg");
 
-            // Act
-            processor.processCreate(payload);
+            when(characterCardRepository.existsByName("Sigma")).thenReturn(false);
+            stubSaveAndFlushWithId(42L);
+            when(imageService.buildImageSrc(42L)).thenReturn("/images/character_cards/42.jpg");
 
-            // Assert
+            try (MockedStatic<TransactionSynchronizationManager> txMgr = mockStatic(TransactionSynchronizationManager.class)) {
+                processor.processCreate(payload);
+            }
+
             ArgumentCaptor<CharacterCard> captor = ArgumentCaptor.forClass(CharacterCard.class);
-            verify(repository).save(captor.capture());
-            CharacterCard savedCard = captor.getValue();
-
-            assertEquals("sigma_card", savedCard.getName());
-            assertEquals("/images/sigma-card.png", savedCard.getImageSrc());
-            assertEquals(Gender.MALE, savedCard.getGender());
-            assertEquals(Race.Czlowiek, savedCard.getRace());
-            assertTrue(savedCard.getAlive());
-            assertTrue(savedCard.getColors().contains(Color.ZIELONY));
-            assertTrue(savedCard.getAffiliations().contains(Affiliation.Gwiezdna_Flota));
-            assertEquals(1, savedCard.getFirstAppearanceEpisode());
-            assertTrue(savedCard.getAliases().contains("sigma_alias"));
-
-            verify(imageService).applyPendingImage("sigma/path.jpg", "sigma_card");
+            verify(characterCardRepository).saveAndFlush(captor.capture());
+            assertEquals("Sigma", captor.getValue().getName());
+            assertEquals(Gender.MALE, captor.getValue().getGender());
+            assertEquals("/images/character_cards/42.jpg", captor.getValue().getImageSrc());
+            verify(quoteRepository).save(any(Quote.class));
         }
 
         @Test
-        void processCreate_validPayloadWithoutTempImage_savesCardWithoutApplyingImage() throws IOException {
-            // Arrange
-            AdminCharacterCardRequest req = new AdminCharacterCardRequest(
-                    "beta_card", null, null, null, null, null, null, null
-            );
-            PendingCardCreatePayload payload = new PendingCardCreatePayload(req, null);
-            when(repository.existsByName("beta_card")).thenReturn(false);
-            when(imageService.buildImageSrc("beta_card")).thenReturn("/images/beta-card.png");
+        void validPayload_afterCommit_appliesDisplayImageAndGeneratesGuessImages() throws IOException {
+            Path tempImg = Files.createFile(tempDir.resolve("display.jpg"));
+            Path tempGuess = Files.createFile(tempDir.resolve("guess.jpg"));
+            Path guessOutputDir = tempDir.resolve("output");
 
-            // Act
-            processor.processCreate(payload);
+            when(characterCardRepository.existsByName("Sigma")).thenReturn(false);
+            stubSaveAndFlushWithId(42L);
+            when(imageService.buildImageSrc(42L)).thenReturn("/images/character_cards/42.jpg");
+            when(imageService.getGuessImageOutputDir(42L)).thenReturn(guessOutputDir);
 
-            // Assert
-            verify(repository).save(any(CharacterCard.class));
-            verify(imageService, never()).applyPendingImage(anyString(), anyString());
-            verify(imageService, never()).renameImage(anyString(), anyString());
+            PendingCardCreatePayload payload = new PendingCardCreatePayload(
+                    createRequest("Sigma"), tempImg.toString(), tempGuess.toString());
+
+            try (MockedStatic<TransactionSynchronizationManager> txMgr = mockStatic(TransactionSynchronizationManager.class)) {
+                processor.processCreate(payload);
+                captureRegisteredSynchronization(txMgr).afterCommit();
+            }
+
+            verify(imageService).scaleAndApplyDisplayImage(tempImg.toString(), 42L);
+            verify(guessImageGenerator).generateGuessImages(any(), eq(guessOutputDir));
         }
     }
+
+    // ── processUpdate ─────────────────────────────────────────────────────────
 
     @Nested
     class ProcessUpdateTests {
 
         @Test
-        void processUpdate_cardNotFound_throwsIllegalArgumentException() {
-            // Arrange
-            AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", null, null,
-                    null, null, null, null, null);
-            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(1L, req, "sigma_temp.jpg", "beta_name");
-            when(repository.findById(1L)).thenReturn(Optional.empty());
+        void cardNotFound_throws() {
+            when(characterCardRepository.findById(1L)).thenReturn(Optional.empty());
+            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(1L, updateRequest("X"), null, null);
 
-            // Act & Assert
-            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                    processor.processUpdate(payload)
-            );
-
-            assertEquals("Character card not found: 1", exception.getMessage());
-            verify(repository, never()).save(any());
+            assertThrows(IllegalArgumentException.class, () -> processor.processUpdate(payload));
         }
 
         @Test
-        void processUpdate_newNameAlreadyExists_throwsIllegalArgumentException() {
-            // Arrange
-            CharacterCard existingCard = CharacterCard.createNewEmpty();
-            existingCard.setName("beta_name");
-            AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", null, null,
-                    null, null, null, null, null);
-            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(1L, req, null, "beta_name");
+        void newNameCollision_throws_doesNotSave() {
+            CharacterCard existing = cardWithId(1L);
+            existing.setName("OldName");
+            when(characterCardRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(characterCardRepository.existsByName("NewName")).thenReturn(true);
 
-            when(repository.findById(1L)).thenReturn(Optional.of(existingCard));
-            when(repository.existsByName("sigma_name")).thenReturn(true);
+            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(1L, updateRequest("NewName"), null, null);
 
-            // Act & Assert
-            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                    processor.processUpdate(payload)
-            );
-
-            assertEquals("Character card name already exists: sigma_name", exception.getMessage());
-            verify(repository, never()).save(any());
+            assertThrows(IllegalArgumentException.class, () -> processor.processUpdate(payload));
+            verify(characterCardRepository, never()).saveAndFlush(any());
         }
 
         @Test
-        void processUpdate_validPayloadWithTempImage_updatesCardAndAppliesImage() throws IOException {
-            // Arrange
-            CharacterCard existingCard = CharacterCard.createNewEmpty();
-            existingCard.setName("beta_name");
-            AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", "FEMALE", null,
-                    null, null, null, null, null);
-            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(1L, req, "sigma_temp.jpg", "beta_name");
+        void noImages_updatesFieldsOnly_doesNotRegisterSynchronization() {
+            CharacterCard existing = cardWithId(5L);
+            when(characterCardRepository.findById(5L)).thenReturn(Optional.of(existing));
+            when(characterCardRepository.saveAndFlush(any())).thenReturn(existing);
+            when(imageService.buildImageSrc(5L)).thenReturn("/images/character_cards/5.jpg");
 
-            when(repository.findById(1L)).thenReturn(Optional.of(existingCard));
-            when(repository.existsByName("sigma_name")).thenReturn(false);
-            when(imageService.buildImageSrc("sigma_name")).thenReturn("/images/sigma-name.png");
+            AdminCharacterCardUpdateRequest req = new AdminCharacterCardUpdateRequest(
+                    null, "FEMALE", null, null, null, null, null, null, null, null);
+            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(5L, req, null, null);
 
-            // Act
             processor.processUpdate(payload);
 
-            // Assert
-            verify(repository).save(existingCard);
-            assertEquals("sigma_name", existingCard.getName());
-            assertEquals(Gender.FEMALE, existingCard.getGender());
-            assertEquals("/images/sigma-name.png", existingCard.getImageSrc());
-
-            verify(imageService).applyPendingImage("sigma_temp.jpg", "sigma_name");
-            verify(imageService, never()).renameImage(anyString(), anyString());
+            verify(characterCardRepository).saveAndFlush(existing);
+            verifyNoInteractions(guessImageGenerator);
         }
 
         @Test
-        void processUpdate_nameChangedWithoutTempImage_updatesCardAndRenamesImage() throws IOException {
-            // Arrange
-            CharacterCard existingCard = CharacterCard.createNewEmpty();
-            existingCard.setName("beta_name");
-            AdminCharacterCardRequest req = new AdminCharacterCardRequest("sigma_name", null, null,
-                    null, null, null, null, null);
-            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(1L, req, null, "beta_name");
+        void withImages_schedulesAfterCommit_appliesBothImages() throws IOException {
+            Path tempImg = Files.createFile(tempDir.resolve("display.jpg"));
+            Path tempGuess = Files.createFile(tempDir.resolve("guess.jpg"));
+            Path guessOutputDir = tempDir.resolve("output");
 
-            when(repository.findById(1L)).thenReturn(Optional.of(existingCard));
-            when(repository.existsByName("sigma_name")).thenReturn(false);
-            when(imageService.buildImageSrc("sigma_name")).thenReturn("/images/sigma-name.png");
+            CharacterCard existing = cardWithId(5L);
+            when(characterCardRepository.findById(5L)).thenReturn(Optional.of(existing));
+            when(characterCardRepository.saveAndFlush(any())).thenReturn(existing);
+            when(imageService.buildImageSrc(5L)).thenReturn("/images/character_cards/5.jpg");
+            when(imageService.getGuessImageOutputDir(5L)).thenReturn(guessOutputDir);
 
-            // Act
-            processor.processUpdate(payload);
+            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(
+                    5L, updateRequest(null), tempImg.toString(), tempGuess.toString());
 
-            // Assert
-            verify(repository).save(existingCard);
-            verify(imageService, never()).applyPendingImage(anyString(), anyString());
-            verify(imageService).renameImage("beta_name", "sigma_name");
+            try (MockedStatic<TransactionSynchronizationManager> txMgr = mockStatic(TransactionSynchronizationManager.class)) {
+                processor.processUpdate(payload);
+                captureRegisteredSynchronization(txMgr).afterCommit();
+            }
+
+            verify(imageService).scaleAndApplyDisplayImage(tempImg.toString(), 5L);
+            verify(guessImageGenerator).generateGuessImages(any(), eq(guessOutputDir));
         }
 
         @Test
-        void processUpdate_nameNotProvided_keepsOldNameAndUpdatesOtherFields() throws IOException {
-            // Arrange
-            CharacterCard existingCard = CharacterCard.createNewEmpty();
-            existingCard.setName("sigma_name");
-            AdminCharacterCardRequest req = new AdminCharacterCardRequest(" ", "MALE", null,
-                    null, null, null, null, null);
-            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(1L, req, null, "sigma_name");
+        void quoteIdsToRemove_nullsCurrentCardStateRefFirst_thenDeletesQuote() {
+            CharacterCard existing = cardWithId(5L);
+            when(characterCardRepository.findById(5L)).thenReturn(Optional.of(existing));
+            when(characterCardRepository.saveAndFlush(any())).thenReturn(existing);
+            when(imageService.buildImageSrc(5L)).thenReturn("/images/character_cards/5.jpg");
 
-            when(repository.findById(1L)).thenReturn(Optional.of(existingCard));
-            when(imageService.buildImageSrc("sigma_name")).thenReturn("/images/sigma-name.png");
+            Quote quote = mock(Quote.class);
+            when(quote.getId()).thenReturn(10L);
+            when(quote.getCharacterCard()).thenReturn(existing);
+            when(quoteRepository.findById(10L)).thenReturn(Optional.of(quote));
 
-            // Act
+            CurrentCardState state = new CurrentCardState();
+            state.setCurrentQuote(quote);
+            when(currentCardStateRepository.findById(1)).thenReturn(Optional.of(state));
+
+            AdminCharacterCardUpdateRequest req = new AdminCharacterCardUpdateRequest(
+                    null, null, null, null, null, null, null, null, null, List.of(10L));
+            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(5L, req, null, null);
+
             processor.processUpdate(payload);
 
-            // Assert
-            verify(repository, never()).existsByName(anyString());
-            verify(repository).save(existingCard);
-            assertEquals("sigma_name", existingCard.getName());
-            assertEquals(Gender.MALE, existingCard.getGender());
+            assertNull(state.getCurrentQuote());
+            verify(currentCardStateRepository).save(state);
+            verify(quoteRepository).delete(quote);
+        }
 
-            verify(imageService, never()).applyPendingImage(anyString(), anyString());
-            verify(imageService, never()).renameImage(anyString(), anyString());
+        @Test
+        void quoteIdsToRemove_quoteFromWrongCard_throws() {
+            CharacterCard existing = cardWithId(5L);
+            CharacterCard otherCard = cardWithId(99L);
+            when(characterCardRepository.findById(5L)).thenReturn(Optional.of(existing));
+            when(characterCardRepository.saveAndFlush(any())).thenReturn(existing);
+            when(imageService.buildImageSrc(5L)).thenReturn("/images/character_cards/5.jpg");
+
+            Quote quote = mock(Quote.class);
+            when(quote.getCharacterCard()).thenReturn(otherCard);
+            when(quoteRepository.findById(10L)).thenReturn(Optional.of(quote));
+
+            AdminCharacterCardUpdateRequest req = new AdminCharacterCardUpdateRequest(
+                    null, null, null, null, null, null, null, null, null, List.of(10L));
+            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(5L, req, null, null);
+
+            assertThrows(IllegalArgumentException.class, () -> processor.processUpdate(payload));
+            verify(quoteRepository, never()).delete(any());
+        }
+
+        @Test
+        void quotesToAdd_createsNewQuotes() {
+            CharacterCard existing = cardWithId(5L);
+            when(characterCardRepository.findById(5L)).thenReturn(Optional.of(existing));
+            when(characterCardRepository.saveAndFlush(any())).thenReturn(existing);
+            when(imageService.buildImageSrc(5L)).thenReturn("/images/character_cards/5.jpg");
+
+            AdminCharacterCardUpdateRequest req = new AdminCharacterCardUpdateRequest(
+                    null, null, null, null, null, null, null, null,
+                    List.of(validQuote(), validQuote()), null);
+            PendingCardUpdatePayload payload = new PendingCardUpdatePayload(5L, req, null, null);
+
+            processor.processUpdate(payload);
+
+            verify(quoteRepository, times(2)).save(any(Quote.class));
         }
     }
+
+    // ── processDelete ─────────────────────────────────────────────────────────
 
     @Nested
     class ProcessDeleteTests {
 
         @Test
-        void processDelete_cardExists_deletesCard() {
-            // Arrange
-            PendingCardDeletePayload payload = new PendingCardDeletePayload(1L);
-            when(repository.existsById(1L)).thenReturn(true);
+        void cardNotFound_skipsWithoutError() {
+            when(characterCardRepository.existsById(99L)).thenReturn(false);
 
-            // Act
-            processor.processDelete(payload);
+            processor.processDelete(new PendingCardDeletePayload(99L));
 
-            // Assert
-            verify(repository).deleteById(1L);
+            verify(characterCardRepository, never()).deleteById(anyLong());
+            verifyNoInteractions(currentCardStateRepository);
         }
 
         @Test
-        void processDelete_cardDoesNotExist_doesNothing() {
-            // Arrange
-            PendingCardDeletePayload payload = new PendingCardDeletePayload(1L);
-            when(repository.existsById(1L)).thenReturn(false);
+        void cardFound_deletesCard_schedulesFileDeletionAfterCommit() throws IOException {
+            when(characterCardRepository.existsById(5L)).thenReturn(true);
+            when(currentCardStateRepository.findById(1)).thenReturn(Optional.empty());
 
-            // Act
-            processor.processDelete(payload);
+            try (MockedStatic<TransactionSynchronizationManager> txMgr = mockStatic(TransactionSynchronizationManager.class)) {
+                processor.processDelete(new PendingCardDeletePayload(5L));
 
-            // Assert
-            verify(repository, never()).deleteById(anyLong());
+                verify(characterCardRepository).deleteById(5L);
+
+                captureRegisteredSynchronization(txMgr).afterCommit();
+            }
+
+            verify(imageService).deleteDisplayImage(5L);
+            verify(imageService).deleteGuessImageDir(5L);
+        }
+
+        @Test
+        void cardInCurrentCards_removedBeforeDelete() {
+            CharacterCard card = cardWithId(5L);
+            CurrentCardState state = new CurrentCardState();
+            state.getCurrentCards().put(GameMode.CLASSIC, card);
+
+            when(characterCardRepository.existsById(5L)).thenReturn(true);
+            when(currentCardStateRepository.findById(1)).thenReturn(Optional.of(state));
+
+            try (MockedStatic<TransactionSynchronizationManager> txMgr = mockStatic(TransactionSynchronizationManager.class)) {
+                processor.processDelete(new PendingCardDeletePayload(5L));
+            }
+
+            assertFalse(state.getCurrentCards().containsKey(GameMode.CLASSIC));
+            verify(currentCardStateRepository).save(state);
+            verify(characterCardRepository).deleteById(5L);
+        }
+
+        @Test
+        void cardInPreviousCards_removedBeforeDelete() {
+            CharacterCard card = cardWithId(5L);
+            CurrentCardState state = new CurrentCardState();
+            state.getPreviousCards().put(GameMode.CLASSIC, card);
+
+            when(characterCardRepository.existsById(5L)).thenReturn(true);
+            when(currentCardStateRepository.findById(1)).thenReturn(Optional.of(state));
+
+            try (MockedStatic<TransactionSynchronizationManager> txMgr = mockStatic(TransactionSynchronizationManager.class)) {
+                processor.processDelete(new PendingCardDeletePayload(5L));
+            }
+
+            assertFalse(state.getPreviousCards().containsKey(GameMode.CLASSIC));
+            verify(currentCardStateRepository).save(state);
+        }
+
+        @Test
+        void cardHasCurrentQuote_quotedNulledBeforeDelete() {
+            CharacterCard card = cardWithId(5L);
+            Quote quote = mock(Quote.class);
+            when(quote.getCharacterCard()).thenReturn(card);
+
+            CurrentCardState state = new CurrentCardState();
+            state.setCurrentQuote(quote);
+
+            when(characterCardRepository.existsById(5L)).thenReturn(true);
+            when(currentCardStateRepository.findById(1)).thenReturn(Optional.of(state));
+
+            try (MockedStatic<TransactionSynchronizationManager> txMgr = mockStatic(TransactionSynchronizationManager.class)) {
+                processor.processDelete(new PendingCardDeletePayload(5L));
+            }
+
+            assertNull(state.getCurrentQuote());
+            verify(currentCardStateRepository).save(state);
+            verify(characterCardRepository).deleteById(5L);
+        }
+
+        @Test
+        void cardHasPreviousQuote_quotedNulledBeforeDelete() {
+            CharacterCard card = cardWithId(5L);
+            Quote quote = mock(Quote.class);
+            when(quote.getCharacterCard()).thenReturn(card);
+
+            CurrentCardState state = new CurrentCardState();
+            state.setPreviousQuote(quote);
+
+            when(characterCardRepository.existsById(5L)).thenReturn(true);
+            when(currentCardStateRepository.findById(1)).thenReturn(Optional.of(state));
+
+            try (MockedStatic<TransactionSynchronizationManager> txMgr = mockStatic(TransactionSynchronizationManager.class)) {
+                processor.processDelete(new PendingCardDeletePayload(5L));
+            }
+
+            assertNull(state.getPreviousQuote());
+            verify(currentCardStateRepository).save(state);
+        }
+
+        @Test
+        void cardNotInCurrentCardState_stateNotSaved() {
+            CharacterCard otherCard = cardWithId(99L);
+            CurrentCardState state = new CurrentCardState();
+            state.getCurrentCards().put(GameMode.CLASSIC, otherCard);
+
+            when(characterCardRepository.existsById(5L)).thenReturn(true);
+            when(currentCardStateRepository.findById(1)).thenReturn(Optional.of(state));
+
+            try (MockedStatic<TransactionSynchronizationManager> txMgr = mockStatic(TransactionSynchronizationManager.class)) {
+                processor.processDelete(new PendingCardDeletePayload(5L));
+            }
+
+            verify(currentCardStateRepository, never()).save(any());
+            verify(characterCardRepository).deleteById(5L);
         }
     }
 }

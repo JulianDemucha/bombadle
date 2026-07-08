@@ -1,12 +1,11 @@
 package com.bombadle.dto.queue;
 
-import com.bombadle.dto.request.AdminCharacterCardRequest;
+import com.bombadle.dto.request.AdminCharacterCardUpdateRequest;
 
 public record PendingCardUpdatePayload(
         Long id,
-        AdminCharacterCardRequest card,
+        AdminCharacterCardUpdateRequest card,
         String tempImagePath,
-        String previousName
+        String tempGuessImagePath
 ) {
 }
-

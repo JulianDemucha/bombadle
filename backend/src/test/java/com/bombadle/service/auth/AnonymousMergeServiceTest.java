@@ -4,6 +4,7 @@ import com.bombadle.dto.ClassicGuessAttempt;
 import com.bombadle.dto.GuessAttempt;
 import com.bombadle.entity.*;
 import com.bombadle.enums.GameMode;
+import com.bombadle.service.cache.CacheService;
 import com.bombadle.service.game.GuessListService;
 import com.bombadle.service.game.ScoreRegistrationService;
 import com.bombadle.service.player.AnonymousSessionService;
@@ -38,6 +39,9 @@ public class AnonymousMergeServiceTest {
 
     @Mock
     private ScoreRegistrationService scoreRegistrationService;
+
+    @Mock
+    private CacheService cacheService;
 
     @Nested
     class HandleAnonymousSessionMergeTests {
@@ -122,6 +126,7 @@ public class AnonymousMergeServiceTest {
                     GameMode.CLASSIC,
                     session.getScoreTimestamps().get(GameMode.CLASSIC)
             );
+            verify(cacheService).evictCacheEntry("guess-list", player.getId() + "-" + GameMode.CLASSIC);
             verify(anonymousSessionService).delete(session);
         }
 

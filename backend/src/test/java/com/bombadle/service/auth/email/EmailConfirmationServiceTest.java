@@ -1,13 +1,17 @@
 package com.bombadle.service.auth.email;
 
 import com.bombadle.config.PlayerPrincipal;
+import com.bombadle.dto.request.AccountRecoveryConfirmRequest;
 import com.bombadle.dto.request.PasswordResetRequest;
 import com.bombadle.dto.request.VerificationCodeRequest;
 import com.bombadle.dto.request.VerificationCodeWithEmailRequest;
+import com.bombadle.entity.DeletedAccount;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.EmailVerificationType;
+import com.bombadle.repository.DeletedAccountRepository;
 import com.bombadle.service.player.PlayerCredentialsService;
 import com.bombadle.service.player.PlayerDeletionService;
+import com.bombadle.service.player.PlayerRecoveryService;
 import com.bombadle.service.player.PlayerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -30,13 +34,22 @@ class EmailConfirmationServiceTest {
     private VerificationTokenService verificationTokenService;
 
     @Mock
+    private AccountRecoveryTokenService accountRecoveryTokenService;
+
+    @Mock
     private PlayerDeletionService playerDeletionService;
+
+    @Mock
+    private PlayerRecoveryService playerRecoveryService;
 
     @Mock
     private PlayerService playerService;
 
     @Mock
     private PlayerCredentialsService playerCredentialsService;
+
+    @Mock
+    private DeletedAccountRepository deletedAccountRepository;
 
     @InjectMocks
     private EmailConfirmationService emailConfirmationService;
@@ -112,9 +125,9 @@ class EmailConfirmationServiceTest {
     class ConfirmPlayerSelfDeletionTests {
 
         @Test
-        void confirmPlayerSelfDeletion_validRequest_deletesPlayer() {
+        void confirmPlayerSelfDeletion_validRequest_deletesPlayerWithSnapshot() {
             // Arrange
-            VerificationCodeRequest request = new VerificationCodeRequest("123456");
+            VerificationCodeRequest request = new VerificationCodeRequest("123456", false);
             PlayerPrincipal principal = mock(PlayerPrincipal.class);
             when(principal.getPlayerId()).thenReturn(1L);
 
@@ -123,7 +136,51 @@ class EmailConfirmationServiceTest {
 
             // Assert
             verify(verificationTokenService).verifyAndConsume(1L, EmailVerificationType.ACCOUNT_DELETION, "123456");
-            verify(playerDeletionService).deletePlayerSelf(1L);
+            verify(playerDeletionService).deletePlayerSelf(1L, false);
+        }
+
+        @Test
+        void confirmPlayerSelfDeletion_deleteAllDataNow_passesFlagThrough() {
+            // Arrange
+            VerificationCodeRequest request = new VerificationCodeRequest("123456", true);
+            PlayerPrincipal principal = mock(PlayerPrincipal.class);
+            when(principal.getPlayerId()).thenReturn(1L);
+
+            // Act
+            emailConfirmationService.confirmPlayerSelfDeletion(request, principal);
+
+            // Assert
+            verify(playerDeletionService).deletePlayerSelf(1L, true);
+        }
+    }
+
+    @Nested
+    class ConfirmAccountRecoveryTests {
+
+        @Test
+        void confirmAccountRecovery_validRequest_recoversAccount() {
+            // Arrange
+            DeletedAccount deletedAccount = DeletedAccount.builder().id(5L).email("test@mail.com").build();
+            AccountRecoveryConfirmRequest request = new AccountRecoveryConfirmRequest("test@mail.com", "123456", "newPassword1");
+            when(deletedAccountRepository.findByEmail("test@mail.com")).thenReturn(Optional.of(deletedAccount));
+
+            // Act
+            emailConfirmationService.confirmAccountRecovery(request);
+
+            // Assert
+            verify(accountRecoveryTokenService).verifyAndConsume(5L, EmailVerificationType.ACCOUNT_RECOVERY, "123456");
+            verify(playerRecoveryService).recoverAccount(deletedAccount, "newPassword1");
+        }
+
+        @Test
+        void confirmAccountRecovery_deletedAccountNotFound_throwsException() {
+            // Arrange
+            AccountRecoveryConfirmRequest request = new AccountRecoveryConfirmRequest("notfound@mail.com", "123456", null);
+            when(deletedAccountRepository.findByEmail("notfound@mail.com")).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(UsernameNotFoundException.class, () -> emailConfirmationService.confirmAccountRecovery(request));
+            verifyNoInteractions(accountRecoveryTokenService, playerRecoveryService);
         }
     }
 }

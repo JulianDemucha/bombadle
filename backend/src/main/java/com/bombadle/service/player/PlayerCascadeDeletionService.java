@@ -2,7 +2,9 @@ package com.bombadle.service.player;
 
 import com.bombadle.entity.Player;
 import com.bombadle.service.auth.cookie.RefreshTokenService;
+import com.bombadle.service.feedback.FeedbackService;
 import com.bombadle.service.game.GuessListService;
+import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,8 @@ public class PlayerCascadeDeletionService {
     private final RefreshTokenService refreshTokenService;
     private final GuessListService guessListService;
     private final ScoreService scoreService;
+    private final PlayerStatisticsService playerStatisticsService;
+    private final FeedbackService feedbackService;
 
     @Transactional
     public void deletePlayerWithCascade(Player player) {
@@ -22,7 +26,9 @@ public class PlayerCascadeDeletionService {
 
         guessListService.deleteAllByPlayerId(playerId);
         scoreService.deleteAllByPlayerId(playerId);
+        playerStatisticsService.deleteAllByPlayerId(playerId);
         refreshTokenService.deleteAllByPlayerId(playerId);
+        feedbackService.nullifyAuthor(playerId);
         playerService.manualDelete(player);
     }
 }

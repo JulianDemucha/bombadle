@@ -5,6 +5,7 @@ import com.bombadle.entity.GuessList;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.GameMode;
 import com.bombadle.repository.GuessListRepository;
+import com.bombadle.service.cache.CacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GuessListService {
     private final GuessListRepository guessListRepository;
+    private final CacheService cacheService;
 
     @Cacheable(value = "guess-list", key = "#playerId + '-' + #gameMode")
     public GuessListDto getByPlayerId(long playerId, GameMode gameMode) {
@@ -46,5 +48,8 @@ public class GuessListService {
     @Transactional
     public void deleteAllByPlayerId(long playerId) {
         guessListRepository.deleteByPlayerId(playerId);
+        for (GameMode mode : GameMode.values()) {
+            cacheService.evictCacheEntry("guess-list", playerId + "-" + mode);
+        }
     }
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../../../../api/api.js';
+import { syncAnonymousWonModes } from '../../../../api/anonymousProgress.js';
 import { useAuth } from '../../../../auth/UseAuth.jsx';
 import confetti from 'canvas-confetti';
 import {
@@ -22,6 +23,7 @@ const GUESS_ENDPOINT_BASE = '/api/card-guessing/classic/guess';
 
 const LEADERBOARD_TOP3_ENDPOINT = '/api/leaderboard/CLASSIC/top3';
 const LEADERBOARD_PLAYER_ENDPOINT_BASE = '/api/leaderboard/CLASSIC/player';
+const LEADERBOARD_TODAY_SOLVERS_ENDPOINT = '/api/leaderboard/CLASSIC/today-solvers';
 
 const formatTimeLabel = (value) => {
     if (!value) return '--:--';
@@ -48,15 +50,11 @@ const triggerWinAnimation = () => {
     fire(0.1, { spread: 120, decay: 0.91, scalar: 0.8, origin: { x: 0.5, y: 1 }, startVelocity: 60, angle: 90 });
 };
 
-const pickGuessTimestamp = (entry) =>
-    entry?.scoreTimeStamp || entry?.timestamp || entry?.timeStamp || entry?.createdAt || entry?.guessAttempt?.scoreTimeStamp || null;
-
 const buildFallbackCurrentUserRow = (user, attempts, timeLabel) => ({
     rank: '-',
     name: user?.displayName || user?.login || 'Ty',
     time: timeLabel || '--:--',
     attempts: attempts > 0 ? attempts : '-',
-    wins: user?.totalGuesses ?? '?',
     avatar: user?.avatarImage ? `/avatar/${user.avatarImage}.jpg` : '/avatar/AVATAR_DEFAULT.jpg',
     isCurrentUser: true
 });
@@ -70,7 +68,7 @@ const findSelectedCard = ({ item, guessAttempt, cardsById, cardsByName }) => {
 };
 
 function useClassicModeGame() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [guesses, setGuesses] = useState([]);
     const [characterCards, setCharacterCards] = useState([]);
     const [isWon, setIsWon] = useState(false);
@@ -78,6 +76,7 @@ function useClassicModeGame() {
     const [isLeaderboardExpanded, setIsLeaderboardExpanded] = useState(false);
     const [isAnimatingSuccess, setIsAnimatingSuccess] = useState(false);
     const [topThree, setTopThree] = useState([]);
+    const [todaySolvers, setTodaySolvers] = useState(0);
     const [currentUserRow, setCurrentUserRow] = useState(null);
     const [isCurrentUserInTopThree, setIsCurrentUserInTopThree] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -154,6 +153,12 @@ function useClassicModeGame() {
             const isCurrentInTopThree = topThreeRows.some((row) => row.isCurrentUser);
             setIsCurrentUserInTopThree(isCurrentInTopThree);
 
+            const solversResponse = await apiFetch(LEADERBOARD_TODAY_SOLVERS_ENDPOINT);
+            if (solversResponse.ok && solversResponse.data) {
+                const { loggedIn = 0, anonymous = 0 } = solversResponse.data;
+                setTodaySolvers(loggedIn + anonymous);
+            }
+
             if (isWon && user && !isCurrentInTopThree) {
                 const userId = user?.id ?? user?.playerId;
                 if (userId) {
@@ -179,8 +184,7 @@ function useClassicModeGame() {
                 }
             } else if (isWon && !user) {
                 const fallbackRow = buildFallbackCurrentUserRow(null, latestGuessesCountRef.current, latestWinTimeLabelRef.current);
-                fallbackRow.wins = '?';
-                setCurrentUserRow(fallbackRow);
+                setCurrentUserRow({ ...fallbackRow, currentStreak: 1 });
             } else {
                 setCurrentUserRow(null);
             }
@@ -218,6 +222,10 @@ function useClassicModeGame() {
                 const response = await apiFetch(GET_GUESS_LIST_ENDPOINT);
                 const items = pickGuessListItems(response.data);
 
+                // Dla anonima pobieramy sesję raz: ustawia flagi "won" + cookie i zwraca dto,
+                // z którego czytamy czas zgadnięcia (scoreTimestamps), bo GuessAttempt nie ma timestampu.
+                const anonymousSession = user ? null : await syncAnonymousWonModes();
+
                 if (user && user.completedModesToday?.includes('CLASSIC')) {
                     setIsWon(true);
                     setIsLeaderboardExpanded(true);
@@ -231,11 +239,16 @@ function useClassicModeGame() {
                     const isLastGuessCorrect = extractGuessAttempt(lastGuess)?.name?.match === 'MATCH';
 
                     if (isLastGuessCorrect) {
-                        // Bierzemy czas z ostatniego zgadnięcia bezpośrednio z backendu!
-                        latestWinTimeLabelRef.current = formatTimeLabel(pickGuessTimestamp(lastGuess));
                         setIsWon(true);
                         setIsLeaderboardExpanded(true);
-                        if (!user) setIsAnonymousAndWon(true);
+                        if (user) {
+                            if (user.todayScoresTimestamps?.['CLASSIC']) {
+                                latestWinTimeLabelRef.current = formatTimeLabel(user.todayScoresTimestamps['CLASSIC']);
+                            }
+                        } else {
+                            setIsAnonymousAndWon(true);
+                            latestWinTimeLabelRef.current = formatTimeLabel(anonymousSession?.scoreTimestamps?.['CLASSIC']);
+                        }
                     }
 
                     const mappedRows = items.map((item, index) => {
@@ -260,10 +273,10 @@ function useClassicModeGame() {
             }
         };
 
-        if (characterCards.length > 0) {
+        if (characterCards.length > 0 && !authLoading) {
             loadGame();
         }
-    }, [characterCards, user, cardsById, cardsByName]);
+    }, [characterCards, user, authLoading, cardsById, cardsByName]);
 
     const handleSelectCharacterId = useCallback(async (cardId) => {
         if (isWon || isAnimatingSuccess) return;
@@ -324,6 +337,7 @@ function useClassicModeGame() {
         isLeaderboardExpanded,
         isAnimatingSuccess,
         topThree,
+        todaySolvers,
         currentUserRow,
         isCurrentUserInTopThree,
         handleSelectCharacterId,

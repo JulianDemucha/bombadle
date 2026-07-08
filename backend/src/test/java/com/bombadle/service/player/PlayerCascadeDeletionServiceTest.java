@@ -2,7 +2,9 @@ package com.bombadle.service.player;
 
 import com.bombadle.entity.Player;
 import com.bombadle.service.auth.cookie.RefreshTokenService;
+import com.bombadle.service.feedback.FeedbackService;
 import com.bombadle.service.game.GuessListService;
+import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,12 @@ class PlayerCascadeDeletionServiceTest {
     @Mock
     private ScoreService scoreService;
 
+    @Mock
+    private PlayerStatisticsService playerStatisticsService;
+
+    @Mock
+    private FeedbackService feedbackService;
+
     @InjectMocks
     private PlayerCascadeDeletionService playerCascadeDeletionService;
 
@@ -49,6 +57,7 @@ class PlayerCascadeDeletionServiceTest {
             // Assert
             verify(guessListService).deleteAllByPlayerId(playerId);
             verify(scoreService).deleteAllByPlayerId(playerId);
+            verify(playerStatisticsService).deleteAllByPlayerId(playerId);
             verify(refreshTokenService).deleteAllByPlayerId(playerId);
             verify(playerService).manualDelete(player);
         }

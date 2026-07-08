@@ -115,7 +115,7 @@ class PlayerUpdateServiceTest {
             assertEquals("newlogin", defaultPlayer.getLogin());
             assertEquals("NewLogin", defaultPlayer.getDisplayName());
             verify(repo).save(defaultPlayer);
-            verify(cacheService).clear("paged-leaderboard");
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).clear("top-3-leaderboard");
         }
 
@@ -144,7 +144,7 @@ class PlayerUpdateServiceTest {
             // Assert
             assertEquals(AvatarImage.AVATAR_BOMBA, defaultPlayer.getAvatarImage());
             verify(repo).save(defaultPlayer);
-            verify(cacheService).clear("paged-leaderboard");
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).clear("top-3-leaderboard");
         }
 
@@ -165,7 +165,7 @@ class PlayerUpdateServiceTest {
 
             // Assert
             verify(repo).save(defaultPlayer);
-            verify(cacheService, never()).clear("paged-leaderboard");
+            verify(cacheService, never()).clear("full-leaderboard");
             verify(cacheService).clear("top-3-leaderboard");
         }
     }

@@ -2,7 +2,7 @@
     max-width: 50px;
     display: block;
     position: absolute;
-    top: 2.5rem;
+    top: 3.2rem;
     right: 0.7rem;
 }
 
@@ -31,7 +31,7 @@
 }
 
 
-@media (min-width: 1025px) {
+@media (min-width: 1135px) {
     .profile-button {
         max-width: 90px;
         top: 3.75rem;

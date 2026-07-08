@@ -2,8 +2,6 @@ package com.bombadle.controller;
 
 import com.bombadle.dto.CharacterCardSearchDto;
 import com.bombadle.dto.PreviousCharacterCardDto;
-import com.bombadle.entity.CharacterCard;
-import com.bombadle.entity.CurrentCardState;
 import com.bombadle.enums.GameMode;
 import com.bombadle.service.game.CharacterCardService;
 import com.bombadle.service.game.CurrentCardStateService;
@@ -32,19 +30,8 @@ public class CharacterCardController {
     public ResponseEntity<PreviousCharacterCardDto> getPreviousCharacterCard(@PathVariable String gameMode) {
         GameMode mode = GameMode.valueOf(gameMode.toUpperCase());
 
-        CurrentCardState state = currentCardStateService.getCurrentCardState();
-
-        CharacterCard prevCard = state.getPreviousCards().get(mode);
-
-        if (prevCard == null) {
-            return ResponseEntity.noContent().build();
-        }
-
-        PreviousCharacterCardDto dto = PreviousCharacterCardDto.builder()
-                .name(prevCard.getName())
-                .imageSrc(prevCard.getImageSrc())
-                .build();
-
-        return ResponseEntity.ok(dto);
+        return currentCardStateService.getPreviousCharacterCard(mode)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 }

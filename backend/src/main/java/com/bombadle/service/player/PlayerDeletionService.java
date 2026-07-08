@@ -1,20 +1,30 @@
 package com.bombadle.service.player;
 
+import com.bombadle.dto.DailyStatisticSnapshot;
 import com.bombadle.entity.DeletedAccount;
+import com.bombadle.entity.DeletedAccountStatistic;
 import com.bombadle.entity.Player;
+import com.bombadle.entity.PlayerDailyStatistic;
+import com.bombadle.enums.GameMode;
 import com.bombadle.enums.Role;
 import com.bombadle.exception.AdminOperationNotAllowedException;
 import com.bombadle.repository.DeletedAccountRepository;
+import com.bombadle.repository.DeletedAccountStatisticRepository;
+import com.bombadle.repository.PlayerDailyStatisticRepository;
 import com.bombadle.service.admin.AdminAuditService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /// Snapshots deleted players into DeletedAccount, and logs AdminAudit for admin-only methods/actions
 
@@ -25,6 +35,8 @@ public class PlayerDeletionService {
 
     private final AdminAuditService adminAuditService;
     private final DeletedAccountRepository deletedAccountRepository;
+    private final DeletedAccountStatisticRepository deletedAccountStatisticRepository;
+    private final PlayerDailyStatisticRepository playerDailyStatisticRepository;
     private final PlayerService playerService;
     private final PlayerCascadeDeletionService playerCascadeDeletionService;
 
@@ -57,9 +69,29 @@ public class PlayerDeletionService {
         }
     }
 
-    public void deletePlayerSelf(long playerId) {
+    @Transactional
+    public void purgeExpiredDeletedAccountSnapshots(Duration retention) {
+        Instant cutoff = Instant.now().minus(retention);
+        List<DeletedAccount> expired = deletedAccountRepository.findAllByDeletedAtBefore(cutoff);
+        if (expired.isEmpty()) {
+            return;
+        }
+        List<Long> deletedAccountIds = expired.stream().map(DeletedAccount::getId).toList();
+        deletedAccountStatisticRepository.deleteAllByDeletedAccountIdIn(deletedAccountIds);
+        deletedAccountRepository.deleteAll(expired);
+        log.info("Purged {} expired deleted-account snapshot(s).", expired.size());
+    }
+
+    @Transactional
+    public void deletePlayerSelf(long playerId, boolean deleteAllDataNow) {
         Player target = playerService.getPlayerById(playerId);
-        deletePlayerWithSnapshotNoAudit(target, playerId);
+        if (deleteAllDataNow) {
+            playerCascadeDeletionService.deletePlayerWithCascade(target);
+            return;
+        }
+        DeletedAccount snapshot = snapshotDeletedAccount(target, playerId);
+        snapshotDeletedAccountStatistic(target, snapshot.getId());
+        playerCascadeDeletionService.deletePlayerWithCascade(target);
     }
 
     public void deletePlayerByAdmin(long actorId, long targetId) {
@@ -80,7 +112,7 @@ public class PlayerDeletionService {
         playerCascadeDeletionService.deletePlayerWithCascade(target);
     }
 
-    private void snapshotDeletedAccount(Player target, Long actorId) {
+    private DeletedAccount snapshotDeletedAccount(Player target, Long actorId) {
         DeletedAccount snapshot = DeletedAccount.builder()
                 .originalPlayerId(target.getId())
                 .login(target.getLogin())
@@ -93,7 +125,43 @@ public class PlayerDeletionService {
                 .deletedAt(Instant.now())
                 .deletedByActorId(actorId)
                 .build();
-        deletedAccountRepository.save(snapshot);
+        return deletedAccountRepository.save(snapshot);
+    }
+
+    private void snapshotDeletedAccountStatistic(Player target, Long deletedAccountId) {
+        List<PlayerDailyStatistic> dailyStatistics = playerDailyStatisticRepository.findAllByPlayerId(target.getId());
+
+        Map<GameMode, Integer> guessesByMode = new HashMap<>();
+        int totalTop3Finishes = 0;
+        List<DailyStatisticSnapshot> dailyStatisticsSnapshot = new ArrayList<>();
+        for (PlayerDailyStatistic stat : dailyStatistics) {
+            guessesByMode.merge(stat.getGameMode(), 1, Integer::sum);
+            if (stat.getLeaderboardPosition() <= 3) {
+                totalTop3Finishes++;
+            }
+            dailyStatisticsSnapshot.add(new DailyStatisticSnapshot(
+                    stat.getGameMode(),
+                    stat.getPuzzleDate(),
+                    stat.getSolvedAt(),
+                    stat.getNumberOfTries(),
+                    stat.getLeaderboardPosition(),
+                    stat.getTotalParticipants()
+            ));
+        }
+
+        DeletedAccountStatistic statistic = DeletedAccountStatistic.builder()
+                .deletedAccountId(deletedAccountId)
+                .currentStreak(target.getCurrentStreak())
+                .longestStreak(target.getLongestStreak())
+                .currentSuperstreak(target.getCurrentSuperstreak())
+                .longestSuperstreak(target.getLongestSuperstreak())
+                .totalSuccessfulGuesses(target.getTotalSuccessfulGuesses())
+                .guessesByMode(guessesByMode)
+                .totalTop3Finishes(totalTop3Finishes)
+                .dailyStatisticsSnapshot(dailyStatisticsSnapshot)
+                .capturedAt(Instant.now())
+                .build();
+        deletedAccountStatisticRepository.save(statistic);
     }
 
     private void validateAdminAction(Player actor, Player target, String action) {

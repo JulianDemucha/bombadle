@@ -1,32 +1,118 @@
-.back-arrow-button {
+.nav-back-button {
+    position: absolute;
+    top: 65%;
+    left: 0.2rem;
+    transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
-    padding: 10px;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--login_primary, #0d1d14);
     transition: transform 0.2s;
+    z-index: 2;
 }
 
-.back-arrow-button:hover {
-    transform: scale(1.1);
+.nav-back-button:hover {
+    transform: translateY(-50%) scale(1.1);
 }
 
-.back-arrow-svg {
+.nav-back-button-img {
     width: 32px;
     height: 32px;
-    stroke: currentColor;
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    -webkit-user-drag: none;
+    user-select: none;
     filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.2));
 }
 
-@media (max-width: 500px) {
-    .back-arrow-button {
-        padding-left: 0;
-        margin-left: -50px;
+@media (min-width: 345px) {
+    .nav-back-button {
+        left: 0.5rem;
+    }
+
+    .nav-back-button-img {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (min-width: 370px) {
+    .nav-back-button {
+        left: 0.7rem;
+    }
+
+    .nav-back-button-img {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+@media (min-width: 500px) {
+    .nav-back-button {
+        left: 3rem;
+        top: 4.7rem;
+    }
+
+    .nav-back-button-img {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (min-width: 769px) {
+    .nav-back-button {
+        left: 7rem;
+    }
+
+    .nav-back-button-img {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (min-width: 1135px) {
+    .nav-back-button {
+        left: 7rem;
+        top: 6.5rem;
+    }
+
+    .nav-back-button-img {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* AuthHeader (login/register/etc.) sits inside .login-register-page, which has
+   its own fixed 50px side padding for the form card. Header (mode pages) has no
+   such padding. Same "left" value would therefore land at very different
+   absolute screen positions between the two contexts, so AuthHeader gets its
+   own offsets here: mode-page offset minus that 50px, landing the button at
+   the same on-screen X position in both places. */
+.auth-header .nav-back-button {
+    left: calc(0.2rem - 50px);
+}
+
+@media (min-width: 345px) {
+    .auth-header .nav-back-button {
+        left: calc(0.15rem - 50px);
+    }
+}
+
+@media (min-width: 500px) {
+    .auth-header .nav-back-button {
+        left: calc(1rem - 50px);
+    }
+}
+
+@media (min-width: 769px) {
+    .auth-header .nav-back-button {
+        left: calc(1.5rem - 50px);
+    }
+}
+
+@media (min-width: 1135px) {
+    .auth-header .nav-back-button {
+        left: calc(2rem - 50px);
     }
 }

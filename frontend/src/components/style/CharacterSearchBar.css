@@ -21,6 +21,12 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    /* Definite width so the inner .board-container's width:100% resolves and its
+       overflow-x:auto actually contains the 830px .guess-grid (internal scroll),
+       instead of the grid stretching this shrink-to-fit wrapper and the whole
+       document past the viewport. */
+    width: 100%;
+    min-width: 0;
 }
 
 .game-content {

@@ -48,6 +48,7 @@ public class AdminUserService {
         StringBuilder actionType = new StringBuilder("update_user_").append(targetId);
         boolean changed = false;
         boolean profileChanged = false;
+        boolean statsChanged = false;
 
         if (request.login() != null && !request.login().isBlank()) {
             String login = request.login();
@@ -83,6 +84,7 @@ public class AdminUserService {
             if (cleared) {
                 actionType.append("_clear_today_score");
                 changed = true;
+                statsChanged = true;
             }
         }
 
@@ -95,6 +97,7 @@ public class AdminUserService {
                 target.setTotalSuccessfulGuesses(wins);
                 actionType.append("_change_wins_to_").append(wins);
                 changed = true;
+                statsChanged = true;
             }
         }
 
@@ -102,8 +105,12 @@ public class AdminUserService {
             playerRepository.save(target);
             adminAuditService.logAction(actorId, actionType.toString(), null);
             if (profileChanged) {
-                cacheService.clear("paged-leaderboard"); // ZMIANA NAZWY CACHE
+                cacheService.clear("full-leaderboard");
                 cacheService.clear("top-3-leaderboard");
+            }
+            if (statsChanged) {
+                cacheService.evictCacheEntry("player-basic-statistics", targetId);
+                cacheService.evictCacheEntry("player-detailed-statistics", targetId);
             }
         }
     }

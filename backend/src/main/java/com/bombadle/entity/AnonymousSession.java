@@ -51,22 +51,25 @@ public class AnonymousSession {
     }
 
     public void markModeAsCompleted(GameMode mode) {
-        if (this.completedModesToday == null) {
-            this.completedModesToday = new HashSet<>();
-        }
-        this.completedModesToday.add(mode);
+        // Replacing the field with a new instance (not mutating in-place) is required so
+        // Hibernate's ImmutableMutabilityPlan dirty checker sees a changed reference and
+        // emits the UPDATE for completed_modes_today. In-place add() leaves snapshot == current.
+        Set<GameMode> updated = this.completedModesToday == null ? new HashSet<>() : new HashSet<>(this.completedModesToday);
+        updated.add(mode);
+        this.completedModesToday = updated;
     }
 
     public void addScoreTimestamp(GameMode mode, Instant timestamp) {
-        if (this.scoreTimestamps == null) {
-            this.scoreTimestamps = new HashMap<>();
-        }
-        this.scoreTimestamps.put(mode, timestamp);
+        // Same reason as markModeAsCompleted: replace, don't put() in-place, to force dirty detection.
+        Map<GameMode, Instant> updated = this.scoreTimestamps == null ? new HashMap<>() : new HashMap<>(this.scoreTimestamps);
+        updated.put(mode, timestamp);
+        this.scoreTimestamps = updated;
     }
 
     public void resetDailyProgress() {
-        if (this.completedModesToday != null) this.completedModesToday.clear();
-        if (this.scoreTimestamps != null) this.scoreTimestamps.clear();
+        // Same reason as markModeAsCompleted: replace, don't clear(), to force dirty detection.
+        this.completedModesToday = new HashSet<>();
+        this.scoreTimestamps = new HashMap<>();
         if (this.guessLists != null) this.guessLists.clear();
     }
 

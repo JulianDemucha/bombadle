@@ -7,9 +7,12 @@ import com.bombadle.enums.GameMode;
 import com.bombadle.service.game.*;
 import com.bombadle.service.player.AnonymousSessionService;
 import com.bombadle.service.cache.CacheService;
+import com.bombadle.service.stats.DailySolverStatisticService;
+import com.bombadle.service.stats.PlayerStatisticsService;
 import com.bombadle.service.stats.ScoreService;
 import com.bombadle.service.player.PlayerDeletionService;
 import com.bombadle.service.admin.AdminChangeQueueService;
+import com.bombadle.service.feedback.FeedbackService;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -40,6 +46,9 @@ public class DailyResetService {
     private final CurrentCardStateService currentCardStateService;
     private final ScoreMaintenanceService scoreMaintenanceService;
     private final QuoteService quoteService;
+    private final PlayerStatisticsService playerStatisticsService;
+    private final DailySolverStatisticService dailySolverStatisticService;
+    private final FeedbackService feedbackService;
 
     /* Cron:  seconds, minutes, hours, day (of the month), month, day (of the week) */
     @Scheduled(cron = "0 0 7 * * *", zone = "Europe/Warsaw")
@@ -48,6 +57,8 @@ public class DailyResetService {
     public void executeDailyReset() {
         log.info("7:00 - Daily reset triggered: selecting new characters and resetting scores.");
 
+        playerStatisticsService.evaluateDailyStreaks();
+        dailySolverStatisticService.captureClosingDay();
         clearPreviousDayState();
         pickNewDailyEntities();
         refreshCaches();
@@ -61,6 +72,8 @@ public class DailyResetService {
         scoreMaintenanceService.resetAllScores();
         scoreService.deleteAllInBatch();
         playerDeletionService.deleteMarkedForDeletion(Duration.ofHours(48));
+        playerDeletionService.purgeExpiredDeletedAccountSnapshots(Duration.ofDays(7));
+        feedbackService.deleteOlderThan(Instant.now().minus(Duration.ofDays(7)));
         log.info("All scores and previous day states have been cleared.");
     }
 
@@ -71,30 +84,38 @@ public class DailyResetService {
         }
         currentGameStateWrapper.setQuote(newQuote);
 
+        CharacterCard quoteCard = newQuote.getCharacterCard();
+        if (quoteCard == null) {
+            throw new IllegalStateException("Picked quote has no associated character card");
+        }
+
         Map<GameMode, CharacterCard> newDailyCards = new HashMap<>();
+        List<Long> usedCardIds = new ArrayList<>();
+
+        applyDailyCard(newDailyCards, usedCardIds, GameMode.QUOTES_STAGE_2, quoteCard);
 
         for (GameMode mode : GameMode.values()) {
-            if (mode == GameMode.QUOTES_STAGE_1) {
+            if (mode == GameMode.QUOTES_STAGE_1 || mode == GameMode.QUOTES_STAGE_2) {
                 continue;
             }
 
-            CharacterCard newCard;
-            if (mode == GameMode.QUOTES_STAGE_2) {
-                newCard = newQuote.getCharacterCard();
-            } else {
-                newCard = characterCardService.findRandomCard();
-            }
-
+            CharacterCard newCard = characterCardService.findRandomCardExcluding(usedCardIds);
             if (newCard == null) {
                 throw new IllegalStateException("No character cards in the database for mode: " + mode);
             }
 
-            newDailyCards.put(mode, newCard);
-            currentGameStateWrapper.set(mode, newCard);
-            log.info("New Character card picked for {}: {}", mode, newCard.getName());
+            applyDailyCard(newDailyCards, usedCardIds, mode, newCard);
         }
 
         currentCardStateService.updateCurrentState(newDailyCards, newQuote);
+    }
+
+    private void applyDailyCard(Map<GameMode, CharacterCard> newDailyCards, List<Long> usedCardIds,
+                                 GameMode mode, CharacterCard card) {
+        newDailyCards.put(mode, card);
+        usedCardIds.add(card.getId());
+        currentGameStateWrapper.set(mode, card);
+        log.info("New Character card picked for {}: {}", mode, card.getName());
     }
 
     private void refreshCaches() {
@@ -102,5 +123,7 @@ public class DailyResetService {
         log.info("All caches have been evicted.");
         cacheService.reloadCardCompareCache();
         log.info("Card comparison caches have been cleared and reloaded.");
+        cacheService.reloadSearchIndexCache();
+        log.info("Search index cache has been cleared and reloaded.");
     }
 }

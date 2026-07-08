@@ -7,6 +7,7 @@ const useLeaderboard = (mode = 'classic') => {
     const normalizedMode = VALID_MODES.includes(mode) ? mode : null;
 
     const [leaderboardData, setLeaderboardData] = useState(null);
+    const [todaySolvers, setTodaySolvers] = useState({ loggedIn: 0, anonymous: 0 });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
@@ -16,6 +17,7 @@ const useLeaderboard = (mode = 'classic') => {
         setTrackedMode(normalizedMode);
         setCurrentPage(0);
         setLeaderboardData(null);
+        setTodaySolvers({ loggedIn: 0, anonymous: 0 });
         setError(null);
     }
 
@@ -52,6 +54,24 @@ const useLeaderboard = (mode = 'classic') => {
         fetchLeaderboard(normalizedMode, currentPage);
     }, [normalizedMode, currentPage, fetchLeaderboard]);
 
+    const fetchTodaySolvers = useCallback(async (targetMode) => {
+        if (!targetMode) {
+            setTodaySolvers({ loggedIn: 0, anonymous: 0 });
+            return;
+        }
+
+        const response = await apiFetch(`/api/leaderboard/${targetMode}/today-solvers`);
+
+        if (response.ok && response.data) {
+            const { loggedIn = 0, anonymous = 0 } = response.data;
+            setTodaySolvers({ loggedIn, anonymous });
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchTodaySolvers(normalizedMode);
+    }, [normalizedMode, fetchTodaySolvers]);
+
     const goToNextPage = () => {
         if (leaderboardData && !leaderboardData.last) {
             setCurrentPage((prev) => prev + 1);
@@ -78,6 +98,8 @@ const useLeaderboard = (mode = 'classic') => {
 
     return {
         leaderboardData,
+        loggedInSolvers: todaySolvers.loggedIn,
+        anonymousSolvers: todaySolvers.anonymous,
         loading,
         error,
         currentPage,

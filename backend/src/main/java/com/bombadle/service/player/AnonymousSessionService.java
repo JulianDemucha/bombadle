@@ -67,4 +67,13 @@ public class AnonymousSessionService {
     public void truncateTable() {
         repo.truncateTable();
     }
+
+    /**
+     * Number of anonymous sessions that solved the given mode today. Backed by the daily-reset
+     * semantics of {@code completedModesToday} (the table is truncated on reset), so the count is
+     * inherently scoped to the current day.
+     */
+    public long countSolversForMode(GameMode gameMode) {
+        return repo.countByCompletedModeToday(gameMode.name());
+    }
 }

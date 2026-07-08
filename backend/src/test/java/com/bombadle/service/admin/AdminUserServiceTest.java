@@ -3,6 +3,7 @@ package com.bombadle.service.admin;
 import com.bombadle.dto.request.AdminUserUpdateRequest;
 import com.bombadle.entity.Player;
 import com.bombadle.enums.AvatarImage;
+import com.bombadle.enums.GameMode;
 import com.bombadle.enums.Role;
 import com.bombadle.repository.PlayerRepository;
 import com.bombadle.service.cache.CacheService;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -63,7 +65,7 @@ class AdminUserServiceTest {
             verify(playerRepository).save(userTarget);
             verify(adminAuditService).logAction(eq(1L), contains("_change_login_to_sigma_login"), isNull());
 
-            verify(cacheService).clear("paged-leaderboard");
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).clear("top-3-leaderboard");
         }
 
@@ -82,8 +84,52 @@ class AdminUserServiceTest {
             verify(playerRepository).save(userTarget);
             verify(adminAuditService).logAction(eq(1L), contains("_change_avatar_to_AVATAR_BOMBA"), isNull());
 
-            verify(cacheService).clear("paged-leaderboard");
+            verify(cacheService).clear("full-leaderboard");
             verify(cacheService).clear("top-3-leaderboard");
+        }
+
+        @Test
+        void updateUser_changeTotalSuccessfulGuesses_updatesAndEvictsStatsCacheOnly() {
+            // ARRANGE
+            AdminUserUpdateRequest request = new AdminUserUpdateRequest(null, null, 42, null);
+            when(playerRepository.findById(1L)).thenReturn(Optional.of(adminActor));
+            when(playerRepository.findById(3L)).thenReturn(Optional.of(userTarget));
+
+            // ACT
+            adminUserService.updateUser(1L, 3L, request);
+
+            // ASSERT
+            assertEquals(42, userTarget.getTotalSuccessfulGuesses());
+            verify(playerRepository).save(userTarget);
+            verify(cacheService).evictCacheEntry("player-basic-statistics", 3L);
+            verify(cacheService).evictCacheEntry("player-detailed-statistics", 3L);
+            verify(cacheService, never()).clear("full-leaderboard");
+            verify(cacheService, never()).clear("top-3-leaderboard");
+        }
+
+        @Test
+        void updateUser_clearTodayScore_resetsProgressAndEvictsStatsCacheOnly() {
+            // ARRANGE
+            Player targetWithTodayProgress = Player.builder()
+                    .id(3L)
+                    .role(Role.ROLE_USER)
+                    .completedModesToday(Set.of(GameMode.CLASSIC))
+                    .totalSuccessfulGuesses(5)
+                    .build();
+            AdminUserUpdateRequest request = new AdminUserUpdateRequest(null, null, null, true);
+            when(playerRepository.findById(1L)).thenReturn(Optional.of(adminActor));
+            when(playerRepository.findById(3L)).thenReturn(Optional.of(targetWithTodayProgress));
+
+            // ACT
+            adminUserService.updateUser(1L, 3L, request);
+
+            // ASSERT
+            assertEquals(4, targetWithTodayProgress.getTotalSuccessfulGuesses());
+            verify(playerRepository).save(targetWithTodayProgress);
+            verify(cacheService).evictCacheEntry("player-basic-statistics", 3L);
+            verify(cacheService).evictCacheEntry("player-detailed-statistics", 3L);
+            verify(cacheService, never()).clear("full-leaderboard");
+            verify(cacheService, never()).clear("top-3-leaderboard");
         }
     }
 }

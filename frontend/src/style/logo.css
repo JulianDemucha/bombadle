@@ -2,6 +2,12 @@
 .header-container {
     position: relative;
     padding: 0.5rem 0;
+    display: flex;
+    justify-content: center;
+}
+
+.auth-header {
+
 }
 
 .logo, .logo img {
@@ -41,7 +47,7 @@
     }
 }
 
-@media (min-width: 1025px) {
+@media (min-width: 1135px) {
 
     .logo-desktop {
         display: block;
