@@ -269,6 +269,7 @@
     font-weight: 700;
     text-align: center;
     font-size: 14px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
 .form-success {
@@ -281,9 +282,13 @@
 
 .field-error {
     color: #b00020;
+    background-color: rgba(255, 255, 255, 0.4);
+    padding: 4px 8px;
+    border-radius: 4px;
     font-size: 12px;
     margin-top: 5px;
     font-weight: bold;
+    display: inline-block;
 }
 
 @media (max-width: 480px) {
