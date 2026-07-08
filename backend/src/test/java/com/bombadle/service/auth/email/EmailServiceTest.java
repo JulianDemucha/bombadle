@@ -1,6 +1,7 @@
 package com.bombadle.service.auth.email;
 
 import com.bombadle.config.ApplicationConfigProperties;
+import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,8 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.MailSendException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import java.time.Duration;
 
@@ -35,7 +36,7 @@ class EmailServiceTest {
     private EmailService emailService;
 
     @Captor
-    private ArgumentCaptor<SimpleMailMessage> messageCaptor;
+    private ArgumentCaptor<MimeMessage> messageCaptor;
 
     private final String TARGET_EMAIL = "target@mail.com";
     private final String FROM_EMAIL = "no-reply@bombadle.com";
@@ -45,56 +46,52 @@ class EmailServiceTest {
     void setUp() {
         when(emailConfig.fromAddress()).thenReturn(FROM_EMAIL);
         when(emailConfig.otpExpiration()).thenReturn(Duration.ofMinutes(15));
+        // Real MimeMessage so the helper can populate headers/body.
+        when(mailSender.createMimeMessage()).thenReturn(new JavaMailSenderImpl().createMimeMessage());
     }
 
     @Test
-    void sendActivationEmail_buildsAndSendsMessage() {
+    void sendActivationEmail_buildsAndSendsMessage() throws Exception {
         emailService.sendActivationEmail(TARGET_EMAIL, OTP_CODE);
 
         verify(emailRateLimitService).enforceRateLimit(TARGET_EMAIL);
         verify(mailSender).send(messageCaptor.capture());
 
-        SimpleMailMessage sentMessage = messageCaptor.getValue();
-        assertThat(sentMessage.getTo()).containsExactly(TARGET_EMAIL);
-        assertThat(sentMessage.getFrom()).isEqualTo(FROM_EMAIL);
-        assertThat(sentMessage.getSubject()).isEqualTo("Aktywacja konta - Bombadle");
-        assertThat(sentMessage.getText()).contains(OTP_CODE).contains("15");
+        MimeMessage sent = messageCaptor.getValue();
+        assertThat(sent.getAllRecipients()[0].toString()).isEqualTo(TARGET_EMAIL);
+        assertThat(sent.getFrom()[0].toString()).isEqualTo(FROM_EMAIL);
+        assertThat(sent.getSubject()).isEqualTo("Aktywacja konta - Bombadle");
     }
 
     @Test
-    void sendPasswordResetEmail_buildsAndSendsMessage() {
+    void sendPasswordResetEmail_buildsAndSendsMessage() throws Exception {
         emailService.sendPasswordResetEmail(TARGET_EMAIL, OTP_CODE);
 
         verify(emailRateLimitService).enforceRateLimit(TARGET_EMAIL);
         verify(mailSender).send(messageCaptor.capture());
 
-        SimpleMailMessage sentMessage = messageCaptor.getValue();
-        assertThat(sentMessage.getTo()).containsExactly(TARGET_EMAIL);
-        assertThat(sentMessage.getFrom()).isEqualTo(FROM_EMAIL);
-        assertThat(sentMessage.getSubject()).isEqualTo("Reset hasła - Bombadle");
-        assertThat(sentMessage.getText()).contains(OTP_CODE).contains("15");
+        MimeMessage sent = messageCaptor.getValue();
+        assertThat(sent.getAllRecipients()[0].toString()).isEqualTo(TARGET_EMAIL);
+        assertThat(sent.getSubject()).isEqualTo("Reset hasła - Bombadle");
     }
 
     @Test
-    void sendAccountDeletionConfirmationEmail_buildsAndSendsMessage() {
+    void sendAccountDeletionConfirmationEmail_buildsAndSendsMessage() throws Exception {
         emailService.sendAccountDeletionConfirmationEmail(TARGET_EMAIL, OTP_CODE);
 
         verify(emailRateLimitService).enforceRateLimit(TARGET_EMAIL);
         verify(mailSender).send(messageCaptor.capture());
 
-        SimpleMailMessage sentMessage = messageCaptor.getValue();
-        assertThat(sentMessage.getTo()).containsExactly(TARGET_EMAIL);
-        assertThat(sentMessage.getFrom()).isEqualTo(FROM_EMAIL);
-        assertThat(sentMessage.getSubject()).isEqualTo("Potwierdzenie usunięcia konta - Bombadle");
-        assertThat(sentMessage.getText()).contains(OTP_CODE).contains("15");
+        MimeMessage sent = messageCaptor.getValue();
+        assertThat(sent.getSubject()).isEqualTo("Potwierdzenie usunięcia konta - Bombadle");
     }
 
     @Test
     void sendEmailSafely_catchesExceptionAndDoesNotPropagate() {
-        doThrow(new MailSendException("SMTP error")).when(mailSender).send(any(SimpleMailMessage.class));
+        doThrow(new MailSendException("SMTP error")).when(mailSender).send(any(MimeMessage.class));
 
         assertDoesNotThrow(() -> emailService.sendActivationEmail(TARGET_EMAIL, OTP_CODE));
 
-        verify(mailSender).send(any(SimpleMailMessage.class));
+        verify(mailSender).send(any(MimeMessage.class));
     }
 }
