@@ -8,5 +8,6 @@ public enum Race {
     Chuj,
     Chujew,
     Kurwczerw,
-    Nieznany
+    Nieznany,
+    Dodupyzaur
 }

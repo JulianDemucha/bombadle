@@ -9,5 +9,8 @@ public enum Color {
     ZOLTY,
     CZERWONY,
     POMARANCZOWY,
-    CZARNY
+    CZARNY,
+    JASNONIEBIESKI,
+    SZARY,
+    BRAZOWY
 }
