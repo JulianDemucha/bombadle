@@ -14,6 +14,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -89,8 +90,11 @@ public class CurrentCardStateService {
             if (state.getPreviousCards().get(mode) == null) {
                 if (fallbackCard == null) {
                     fallbackCard = characterCardService.findCharacterCardById(FALLBACK_CHARACTER_CARD_ID)
-                            .orElseThrow(() -> new IllegalStateException(
-                                    "Fallback character card id=" + FALLBACK_CHARACTER_CARD_ID + " not found"));
+                            .orElseGet(() -> characterCardService.findRandomCardExcluding(List.of(-1L)));
+
+                    if (fallbackCard == null) {
+                        throw new IllegalStateException("No character cards found in the database for fallback");
+                    }
                 }
                 state.getPreviousCards().put(mode, fallbackCard);
             }
