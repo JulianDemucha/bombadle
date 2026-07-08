@@ -22,10 +22,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CurrentCardStateService {
 
-    /**
-     * The base "Kapitan Bomba" character card, seeded by Flyway (V9) and guaranteed to exist.
-     * Used to backfill previousCards on a fresh database (see {@link #updateCurrentState}).
-     */
+    /** Base "Kapitan Bomba" card (seeded by V9); backfills previousCards on a fresh DB. */
     private static final long FALLBACK_CHARACTER_CARD_ID = 1L;
 
     private final CurrentCardStateRepository repo;
@@ -76,10 +73,8 @@ public class CurrentCardStateService {
         state.getPreviousCards().putAll(state.getCurrentCards());
         state.setPreviousQuote(state.getCurrentQuote());
 
-        // On a fresh boot there is no current card to carry forward, so previousCards would be
-        // left without an entry for these modes and /previous-character-card would surface a
-        // broken/empty state. Default any missing entry to the base "Kapitan Bomba" card (id=1).
-        // Scope is previousCards only; previousQuote's null-handling is intentionally left as-is.
+        // Fresh boot has no current card to carry forward: backfill missing previousCards entries
+        // with the base card so /previous-character-card isn't empty. previousCards only, not quote.
         applyPreviousCardFallback(state, newCards.keySet());
 
         state.getCurrentCards().putAll(newCards);

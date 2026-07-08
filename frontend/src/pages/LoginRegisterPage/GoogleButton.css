@@ -1,15 +1,9 @@
-/* The Google button is a plain <button class="login-with-google-btn">, so it inherits the primary
-   button styling from the generic ".login-register-page .login-container button" rule (green accent
-   background, same border/font). We deliberately keep that look and only fix the sizing that was
-   off: the button used to be capped narrower than the other buttons (max-width:320px) and its icon
-   overlapped the label because the generic padding overrode the icon gutter. These selectors are
-   scoped under ".login-register-page .login-container" so the padding/width win over that rule. */
+/* Scoped under .login-container to outweigh the generic "button" rule and fix the Google button's
+   sizing: full width (was capped at 320px) + left gutter for the icon (was overridden). */
 .login-register-page .login-container .login-with-google-btn {
-    /* Same full-width footprint as the other primary buttons (no narrower cap). */
     width: 100%;
     max-width: none;
-    /* Same 12px vertical padding as the primary button; extra left space holds the logo. */
-    padding: 12px 16px 12px 40px;
+    padding: 12px 16px 12px 40px; /* left gutter holds the logo */
 
     background-image: url(../../assets/google.svg);
     background-repeat: no-repeat;
@@ -17,8 +11,7 @@
     background-position: 12px center;
 }
 
-/* Narrow screens: the label is long ("ZALOGUJ SIĘ PRZEZ GOOGLE"); shrink the font and tighten the
-   icon gutter so it stays on one line at the same height as the primary button. */
+/* Narrow screens: shrink font + gutter so the long label stays on one line. */
 @media (max-width: 400px) {
     .login-register-page .login-container .login-with-google-btn {
         padding-left: 36px;

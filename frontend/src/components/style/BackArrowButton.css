@@ -18,6 +18,14 @@
     transform: translateY(-50%) scale(1.1);
 }
 
+/* Transparent shield over the icon so the browser hit-tests the button, not the <img> (kills the Lens chip). */
+.nav-back-button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
 .nav-back-button-img {
     width: 32px;
     height: 32px;
