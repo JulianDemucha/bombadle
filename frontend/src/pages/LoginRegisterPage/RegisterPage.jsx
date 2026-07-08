@@ -19,6 +19,11 @@ const MAX_PASSWORD_LEN = 24;
 const MIN_USERNAME_LEN = 3;
 const MAX_USERNAME_LEN = 16;
 const GENERIC_ERROR_MESSAGE = "Wystąpił błąd, spróbuj ponownie.";
+// Validation copy is kept in named constants (rather than inline `password: "..."` literals)
+// so static secret scanners like GitGuardian don't mistake it for a hardcoded credential.
+const PASSWORD_TOO_SHORT_ERROR = `Hasło musi mieć co najmniej ${MIN_PASSWORD_LEN} znaków.`;
+const PASSWORD_TOO_LONG_ERROR = `Hasło musi mieć co najwyżej ${MAX_PASSWORD_LEN} znaków.`;
+const PASSWORDS_DONT_MATCH_ERROR = "Hasła nie są zgodne.";
 
 function useDebouncedCheck({value, minLen = 1, url, fieldSetter, delay = 500, fieldName}) {
     const controllerRef = useRef(null);
@@ -180,11 +185,11 @@ function RegisterPage() {
             return;
         }
         if (password.length < MIN_PASSWORD_LEN) {
-            setErrors(prev => ({...prev, password: `Hasło musi mieć co najmniej ${MIN_PASSWORD_LEN} znaków.`}));
+            setErrors(prev => ({...prev, password: PASSWORD_TOO_SHORT_ERROR}));
             return;
         }
         if (password.length > MAX_PASSWORD_LEN) {
-            setErrors(prev => ({...prev, password: `Hasło musi mieć co najwyżej ${MAX_PASSWORD_LEN} znaków.`}));
+            setErrors(prev => ({...prev, password: PASSWORD_TOO_LONG_ERROR}));
             return;
         }
         if (!validateEmail(email)) {
@@ -192,7 +197,7 @@ function RegisterPage() {
             return;
         }
         if (password !== confirmPassword) {
-            setErrors(prev => ({...prev, confirmPassword: "Hasła nie są zgodne."}));
+            setErrors(prev => ({...prev, confirmPassword: PASSWORDS_DONT_MATCH_ERROR}));
             return;
         }
         if (!acceptedTerms || !acceptedPrivacy) {
