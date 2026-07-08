@@ -30,6 +30,9 @@ class CurrentCardStateServiceTest {
     @Mock
     private CurrentGameStateWrapper currentGameStateWrapper;
 
+    @Mock
+    private CharacterCardService characterCardService;
+
     @InjectMocks
     private CurrentCardStateService currentCardStateService;
 
@@ -131,7 +134,10 @@ class CurrentCardStateServiceTest {
             Map<GameMode, CharacterCard> newCards = Map.of(GameMode.CLASSIC, newCard);
             Quote newQuote = mock(Quote.class);
 
+            CharacterCard fallbackCard = mock(CharacterCard.class);
+
             when(repo.findById(1)).thenReturn(Optional.empty());
+            when(characterCardService.findCharacterCardById(1L)).thenReturn(Optional.of(fallbackCard));
 
             // ACT
             currentCardStateService.updateCurrentState(newCards, newQuote);
@@ -144,6 +150,35 @@ class CurrentCardStateServiceTest {
             assertEquals(1, savedState.getId());
             assertEquals(newCard, savedState.getCurrentCards().get(GameMode.CLASSIC));
             assertEquals(newQuote, savedState.getCurrentQuote());
+            // On a fresh DB previousCards has no card to carry forward, so it falls back to id=1.
+            assertEquals(fallbackCard, savedState.getPreviousCards().get(GameMode.CLASSIC));
+        }
+
+        @Test
+        void updateCurrentState_stateDoesNotExist_missingModeFallsBackToBaseCard() {
+            // ARRANGE
+            CharacterCard classicCard = mock(CharacterCard.class);
+            CharacterCard quotesCard = mock(CharacterCard.class);
+            Map<GameMode, CharacterCard> newCards = Map.of(
+                    GameMode.CLASSIC, classicCard,
+                    GameMode.QUOTES_STAGE_2, quotesCard);
+            Quote newQuote = mock(Quote.class);
+
+            CharacterCard fallbackCard = mock(CharacterCard.class);
+
+            when(repo.findById(1)).thenReturn(Optional.empty());
+            when(characterCardService.findCharacterCardById(1L)).thenReturn(Optional.of(fallbackCard));
+
+            // ACT
+            currentCardStateService.updateCurrentState(newCards, newQuote);
+
+            // ASSERT: every played mode gets a non-null previous card (the id=1 fallback).
+            ArgumentCaptor<CurrentCardState> stateCaptor = ArgumentCaptor.forClass(CurrentCardState.class);
+            verify(repo).save(stateCaptor.capture());
+
+            CurrentCardState savedState = stateCaptor.getValue();
+            assertEquals(fallbackCard, savedState.getPreviousCards().get(GameMode.CLASSIC));
+            assertEquals(fallbackCard, savedState.getPreviousCards().get(GameMode.QUOTES_STAGE_2));
         }
     }
 }

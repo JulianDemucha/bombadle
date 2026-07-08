@@ -16,13 +16,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class CurrentCardStateService {
 
+    /**
+     * The base "Kapitan Bomba" character card, seeded by Flyway (V9) and guaranteed to exist.
+     * Used to backfill previousCards on a fresh database (see {@link #updateCurrentState}).
+     */
+    private static final long FALLBACK_CHARACTER_CARD_ID = 1L;
+
     private final CurrentCardStateRepository repo;
     private final CurrentGameStateWrapper currentGameStateWrapper;
+    private final CharacterCardService characterCardService;
 
     @PostConstruct
     public void setUpCurrentCardIfStateExists() {
@@ -68,9 +76,29 @@ public class CurrentCardStateService {
         state.getPreviousCards().putAll(state.getCurrentCards());
         state.setPreviousQuote(state.getCurrentQuote());
 
+        // On a fresh boot there is no current card to carry forward, so previousCards would be
+        // left without an entry for these modes and /previous-character-card would surface a
+        // broken/empty state. Default any missing entry to the base "Kapitan Bomba" card (id=1).
+        // Scope is previousCards only; previousQuote's null-handling is intentionally left as-is.
+        applyPreviousCardFallback(state, newCards.keySet());
+
         state.getCurrentCards().putAll(newCards);
         state.setCurrentQuote(newQuote);
 
         repo.save(state);
+    }
+
+    private void applyPreviousCardFallback(CurrentCardState state, Set<GameMode> modes) {
+        CharacterCard fallbackCard = null;
+        for (GameMode mode : modes) {
+            if (state.getPreviousCards().get(mode) == null) {
+                if (fallbackCard == null) {
+                    fallbackCard = characterCardService.findCharacterCardById(FALLBACK_CHARACTER_CARD_ID)
+                            .orElseThrow(() -> new IllegalStateException(
+                                    "Fallback character card id=" + FALLBACK_CHARACTER_CARD_ID + " not found"));
+                }
+                state.getPreviousCards().put(mode, fallbackCard);
+            }
+        }
     }
 }
