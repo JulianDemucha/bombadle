@@ -12,9 +12,10 @@ server {
 }
 
 upstream backend_active {
-    # Bind-mounted, swapped by deploy.sh. Must stay outside conf.d/ - that dir is
-    # wildcard-included by nginx.conf, which would load this file twice.
-    include /etc/nginx/upstream.conf;
+    # The parent dir is bind-mounted (not this file directly) so deploy.sh's
+    # atomic mv-based rewrite is actually visible here - bind-mounting a single
+    # file pins to its inode, so an atomic replace on the host goes unseen.
+    include /etc/nginx/state/active_upstream.conf;
 }
 
 server {
