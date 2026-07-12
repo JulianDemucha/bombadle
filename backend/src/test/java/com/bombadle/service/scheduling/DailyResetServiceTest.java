@@ -34,8 +34,6 @@ import static org.mockito.Mockito.*;
 class DailyResetServiceTest {
 
     @Mock
-    private CharacterCardService characterCardService;
-    @Mock
     private CurrentGameStateWrapper currentGameStateWrapper;
     @Mock
     private ScoreService scoreService;
@@ -56,7 +54,7 @@ class DailyResetServiceTest {
     @Mock
     private ScoreMaintenanceService scoreMaintenanceService;
     @Mock
-    private QuoteService quoteService;
+    private ModeExclusionHistoryService modeExclusionHistoryService;
     @Mock
     private PlayerStatisticsService playerStatisticsService;
     @Mock
@@ -88,13 +86,13 @@ class DailyResetServiceTest {
             Quote mockQuote = mock(Quote.class);
             when(mockQuote.getCharacterCard()).thenReturn(mockQuoteCard);
 
-            when(quoteService.findRandomQuote()).thenReturn(mockQuote);
+            when(modeExclusionHistoryService.pickQuote(any())).thenReturn(mockQuote);
 
             // The production code reuses one mutable exclusion list across calls, so it must be
             // defensively copied at call time (an ArgumentCaptor would only ever see its final state).
             List<List<Long>> exclusionsPerCall = new ArrayList<>();
-            when(characterCardService.findRandomCardExcluding(any())).thenAnswer(invocation -> {
-                List<Long> excludedIds = invocation.getArgument(0);
+            when(modeExclusionHistoryService.pickCardForMode(any(), any(), any())).thenAnswer(invocation -> {
+                List<Long> excludedIds = invocation.getArgument(1);
                 exclusionsPerCall.add(List.copyOf(excludedIds));
                 return exclusionsPerCall.size() == 1 ? mockClassicCard : mockImagesCard;
             });
@@ -121,12 +119,12 @@ class DailyResetServiceTest {
             inOrder.verify(dailySolverStatisticService).captureClosingDay();
             inOrder.verify(scoreMaintenanceService).resetAllScores();
 
-            verify(quoteService).findRandomQuote();
+            verify(modeExclusionHistoryService).pickQuote(any());
             verify(currentGameStateWrapper).setQuote(mockQuote);
 
             // CLASSIC is picked excluding only the quote's card; IMAGES is picked excluding both
             // the quote's card and the just-picked CLASSIC card, guaranteeing the three are distinct.
-            verify(characterCardService, times(2)).findRandomCardExcluding(any());
+            verify(modeExclusionHistoryService, times(2)).pickCardForMode(any(), any(), any());
             assertEquals(2, exclusionsPerCall.size());
             assertEquals(List.of(100L), exclusionsPerCall.get(0));
             assertEquals(List.of(100L, 200L), exclusionsPerCall.get(1));
@@ -142,14 +140,15 @@ class DailyResetServiceTest {
         @Test
         void executeDailyReset_noQuotesInDatabase_throwsIllegalStateException() {
             // Arrange
-            when(quoteService.findRandomQuote()).thenReturn(null);
+            when(modeExclusionHistoryService.pickQuote(any()))
+                    .thenThrow(new IllegalStateException("No quotes in the database"));
 
             // Act & Assert
             assertThrows(IllegalStateException.class, () -> dailyResetService.executeDailyReset());
 
             verify(adminChangeQueueService).applyAll();
             verify(scoreService).deleteAllInBatch(); // Wszystko co jest przed wylosowaniem się wykonuje
-            verify(characterCardService, never()).findRandomCardExcluding(any());
+            verify(modeExclusionHistoryService, never()).pickCardForMode(any(), any(), any());
             verify(currentGameStateWrapper, never()).set(any(), any());
             verify(currentCardStateService, never()).updateCurrentState(any(), any());
         }
@@ -159,13 +158,13 @@ class DailyResetServiceTest {
             // Arrange
             Quote mockQuote = mock(Quote.class);
             when(mockQuote.getCharacterCard()).thenReturn(null);
-            when(quoteService.findRandomQuote()).thenReturn(mockQuote);
+            when(modeExclusionHistoryService.pickQuote(any())).thenReturn(mockQuote);
 
             // Act & Assert
             assertThrows(IllegalStateException.class, () -> dailyResetService.executeDailyReset());
 
             verify(currentGameStateWrapper).setQuote(mockQuote);
-            verify(characterCardService, never()).findRandomCardExcluding(any());
+            verify(modeExclusionHistoryService, never()).pickCardForMode(any(), any(), any());
             verify(currentCardStateService, never()).updateCurrentState(any(), any());
         }
 
@@ -177,9 +176,10 @@ class DailyResetServiceTest {
 
             Quote mockQuote = mock(Quote.class);
             when(mockQuote.getCharacterCard()).thenReturn(mockQuoteCard);
-            when(quoteService.findRandomQuote()).thenReturn(mockQuote);
+            when(modeExclusionHistoryService.pickQuote(any())).thenReturn(mockQuote);
 
-            when(characterCardService.findRandomCardExcluding(any())).thenReturn(null);
+            when(modeExclusionHistoryService.pickCardForMode(any(), any(), any()))
+                    .thenThrow(new IllegalStateException("No character cards in the database for mode: " + GameMode.CLASSIC));
 
             // Act & Assert
             assertThrows(IllegalStateException.class, () -> dailyResetService.executeDailyReset());

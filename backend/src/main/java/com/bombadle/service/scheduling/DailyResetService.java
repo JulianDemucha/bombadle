@@ -34,7 +34,6 @@ import java.util.Map;
 public class DailyResetService {
     private static final Logger log = LoggerFactory.getLogger(DailyResetService.class);
 
-    private final CharacterCardService characterCardService;
     private final CurrentGameStateWrapper currentGameStateWrapper;
     private final ScoreService scoreService;
     private final GuessListService guessListService;
@@ -45,7 +44,7 @@ public class DailyResetService {
     private final AnonymousGuessListService anonymousGuessListService;
     private final CurrentCardStateService currentCardStateService;
     private final ScoreMaintenanceService scoreMaintenanceService;
-    private final QuoteService quoteService;
+    private final ModeExclusionHistoryService modeExclusionHistoryService;
     private final PlayerStatisticsService playerStatisticsService;
     private final DailySolverStatisticService dailySolverStatisticService;
     private final FeedbackService feedbackService;
@@ -78,10 +77,8 @@ public class DailyResetService {
     }
 
     private void pickNewDailyEntities() {
-        Quote newQuote = quoteService.findRandomQuote();
-        if (newQuote == null) {
-            throw new IllegalStateException("No quotes in the database");
-        }
+        Quote mostRecentQuote = currentCardStateService.getMostRecentQuote().orElse(null);
+        Quote newQuote = modeExclusionHistoryService.pickQuote(mostRecentQuote);
         currentGameStateWrapper.setQuote(newQuote);
 
         CharacterCard quoteCard = newQuote.getCharacterCard();
@@ -99,10 +96,8 @@ public class DailyResetService {
                 continue;
             }
 
-            CharacterCard newCard = characterCardService.findRandomCardExcluding(usedCardIds);
-            if (newCard == null) {
-                throw new IllegalStateException("No character cards in the database for mode: " + mode);
-            }
+            CharacterCard mostRecentCard = currentCardStateService.getMostRecentCard(mode).orElse(null);
+            CharacterCard newCard = modeExclusionHistoryService.pickCardForMode(mode, usedCardIds, mostRecentCard);
 
             applyDailyCard(newDailyCards, usedCardIds, mode, newCard);
         }
