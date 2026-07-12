@@ -4,7 +4,7 @@ import { useAuth } from "../../auth/UseAuth.jsx";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../../api/api.js";
 import axios from "../../api/axios.js";
-import BackArrowButton from "../../components/BackArrowButton.jsx";
+import { useNavigate } from "react-router-dom";
 import AvatarPicker from "./AvatarPicker.jsx";
 import StatisticsSummaryCard from "./components/StatisticsSummaryCard.jsx";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog.jsx";
@@ -35,6 +35,7 @@ export default function PlayerSettingsPage() {
     const user = context.user;
     const reload = context.reload;
     const logout = context.logout;
+    const navigate = useNavigate();
 
     useEffect(() => {
         document.body.classList.add('scrollable-page');
@@ -123,6 +124,14 @@ export default function PlayerSettingsPage() {
         }
     };
 
+    const handleGoBack = () => {
+        if (window.history.length > 1) {
+            navigate(-1);
+            return;
+        }
+        navigate('/');
+    };
+
     if (!user) return null;
 
     const avatarText = avatar ?? user?.avatarImage ?? "AVATAR_DEFAULT";
@@ -130,10 +139,20 @@ export default function PlayerSettingsPage() {
     return (
         <div className="settings-panel-wrapper">
             <div className="settings-top-bar">
-                <BackArrowButton />
                 <button
                     type="button"
-                    className="settings-top-bar__feedback-button"
+                    className="back-arrow-button"
+                    onClick={handleGoBack}
+                    aria-label="Powrot do poprzedniej strony"
+                >
+                    <svg className="back-arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M15 5l-7 7 7 7" />
+                    </svg>
+                    <span className="back-arrow-text"></span>
+                </button>
+                <button
+                    type="button"
+                    className="back-arrow-button back-arrow-button--feedback"
                     style={{ marginLeft: 'auto' }}
                     onClick={feedbackHook.handleOpen}
                 >
