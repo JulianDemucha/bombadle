@@ -70,13 +70,28 @@ bombadle:
 server:
   port: ${SERVER_PORT}
   forward-headers-strategy: framework
+  shutdown: graceful
   servlet:
     session:
       cookie:
         same-site: ${COOKIE_SAME_SITE:Lax}
         secure: ${COOKIE_SECURE:false}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+  health:
+    mail:
+      enabled: false   # SMTP flakiness shouldn't gate deploy health
+
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}

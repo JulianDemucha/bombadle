@@ -112,7 +112,7 @@ public class SecurityConfig {
                 .cors(cors -> {
                 })
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login/**", "/oauth2/**", "/error").permitAll()
+                        .requestMatchers("/login/**", "/oauth2/**", "/error", "/actuator/health/**").permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
 

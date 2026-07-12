@@ -4,7 +4,8 @@ function Footer() {
     return (<>
         <footer className="bombadle-footer">
             <span style={{marginTop: '6rem'}}>Bombadle - 2025</span>
-            <a href="/polityka-prywatnosci">Polityka Prywatności</a>
+            <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">Polityka Prywatności</a>
+            <a href="/regulamin.html" target="_blank" rel="noopener noreferrer">Regulamin strony</a>
             <span style={{fontSize: '11px', opacity: '0.8', lineHeight: '1.5'}}>
                 Ta strona jest nieoficjalną fanowską witryną poświęconą uniwersum Kapitana Bomby.
                 Nie jest powiązana, sponsorowana ani zatwierdzona przez twórców, producentów lub nadawców serialu.

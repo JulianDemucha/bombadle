@@ -1,0 +1,6 @@
+# Force LF for files that run on Linux, regardless of local core.autocrlf.
+*.sh text eol=lf
+deploy/* text eol=lf
+**/nginx/*.template text eol=lf
+Dockerfile text eol=lf
+docker-compose*.yml text eol=lf
