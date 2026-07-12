@@ -5,6 +5,8 @@ import com.bombadle.repository.QuoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class QuoteService {
@@ -12,5 +14,9 @@ public class QuoteService {
 
     public Quote findRandomQuote() {
         return quoteRepository.findRandomQuote();
+    }
+
+    public Quote findRandomQuoteExcluding(List<Long> excludedIds) {
+        return quoteRepository.findRandomQuoteExcluding(excludedIds);
     }
 }
