@@ -121,7 +121,7 @@ services:
     volumes:
       - certbot_certs:/etc/letsencrypt
       - certbot_webroot:/var/www/certbot
-      - /home/ubuntu/bombadle-data/state/active_upstream.conf:/etc/nginx/upstream.conf:ro
+      - /home/ubuntu/bombadle-data/state:/etc/nginx/state:ro
       - /home/ubuntu/bombadle-data/releases/frontend:/var/www/releases/frontend:ro
     restart: unless-stopped
 
