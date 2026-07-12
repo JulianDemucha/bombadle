@@ -53,7 +53,7 @@ function Top3SuperstreakBoard({ topThree = [], loading = false }) {
                 ))}
             </div>
 
-            <Link className="superstreak-board__cta" to="/leaderboard/superstreak" state={{ from: location.pathname }}>
+            <Link className="superstreak-board__cta" to="/leaderboard/superstreak" state={{ from: location.pathname }} replace>
                 Zobacz pełny ranking superserii
             </Link>
         </div>

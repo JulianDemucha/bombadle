@@ -1,24 +1,22 @@
-import {useEffect, useRef} from 'react';
-import {useLocation, useNavigate} from 'react-router-dom';
+import {useEffect} from 'react';
+import {useLocation, useNavigate, useNavigationType} from 'react-router-dom';
 
 const IN_APP_NAV_KEY = 'bombadle_has_in_app_nav';
 
-// Mounted once near the router root. Flags every route change after the
-// initial page load, so BackArrowButton can tell "landed here fresh" apart
-// from "navigated here within the app" even after a reload.
+// Mounted once near the router root. Flags the session once a real PUSH
+// navigation happens, so BackArrowButton knows navigate(-1) has somewhere
+// real to land. Deliberately ignores REPLACE: the leaderboard section (and
+// returning from it) navigates via replace so it collapses back to a single
+// history slot, and those location changes must not be mistaken for "real"
+// history depth or navigate(-1) would fall through past the app entirely.
 export function NavigationTracker() {
-    const location = useLocation();
-    // Compared against location.key (not a mount-order flag) because
-    // StrictMode double-invokes this effect once on initial mount, which
-    // would otherwise flag the very first page load as an in-app navigation.
-    const lastKeyRef = useRef(location.key);
+    const navigationType = useNavigationType();
 
     useEffect(() => {
-        if (location.key !== lastKeyRef.current) {
+        if (navigationType === 'PUSH') {
             sessionStorage.setItem(IN_APP_NAV_KEY, '1');
-            lastKeyRef.current = location.key;
         }
-    }, [location]);
+    }, [navigationType]);
 
     return null;
 }
@@ -29,7 +27,11 @@ export function useBackNavigation() {
 
     return () => {
         if (location.state?.from) {
-            navigate(location.state.from);
+            // replace, not push: entering the leaderboard also replaces (see
+            // Top3Leaderboard/Top3SuperstreakBoard), so the whole detour
+            // collapses back to the one slot the origin page already had —
+            // otherwise a second back-click would land back on the detour.
+            navigate(location.state.from, {replace: true});
             return;
         }
         if (sessionStorage.getItem(IN_APP_NAV_KEY) === '1') {
