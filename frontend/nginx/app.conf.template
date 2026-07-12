@@ -11,6 +11,12 @@ server {
     }
 }
 
+upstream backend_active {
+    # Bind-mounted, swapped by deploy.sh. Must stay outside conf.d/ - that dir is
+    # wildcard-included by nginx.conf, which would load this file twice.
+    include /etc/nginx/upstream.conf;
+}
+
 server {
     listen 443 ssl;
     http2 on;
@@ -20,17 +26,12 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
 
-    root /usr/share/nginx/html;
+    root /var/www/releases/frontend/current;
     index index.html;
     client_max_body_size 10m;
 
-    # docker DNS - resolwuje "backend" leniwie per-request, zamiast raz przy starcie nginx
-    # (bez tego nginx potrafi nie wystartowac, jesli kontener backendu jeszcze nie zdazyl wstac)
-    resolver 127.0.0.11 valid=10s;
-
     location /api/ {
-        set $backend http://backend:8080;
-        proxy_pass $backend;
+        proxy_pass http://backend_active;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -38,8 +39,7 @@ server {
     }
 
     location /oauth2/ {
-        set $backend http://backend:8080;
-        proxy_pass $backend;
+        proxy_pass http://backend_active;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -47,8 +47,7 @@ server {
     }
 
     location /login/ {
-        set $backend http://backend:8080;
-        proxy_pass $backend;
+        proxy_pass http://backend_active;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -56,8 +55,7 @@ server {
     }
 
     location /images/ {
-        set $backend http://backend:8080;
-        proxy_pass $backend;
+        proxy_pass http://backend_active;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

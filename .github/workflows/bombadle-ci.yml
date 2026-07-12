@@ -1,7 +1,7 @@
 name: bombadle CI
 on:
   push:
-    branches: [ "master", "dev", "feature/*" ]
+    branches: [ "dev", "feature/*" ]
   pull_request:
     branches: [ "master", "dev" ]
 

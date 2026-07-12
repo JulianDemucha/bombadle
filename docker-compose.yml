@@ -2,8 +2,6 @@ services:
   db:
     image: postgres:16-alpine
     container_name: bombadle-db
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_DB: bombadle
       POSTGRES_USER: ${DB_USERNAME}
@@ -29,6 +27,7 @@ services:
 
   backend:
     build: ./backend
+    profiles: [ "dev" ]
     container_name: bombadle-backend
     depends_on:
       db:
@@ -57,14 +56,63 @@ services:
       MAIL_FROM: ${MAIL_FROM}
     restart: unless-stopped
 
-  # produkcja: nginx serwuje zbudowany frontend i proxuje /api, /oauth2, /login, /images do backendu,
-  # terminuje realny TLS (Let's Encrypt) - patrz nginx/init-letsencrypt.sh
+  backend-blue:
+    image: ${BACKEND_IMAGE}
+    profiles: [ "prod" ]
+    container_name: bombadle-backend-blue
+    depends_on:
+      db:
+        condition: service_healthy
+    expose: [ "8080" ]
+    environment: &backend-env
+      DB_URL: ${DOCKER_DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SERVER_PORT: ${SERVER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      STORAGE_ROOT_PATH: ${STORAGE_ROOT_PATH}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL}
+      COOKIE_SECURE: ${COOKIE_SECURE}
+      COOKIE_SAME_SITE: ${COOKIE_SAME_SITE}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS}
+      MAIL_FROM: ${MAIL_FROM}
+    healthcheck: &backend-healthcheck
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    stop_grace_period: 30s
+    restart: unless-stopped
+
+  backend-green:
+    image: ${BACKEND_IMAGE}
+    profiles: [ "prod" ]
+    container_name: bombadle-backend-green
+    depends_on:
+      db:
+        condition: service_healthy
+    expose: [ "8080" ]
+    environment: *backend-env
+    healthcheck: *backend-healthcheck
+    stop_grace_period: 30s
+    restart: unless-stopped
+
   nginx:
-    build: ./frontend
+    image: ${NGINX_IMAGE}
     profiles: [ "prod" ]
     container_name: bombadle-nginx
     depends_on:
-      - backend
+      - backend-blue
+      - backend-green
     ports:
       - "80:80"
       - "443:443"
@@ -73,6 +121,8 @@ services:
     volumes:
       - certbot_certs:/etc/letsencrypt
       - certbot_webroot:/var/www/certbot
+      - /home/ubuntu/bombadle-data/state/active_upstream.conf:/etc/nginx/upstream.conf:ro
+      - /home/ubuntu/bombadle-data/releases/frontend:/var/www/releases/frontend:ro
     restart: unless-stopped
 
   certbot:

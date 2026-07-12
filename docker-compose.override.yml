@@ -1,5 +1,8 @@
-# Dev only: Exposes backend port to host for local Vite. Ignored in prod/
+# Dev only: exposes backend/db ports to host for local Vite + IDE/DB client.
 services:
   backend:
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
+  db:
+    ports:
+      - "5432:5432"
