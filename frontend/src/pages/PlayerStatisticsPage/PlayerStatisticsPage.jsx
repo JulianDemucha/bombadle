@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import './PlayerStatisticsPage.css';
 import Header from '../../components/Header.jsx';
 import Footer from '../../components/Footer.jsx';
@@ -25,15 +24,10 @@ export default function PlayerStatisticsPage() {
         availableMetrics,
     } = usePlayerStatistics();
 
-    const navigate = useNavigate();
-
     return (
         <div className="player-statistics-page">
-            <Header />
+            <Header showBackButton />
             <div className="player-statistics-container">
-                <button onClick={() => navigate(-1)} className="back-button">
-                    Powrót
-                </button>
                 <h1>Twoje statystyki</h1>
 
                 {loading && <p className="player-statistics-message">Ładowanie statystyk...</p>}

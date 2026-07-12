@@ -1,7 +1,7 @@
 import React from 'react';
 import useLeaderboard from './hooks/useLeaderboard';
 import './LeaderboardPage.css';
-import {useNavigate, useParams} from 'react-router-dom';
+import {useParams} from 'react-router-dom';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import LeaderboardModeSwitcher from '../../components/LeaderboardModeSwitcher';
@@ -88,8 +88,6 @@ const LeaderboardPage = () => {
         goToLastPage,
     } = useLeaderboard(currentMode);
 
-    const navigate = useNavigate();
-
     const getTitle = () => {
         switch (currentMode) {
             case 'images':
@@ -106,11 +104,8 @@ const LeaderboardPage = () => {
     if (error) {
         return (
             <div className="leaderboard-page">
-                <Header/>
+                <Header showBackButton/>
                 <div className="leaderboard-container">
-                    <button onClick={() => navigate(-1)} className="back-button">
-                        Powrót
-                    </button>
                     <h1>{getTitle()}</h1>
                     <LeaderboardModeSwitcher currentMode={currentMode}/>
                     <div>Wystąpił błąd: {error}</div>
@@ -132,11 +127,8 @@ const LeaderboardPage = () => {
 
     return (
         <div className="leaderboard-page">
-            <Header/>
+            <Header showBackButton/>
             <div className="leaderboard-container">
-                <button onClick={() => navigate(-1)} className="back-button">
-                    Powrót
-                </button>
                 <h1>{getTitle()}</h1>
                 <LeaderboardModeSwitcher currentMode={currentMode}/>
 

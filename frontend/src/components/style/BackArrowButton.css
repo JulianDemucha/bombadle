@@ -124,3 +124,22 @@
         left: calc(2rem - 50px);
     }
 }
+
+/* PlayerSettingsPage's top bar is a plain flex row (no header-container
+   banner behind it), so the button sits in normal flow here instead of
+   the absolute positioning used everywhere else. */
+.settings-top-bar .nav-back-button {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+}
+
+.settings-top-bar .nav-back-button:hover {
+    transform: scale(1.1);
+}
+
+.settings-top-bar .nav-back-button-img {
+    width: 2rem;
+    height: 2rem;
+}

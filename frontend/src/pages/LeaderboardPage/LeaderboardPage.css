@@ -176,29 +176,6 @@
     text-shadow: none;
 }
 
-.back-button {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    background-color: #616161;
-    border-color: #616161;
-    box-shadow: 0 2px 0 #4f4035;
-    padding: 6px 12px;
-    font-size: 1rem;
-    color: #f7f0e6;
-    font-family: 'PixelifySans', monospace;
-    border: 2px solid #5a463a;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.1s ease-in-out;
-}
-
-.back-button:hover {
-    box-shadow: 0 4px 0 #4f4035;
-    filter: brightness(1.1);
-    transform: translateY(-2px);
-}
-
 .text-center { text-align: center; }
 .text-left { text-align: left; }
 .text-ellipsis {
@@ -248,12 +225,6 @@
 
     .leaderboard-column .leaderboard-header {
         font-size: 0.66rem;
-    }
-}
-
-@media (max-width: 800px) {
-    .back-button {
-        font-size: 0.8rem;
     }
 }
 

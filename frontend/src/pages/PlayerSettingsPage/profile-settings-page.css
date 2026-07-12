@@ -8,21 +8,23 @@
 }
 
 .settings-panel-wrapper .settings-top-bar {
+    position: relative;
     max-width: 60rem;
     margin: 0 auto 0.9rem;
     display: flex;
+    align-items: center;
     justify-content: flex-start;
 }
 
-.settings-panel-wrapper .back-arrow-button {
+.settings-panel-wrapper .settings-top-bar__feedback-button {
     min-width: 8.2rem;
     height: 2.8rem;
     padding: 0 0.95rem;
-    border: 3px solid var(--primary);
+    border: 3px solid black;
     border-radius: 0.65rem;
-    background-color: var(--secondary);
-    color: var(--primary);
-    font-family: 'PixelifySans', monospace;
+    background-color: var(--accent);
+    color: antiquewhite;
+    font-family: monospace;
     font-size: 1rem;
     font-weight: 700;
     line-height: 1;
@@ -37,52 +39,20 @@
     z-index: 2;
 }
 
-.settings-panel-wrapper .back-arrow-button:hover {
-    background-color: var(--secondary);
-    box-shadow: 4px 4px 0 var(--primary);
+.settings-panel-wrapper .settings-top-bar__feedback-button:hover {
+    background-color: var(--primary);
+    box-shadow: 4px 4px 0 black;
     transform: translateY(-1px);
 }
 
-.settings-panel-wrapper .back-arrow-button:active {
+.settings-panel-wrapper .settings-top-bar__feedback-button:active {
     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
     transform: translateY(1px);
 }
 
-.settings-panel-wrapper .back-arrow-button:focus-visible {
+.settings-panel-wrapper .settings-top-bar__feedback-button:focus-visible {
     outline: 3px solid rgba(28, 60, 42, 0.7);
     outline-offset: 2px;
-}
-
-.settings-panel-wrapper .back-arrow-button--feedback {
-    background-color: var(--accent);
-    color: antiquewhite;
-    font-family: monospace;
-    border-color: black;
-}
-
-.settings-panel-wrapper .back-arrow-button--feedback:hover {
-    background-color: var(--primary);
-    box-shadow: 4px 4px 0 black;
-}
-
-.settings-panel-wrapper .back-arrow-icon {
-    width: 1.2rem;
-    height: 1.2rem;
-    display: inline-block;
-    flex: 0 0 auto;
-}
-
-.settings-panel-wrapper .back-arrow-icon path {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.settings-panel-wrapper .back-arrow-text {
-    font-size: 1rem;
-    line-height: 1;
 }
 
 .settings-panel-wrapper h1, h2, h3 {
@@ -283,18 +253,10 @@
         padding: 1.5rem;
     }
 
-    .settings-panel-wrapper .back-arrow-button {
+    .settings-panel-wrapper .settings-top-bar__feedback-button {
         min-width: 7.3rem;
         height: 2.5rem;
         padding: 0 0.75rem;
-    }
-
-    .settings-panel-wrapper .back-arrow-icon {
-        width: 1.05rem;
-        height: 1.05rem;
-    }
-
-    .settings-panel-wrapper .back-arrow-text {
         font-size: 0.85rem;
     }
 
