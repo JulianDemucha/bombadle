@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import './style/LeaderboardModeSwitcher.css';
 
 const MODES = [
@@ -11,12 +11,17 @@ const MODES = [
 ];
 
 function LeaderboardModeSwitcher({ currentMode }) {
+    const location = useLocation();
+    const from = location.state?.from;
+
     return (
         <nav className="leaderboard-mode-switcher" aria-label="Wybór rankingu">
             {MODES.map(({ mode, label }) => (
                 <Link
                     key={mode}
                     to={`/leaderboard/${mode}`}
+                    state={from ? { from } : undefined}
+                    replace
                     className={`leaderboard-mode-switcher__item${mode === currentMode ? ' is-active' : ''}`}
                     aria-current={mode === currentMode ? 'page' : undefined}
                 >
