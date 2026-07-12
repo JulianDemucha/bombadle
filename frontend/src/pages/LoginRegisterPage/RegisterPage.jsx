@@ -12,6 +12,8 @@ import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
 import useAnonymousMergePrompt from "../../components/MergePrompt/useAnonymousMergePrompt.js";
 import AccountRecoveryModal from "../../components/AccountRecovery/AccountRecoveryModal.jsx";
 import useAccountRecovery from "../../components/AccountRecovery/useAccountRecovery.js";
+import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog.jsx";
+import useInAppBrowserWarning from "../../components/InAppBrowserWarning/useInAppBrowserWarning.js";
 import PasswordStrengthMeter from "../../components/PasswordStrength/PasswordStrengthMeter.jsx";
 import {evaluatePassword, PASSWORD_COMPLEXITY_ERROR} from "../../components/PasswordStrength/passwordRules.js";
 
@@ -105,6 +107,7 @@ function RegisterPage() {
     const navigate = useNavigate();
     const merge = useAnonymousMergePrompt();
     const recovery = useAccountRecovery();
+    const inAppBrowserWarning = useInAppBrowserWarning();
 
     const setUsernameError = useCallback((msg) => {
         setErrors(prev => ({...prev, username: msg}));
@@ -215,8 +218,10 @@ function RegisterPage() {
     };
 
     const handleGoogleLogin = () => {
-        merge.requestAuth(() => {
-            window.location.href = 'https://localhost:8443/oauth2/authorization/google';
+        inAppBrowserWarning.guardGoogleLogin(() => {
+            merge.requestAuth(() => {
+                window.location.href = 'https://localhost:8443/oauth2/authorization/google';
+            });
         });
     };
 
@@ -225,6 +230,13 @@ function RegisterPage() {
             <AuthHeader />
             <MergePrompt isOpen={merge.isOpen} onConfirm={merge.confirm} onDecline={merge.decline} />
             <AccountRecoveryModal {...recovery} />
+            <ConfirmDialog
+                isOpen={inAppBrowserWarning.isOpen}
+                title="Wbudowana przeglądarka"
+                message="Korzystasz z wbudowanej przeglądarki (np. z aplikacji Messenger lub Instagram). Aby zalogować się przez Google, otwórz tę stronę w standardowej przeglądarce (np. Chrome lub Safari)."
+                confirmLabel="OK"
+                onConfirm={inAppBrowserWarning.dismiss}
+            />
             <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>REJESTRACJA</h1>
 
