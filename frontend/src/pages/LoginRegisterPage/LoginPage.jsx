@@ -186,11 +186,11 @@ function LoginPage() {
                 <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
                     ZALOGUJ SIĘ PRZEZ GOOGLE
                 </button>
-                <p className="google-consent-note">
-                    Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"
-                                                              rel="noopener noreferrer">regulamin</a> i{" "}
-                    <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności</a>.
-                </p>
+                {/*<p className="google-consent-note">*/}
+                {/*    Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"*/}
+                {/*                                              rel="noopener noreferrer">regulamin</a> i{" "}*/}
+                {/*    <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności</a>.*/}
+                {/*</p>*/}
 
                 <div className="loginFooter">
                     Nie masz konta? <a href="/register">Zarejestruj się</a>

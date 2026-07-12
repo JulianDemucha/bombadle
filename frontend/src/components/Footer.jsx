@@ -3,7 +3,7 @@ import '../style/footer.css';
 function Footer() {
     return (<>
         <footer className="bombadle-footer">
-            <span style={{marginTop: '6rem'}}>Bombadle - 2025</span>
+            <span style={{marginTop: '6rem'}}>Bombadle - 2026</span>
             <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">Polityka Prywatności</a>
             <a href="/regulamin.html" target="_blank" rel="noopener noreferrer">Regulamin strony</a>
             <span style={{fontSize: '11px', opacity: '0.8', lineHeight: '1.5'}}>

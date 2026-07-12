@@ -4,6 +4,7 @@ import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import {routes} from "./routes.jsx";
 import {AuthProvider} from "./auth/AuthProvider.jsx";
 import {setupSilentRefresh} from "./api/axios.js";
+import {NavigationTracker} from "./components/BackNavigation.js";
 
 function App() {
     useEffect(() => {
@@ -12,6 +13,7 @@ function App() {
     return (
         <>
             <BrowserRouter>
+                <NavigationTracker/>
                 <AuthProvider>
                     <main style={{minHeight: '80vh'}}>
                         <Routes>
