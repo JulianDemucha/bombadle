@@ -1,12 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import './style/CharacterSearchBar.css';
 import { apiFetch } from '../api/api.js';
-
-const normalizeText = (value) =>
-    (value || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+import { normalizeForSearch } from '../utils/textNormalization.js';
 
 const CharacterSearchBar = ({ onSelectCharacterId, disabled = false }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -31,12 +26,12 @@ const CharacterSearchBar = ({ onSelectCharacterId, disabled = false }) => {
     }, []);
 
     const filteredCards = useMemo(() => {
-        const term = normalizeText(searchTerm.trim());
+        const term = normalizeForSearch(searchTerm.trim());
         if (!term) return [];
 
         const matchesCard = (card) =>
-            normalizeText(card.name).includes(term) ||
-            (card.aliases || []).some((alias) => normalizeText(alias).includes(term));
+            normalizeForSearch(card.name).includes(term) ||
+            (card.aliases || []).some((alias) => normalizeForSearch(alias).includes(term));
 
         return characterCards
             .filter(matchesCard)
