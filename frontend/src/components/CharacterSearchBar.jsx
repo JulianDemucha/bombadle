@@ -34,8 +34,12 @@ const CharacterSearchBar = ({ onSelectCharacterId, disabled = false }) => {
         const term = normalizeText(searchTerm.trim());
         if (!term) return [];
 
+        const matchesCard = (card) =>
+            normalizeText(card.name).includes(term) ||
+            (card.aliases || []).some((alias) => normalizeText(alias).includes(term));
+
         return characterCards
-            .filter((card) => normalizeText(card.name).includes(term))
+            .filter(matchesCard)
             .slice(0, 10);
     }, [searchTerm, characterCards]);
 
