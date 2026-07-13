@@ -1,6 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import './style/BackArrowButton.css';
+import { useBackNavigation } from './BackNavigation.js';
 import backArrowButtonImage from '../assets/buttons/back_arrow_button.png';
 
 const handleImageError = (e) => {
@@ -8,12 +8,12 @@ const handleImageError = (e) => {
 };
 
 const BackArrowButton = () => {
-    const navigate = useNavigate();
+    const goBack = useBackNavigation();
     return (
         <button
             type="button"
             className="nav-back-button"
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             aria-label="Powrót do poprzedniej strony"
         >
             <img

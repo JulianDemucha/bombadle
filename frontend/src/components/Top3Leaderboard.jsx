@@ -28,7 +28,7 @@ function Top3Leaderboard({
     };
 
     const handleFullLeaderboardRedirect = () => {
-        navigate(leaderboardPath || `/leaderboard/${mode}`);
+        navigate(leaderboardPath || `/leaderboard/${mode}`, { state: { from: location.pathname }, replace: true });
     };
 
     return (

@@ -4,16 +4,18 @@ import com.bombadle.entity.CharacterCard;
 import lombok.Builder;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Builder
-public record CharacterCardSearchDto(long id, String name, String imageSrc) {
+public record CharacterCardSearchDto(long id, String name, String imageSrc, Set<String> aliases) {
 
     public static CharacterCardSearchDto toDto(CharacterCard characterCard) {
         return CharacterCardSearchDto.builder()
                 .id(characterCard.getId())
                 .name(characterCard.getName())
                 .imageSrc(characterCard.getImageSrc())
+                .aliases(characterCard.getAliases())
                 .build();
     }
 

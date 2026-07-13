@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -94,6 +95,81 @@ class CurrentCardStateServiceTest {
 
             // ACT & ASSERT
             assertThrows(IllegalStateException.class, () -> currentCardStateService.getCurrentCardState());
+        }
+    }
+
+    @Nested
+    class GetMostRecentCardTests {
+
+        @Test
+        void getMostRecentCard_stateHasCardForMode_returnsCard() {
+            // ARRANGE
+            CurrentCardState state = new CurrentCardState();
+            CharacterCard card = mock(CharacterCard.class);
+            state.getCurrentCards().put(GameMode.CLASSIC, card);
+            when(repo.findById(1)).thenReturn(Optional.of(state));
+
+            // ACT
+            Optional<CharacterCard> result = currentCardStateService.getMostRecentCard(GameMode.CLASSIC);
+
+            // ASSERT
+            assertEquals(Optional.of(card), result);
+        }
+
+        @Test
+        void getMostRecentCard_stateHasNoCardForMode_returnsEmptyOptional() {
+            // ARRANGE
+            CurrentCardState state = new CurrentCardState();
+            when(repo.findById(1)).thenReturn(Optional.of(state));
+
+            // ACT
+            Optional<CharacterCard> result = currentCardStateService.getMostRecentCard(GameMode.IMAGES);
+
+            // ASSERT
+            assertTrue(result.isEmpty());
+        }
+
+        @Test
+        void getMostRecentCard_stateDoesNotExist_returnsEmptyOptional() {
+            // ARRANGE
+            when(repo.findById(1)).thenReturn(Optional.empty());
+
+            // ACT
+            Optional<CharacterCard> result = currentCardStateService.getMostRecentCard(GameMode.CLASSIC);
+
+            // ASSERT
+            assertTrue(result.isEmpty());
+        }
+    }
+
+    @Nested
+    class GetMostRecentQuoteTests {
+
+        @Test
+        void getMostRecentQuote_stateHasQuote_returnsQuote() {
+            // ARRANGE
+            CurrentCardState state = new CurrentCardState();
+            Quote quote = mock(Quote.class);
+            state.setCurrentQuote(quote);
+            when(repo.findById(1)).thenReturn(Optional.of(state));
+
+            // ACT
+            Optional<Quote> result = currentCardStateService.getMostRecentQuote();
+
+            // ASSERT
+            assertEquals(Optional.of(quote), result);
+        }
+
+        @Test
+        void getMostRecentQuote_stateDoesNotExist_returnsEmptyOptional() {
+            // ARRANGE
+            when(repo.findById(1)).thenReturn(Optional.empty());
+
+            // ACT
+            Optional<Quote> result = currentCardStateService.getMostRecentQuote();
+
+            // ASSERT
+            assertTrue(result.isEmpty());
         }
     }
 

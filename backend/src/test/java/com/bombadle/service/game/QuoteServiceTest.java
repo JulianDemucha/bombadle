@@ -9,6 +9,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
@@ -52,6 +54,39 @@ class QuoteServiceTest {
             // ASSERT
             assertNull(result);
             verify(quoteRepository).findRandomQuote();
+        }
+    }
+
+    @Nested
+    class FindRandomQuoteExcludingTests {
+
+        @Test
+        void findRandomQuoteExcluding_quoteExists_returnsQuote() {
+            // ARRANGE
+            Quote expectedQuote = mock(Quote.class);
+            List<Long> excludedIds = List.of(1L, 2L);
+            when(quoteRepository.findRandomQuoteExcluding(excludedIds)).thenReturn(expectedQuote);
+
+            // ACT
+            Quote result = quoteService.findRandomQuoteExcluding(excludedIds);
+
+            // ASSERT
+            assertEquals(expectedQuote, result);
+            verify(quoteRepository).findRandomQuoteExcluding(excludedIds);
+        }
+
+        @Test
+        void findRandomQuoteExcluding_poolExhausted_returnsNull() {
+            // ARRANGE
+            List<Long> excludedIds = List.of(1L, 2L);
+            when(quoteRepository.findRandomQuoteExcluding(excludedIds)).thenReturn(null);
+
+            // ACT
+            Quote result = quoteService.findRandomQuoteExcluding(excludedIds);
+
+            // ASSERT
+            assertNull(result);
+            verify(quoteRepository).findRandomQuoteExcluding(excludedIds);
         }
     }
 }

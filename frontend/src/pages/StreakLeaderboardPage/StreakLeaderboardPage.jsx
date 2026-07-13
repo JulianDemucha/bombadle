@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import useStreakLeaderboard from './hooks/useStreakLeaderboard';
 import './StreakLeaderboardPage.css';
 import Footer from '../../components/Footer';
@@ -43,8 +42,6 @@ const StreakLeaderboardPage = ({ variant = 'streak' }) => {
         goToLastPage,
     } = useStreakLeaderboard(variant);
 
-    const navigate = useNavigate();
-
     const isLoading = loading && !leaderboardData;
     const content = isLoading ? Array.from({ length: 10 }, () => ({})) : (leaderboardData?.content || []);
     const totalPages = leaderboardData?.totalPages || 1;
@@ -53,11 +50,8 @@ const StreakLeaderboardPage = ({ variant = 'streak' }) => {
 
     return (
         <div className="streak-leaderboard">
-            <Header/>
+            <Header showBackButton/>
             <div className="streak-leaderboard__container">
-                <button onClick={() => navigate(-1)} className="streak-leaderboard__back">
-                    Powrót
-                </button>
                 <h1 className="streak-leaderboard__title">{config.title}</h1>
                 <LeaderboardModeSwitcher currentMode={variant}/>
 

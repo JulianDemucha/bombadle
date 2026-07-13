@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import StreakFlame from './StreakFlame.jsx';
 import InfoTooltip from './InfoTooltip.jsx';
 import { SUPERSTREAK_TOOLTIP } from './streakInfo.js';
@@ -9,6 +9,7 @@ const avatarSrc = (avatarImage) =>
     avatarImage ? `/avatar/${avatarImage}.jpg` : '/avatar/AVATAR_DEFAULT.jpg';
 
 function Top3SuperstreakBoard({ topThree = [], loading = false }) {
+    const location = useLocation();
     return (
         <div className="superstreak-board">
             <h3 className="superstreak-board__title">Najdłuższe superserie</h3>
@@ -52,7 +53,7 @@ function Top3SuperstreakBoard({ topThree = [], loading = false }) {
                 ))}
             </div>
 
-            <Link className="superstreak-board__cta" to="/leaderboard/superstreak">
+            <Link className="superstreak-board__cta" to="/leaderboard/superstreak" state={{ from: location.pathname }} replace>
                 Zobacz pełny ranking superserii
             </Link>
         </div>

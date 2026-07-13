@@ -45,6 +45,16 @@ public class CurrentCardStateService {
         return repo.findById(1).orElseThrow(() -> new IllegalStateException("Global card state not found"));
     }
 
+    // currentCards, not previousCards: this reads as "most recent pick" only before updateCurrentState shifts it.
+    public Optional<CharacterCard> getMostRecentCard(GameMode mode) {
+        return repo.findById(1).map(state -> state.getCurrentCards().get(mode));
+    }
+
+    // currentQuote, not previousQuote: this reads as "most recent pick" only before updateCurrentState shifts it.
+    public Optional<Quote> getMostRecentQuote() {
+        return repo.findById(1).map(CurrentCardState::getCurrentQuote);
+    }
+
     /**
      * Changes exactly once per day, at {@link #updateCurrentState}, which evicts this cache.
      */

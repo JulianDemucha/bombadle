@@ -22,23 +22,6 @@
     margin-bottom: 1.5rem;
 }
 
-.player-statistics-container .back-button {
-    margin-bottom: 1rem;
-    padding: 0.5rem 1rem;
-    font-family: 'Courier New', monospace;
-    font-weight: 700;
-    cursor: pointer;
-    color: var(--login_primary);
-    background-color: var(--secondary);
-    border: 2px solid var(--primary);
-    border-radius: 0.5rem;
-}
-
-.player-statistics-container .back-button:hover {
-    box-shadow: 4px 4px 0 var(--primary);
-    transform: translate(-2px, -2px);
-}
-
 .player-statistics-message {
     color: var(--primary);
     padding: 2rem 0;

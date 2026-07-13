@@ -10,6 +10,8 @@ import MergePrompt from "../../components/MergePrompt/MergePrompt.jsx";
 import useAnonymousMergePrompt from "../../components/MergePrompt/useAnonymousMergePrompt.js";
 import AccountRecoveryModal from "../../components/AccountRecovery/AccountRecoveryModal.jsx";
 import useAccountRecovery from "../../components/AccountRecovery/useAccountRecovery.js";
+import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog.jsx";
+import useInAppBrowserWarning from "../../components/InAppBrowserWarning/useInAppBrowserWarning.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const MIN_PASSWORD_LEN = 8;
@@ -34,6 +36,7 @@ function LoginPage() {
     const {reload} = useAuth();
     const merge = useAnonymousMergePrompt();
     const recovery = useAccountRecovery();
+    const inAppBrowserWarning = useInAppBrowserWarning();
 
     useEffect(() => {
         document.body.classList.add('scrollable-page');
@@ -94,8 +97,10 @@ function LoginPage() {
     };
 
     const handleGoogleLogin = () => {
-        merge.requestAuth(() => {
-            window.location.href = '/oauth2/authorization/google';
+        inAppBrowserWarning.guardGoogleLogin(() => {
+            merge.requestAuth(() => {
+                window.location.href = '/oauth2/authorization/google';
+            });
         });
     };
 
@@ -139,6 +144,13 @@ function LoginPage() {
             <AuthHeader />
             <MergePrompt isOpen={merge.isOpen} onConfirm={merge.confirm} onDecline={merge.decline} />
             <AccountRecoveryModal {...recovery} />
+            <ConfirmDialog
+                isOpen={inAppBrowserWarning.isOpen}
+                title="Wbudowana przeglądarka"
+                message="Korzystasz z wbudowanej przeglądarki (np. z aplikacji Messenger lub Instagram). Aby zalogować się przez Google, otwórz tę stronę w standardowej przeglądarce (np. Chrome lub Safari)."
+                confirmLabel="OK"
+                onConfirm={inAppBrowserWarning.dismiss}
+            />
             <form className="login-container" onSubmit={handleSubmit} noValidate>
                 <h1>LOGOWANIE</h1>
 
@@ -186,11 +198,11 @@ function LoginPage() {
                 <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
                     ZALOGUJ SIĘ PRZEZ GOOGLE
                 </button>
-                <p className="google-consent-note">
-                    Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"
-                                                              rel="noopener noreferrer">regulamin</a> i{" "}
-                    <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności</a>.
-                </p>
+                {/*<p className="google-consent-note">*/}
+                {/*    Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"*/}
+                {/*                                              rel="noopener noreferrer">regulamin</a> i{" "}*/}
+                {/*    <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności</a>.*/}
+                {/*</p>*/}
 
                 <div className="loginFooter">
                     Nie masz konta? <a href="/register">Zarejestruj się</a>

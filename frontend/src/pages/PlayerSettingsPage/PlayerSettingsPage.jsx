@@ -14,6 +14,7 @@ import InfoTooltip from "../../components/InfoTooltip.jsx";
 import useAccountDeletion from "./hooks/useAccountDeletion.js";
 import PasswordStrengthMeter from "../../components/PasswordStrength/PasswordStrengthMeter.jsx";
 import { evaluatePassword, PASSWORD_COMPLEXITY_ERROR } from "../../components/PasswordStrength/passwordRules.js";
+import { formatDate } from "./utils/formatDate.js";
 
 export default function PlayerSettingsPage() {
     const [displayName, setDisplayName] = useState("");
@@ -170,6 +171,7 @@ export default function PlayerSettingsPage() {
                     <div className="profile-info">
                         <h2>{displayName}</h2>
                         <p>{user.email}</p>
+                        <p className="profile-info__created-at">Konto założone: {formatDate(user.createdAt)}</p>
                         <AvatarPicker onAvatarSelect={handleAvatarSelected} />
                     </div>
                 </div>
