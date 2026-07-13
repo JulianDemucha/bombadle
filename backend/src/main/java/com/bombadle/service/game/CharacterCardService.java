@@ -24,7 +24,7 @@ public class CharacterCardService {
 
     @Cacheable(value="search-index")
     public List<CharacterCardSearchDto> getAllCardsForSearch() {
-        return repo.findAllCardsForSearch();
+        return CharacterCardSearchDto.toDto(repo.findAll());
     }
 
     public CharacterCard findRandomCard() {

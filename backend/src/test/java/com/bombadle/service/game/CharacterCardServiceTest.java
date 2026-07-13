@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -62,18 +63,25 @@ class CharacterCardServiceTest {
     class GetAllCardsForSearchTests {
 
         @Test
-        void getAllCardsForSearch_cardsExist_returnsListOfCards() {
+        void getAllCardsForSearch_cardsExist_returnsMappedDtosIncludingAliases() {
             // Arrange
-            CharacterCardSearchDto dto = mock(CharacterCardSearchDto.class);
-            List<CharacterCardSearchDto> expectedList = List.of(dto);
-            when(repo.findAllCardsForSearch()).thenReturn(expectedList);
+            CharacterCard card = mock(CharacterCard.class);
+            when(card.getId()).thenReturn(1L);
+            when(card.getName()).thenReturn("Kapitan Bomba");
+            when(card.getImageSrc()).thenReturn("/images/1.jpg");
+            when(card.getAliases()).thenReturn(Set.of("Kapitan Dupa"));
+            when(repo.findAll()).thenReturn(List.of(card));
 
             // Act
             List<CharacterCardSearchDto> result = characterCardService.getAllCardsForSearch();
 
             // Assert
-            assertEquals(expectedList, result);
             assertEquals(1, result.size());
+            CharacterCardSearchDto dto = result.get(0);
+            assertEquals(1L, dto.id());
+            assertEquals("Kapitan Bomba", dto.name());
+            assertEquals("/images/1.jpg", dto.imageSrc());
+            assertEquals(Set.of("Kapitan Dupa"), dto.aliases());
         }
     }
 
