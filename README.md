@@ -1,2 +1,3 @@
-bombadle.pl
-better readme - work in progress 1-245 dni roboczych
+*****bombadle.pl*****
+
+`better readme - work in progress 1-245 dni roboczych`
