@@ -63,6 +63,13 @@ public class DailyResetService {
         refreshCaches();
     }
 
+    /** Fresh database: picks the first daily entities right away instead of waiting for 07:00. */
+    @Transactional
+    public void initializeFirstDay() {
+        pickNewDailyEntities();
+        refreshCaches();
+    }
+
     private void clearPreviousDayState() {
         adminChangeQueueService.applyAll();
         guessListService.truncateTable();

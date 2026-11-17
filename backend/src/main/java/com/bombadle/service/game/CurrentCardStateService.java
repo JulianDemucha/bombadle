@@ -41,6 +41,10 @@ public class CurrentCardStateService {
         });
     }
 
+    public boolean hasState() {
+        return repo.existsById(1);
+    }
+
     public CurrentCardState getCurrentCardState() {
         return repo.findById(1).orElseThrow(() -> new IllegalStateException("Global card state not found"));
     }
