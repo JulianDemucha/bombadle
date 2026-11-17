@@ -41,6 +41,13 @@ npm run dev                 # http://localhost:5173
 
 ## Technology
 
+![Java 21](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
+![Spring Boot 3.5](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?logo=springboot&logoColor=white)
+![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Vite 7](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+
 ### Backend
 - Java 21, Spring Boot 3.5 (Web, Data JPA, Validation, Cache, Mail, Actuator), OpenAPI docs via springdoc
 - Scheduled jobs for the daily reset, activity tracking and token cleanup
