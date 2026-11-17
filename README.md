@@ -76,4 +76,6 @@ npm run dev                 # http://localhost:5173
 
 ## License
 
-The source code is released under the [MIT License](LICENSE). Characters, images and quotes from *Kapitan Bomba* belong to their respective rights holders and are not covered by it.
+The source code is released under the [MIT License](LICENSE).
+
+Bombadle is an unofficial, non-commercial fan project, not affiliated with the creators, producers or distributors of *Kapitan Bomba*. The characters, quotes, names and images from the series belong to their respective rights holders and are not covered by the license.
