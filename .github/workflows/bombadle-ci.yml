@@ -22,6 +22,13 @@ jobs:
     - name: Build and Test with Maven
       run: mvn -B clean verify --file backend/pom.xml
 
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: backend/target/site/jacoco/jacoco.xml
+        fail_ci_if_error: false
+
     - name: Upload JaCoCo Coverage Report
       uses: actions/upload-artifact@v4
       if: always()
