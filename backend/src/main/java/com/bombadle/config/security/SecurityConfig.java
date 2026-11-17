@@ -6,6 +6,7 @@ import com.bombadle.security.oauth2.OAuth2SuccessHandler;
 import com.bombadle.service.auth.cookie.CsrfCookieService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -14,6 +15,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
@@ -77,7 +79,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**", "/test/security/admin").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
                         .requestMatchers("/api/daily-reset/manual-trigger").hasAuthority("ROLE_SUPERADMIN")
                         .requestMatchers(
-                                "/api/auth/check/**", "/api/auth/register", "/api/auth/authenticate",
+                                "/api/auth/check/**", "/api/auth/providers", "/api/auth/register", "/api/auth/authenticate",
                                 "/api/auth/refreshToken",
                                 "/api/character-card/search-index", "/api/leaderboard/**", "/images/**",
                                 "/api/guess-list/**",
@@ -107,7 +109,9 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)   //prod: webSecurityFilterChain
-    public SecurityFilterChain oauth2LoginSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain oauth2LoginSecurityFilterChain(
+            HttpSecurity http,
+            ObjectProvider<ClientRegistrationRepository> clientRegistrations) throws Exception {
         http
                 .cors(cors -> {
                 })
@@ -115,26 +119,29 @@ public class SecurityConfig {
                         .requestMatchers("/login/**", "/oauth2/**", "/error", "/actuator/health/**").permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(AbstractHttpConfigurer::disable)
-
-                .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(authz -> authz
-                                .authorizationRequestRepository(authorizationRequestRepository())
-                        )
-                        .userInfoEndpoint(u -> u
-                                .oidcUserService(customOAuth2UserService)
-                        )
-                        .successHandler(oAuth2SuccessHandler)
-                        .failureHandler((request, response, exception) -> {
-                            exception.printStackTrace();
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType("application/json");
-                            response.getWriter().write("{\"error\":\"" + exception.getMessage() + "\"}");
-                        })
-                )
                 .sessionManagement(sess -> sess
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // HttpSessionOAuth2AuthorizationRequestRepository
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Google sign-in is optional: without credentials there is no ClientRegistrationRepository
+        if (clientRegistrations.getIfAvailable() != null) {
+            http.oauth2Login(oauth2 -> oauth2
+                    .authorizationEndpoint(authz -> authz
+                            .authorizationRequestRepository(authorizationRequestRepository())
+                    )
+                    .userInfoEndpoint(u -> u
+                            .oidcUserService(customOAuth2UserService)
+                    )
+                    .successHandler(oAuth2SuccessHandler)
+                    .failureHandler((request, response, exception) -> {
+                        exception.printStackTrace();
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\":\"" + exception.getMessage() + "\"}");
+                    })
+            );
+        }
 
         return http.build();
     }

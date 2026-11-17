@@ -12,6 +12,7 @@ import AccountRecoveryModal from "../../components/AccountRecovery/AccountRecove
 import useAccountRecovery from "../../components/AccountRecovery/useAccountRecovery.js";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog.jsx";
 import useInAppBrowserWarning from "../../components/InAppBrowserWarning/useInAppBrowserWarning.js";
+import useAuthProviders from "./useAuthProviders.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const MIN_PASSWORD_LEN = 8;
@@ -37,6 +38,7 @@ function LoginPage() {
     const merge = useAnonymousMergePrompt();
     const recovery = useAccountRecovery();
     const inAppBrowserWarning = useInAppBrowserWarning();
+    const providers = useAuthProviders();
 
     useEffect(() => {
         document.body.classList.add('scrollable-page');
@@ -192,12 +194,16 @@ function LoginPage() {
                     {loading ? "Ładowanie..." : "ZALOGUJ SIĘ"}
                 </button>
 
-                <div className="divider">LUB</div>
-                <div aria-live="polite" className="form-message">
-                </div>
-                <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
-                    ZALOGUJ SIĘ PRZEZ GOOGLE
-                </button>
+                {providers.google && (
+                    <>
+                        <div className="divider">LUB</div>
+                        <div aria-live="polite" className="form-message">
+                        </div>
+                        <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
+                            ZALOGUJ SIĘ PRZEZ GOOGLE
+                        </button>
+                    </>
+                )}
                 {/*<p className="google-consent-note">*/}
                 {/*    Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"*/}
                 {/*                                              rel="noopener noreferrer">regulamin</a> i{" "}*/}

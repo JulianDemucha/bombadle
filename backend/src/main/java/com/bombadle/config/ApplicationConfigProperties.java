@@ -12,8 +12,14 @@ public record ApplicationConfigProperties(
         FrontendConfig frontend,
         CacheConfig cache,
         DailyResetConfig dailyReset,
-        EmailConfig email
+        EmailConfig email,
+        GoogleConfig google
 ) {
+    public record GoogleConfig(
+            String clientId,
+            String clientSecret
+    ) {}
+
     public record JwtConfig(
             String secret,
             long expirationSeconds,

@@ -13,9 +13,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -32,6 +34,13 @@ public class AuthenticationController {
     private final PostLoginService postLoginService;
     private final EmailConfirmationService emailConfirmationService;
     private final EmailActionInitiator emailActionInitiator;
+    private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
+
+    /** Which sign-in providers are configured, so the frontend can hide the rest. */
+    @GetMapping("/providers")
+    public Map<String, Boolean> providers() {
+        return Map.of("google", clientRegistrations.getIfAvailable() != null);
+    }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(

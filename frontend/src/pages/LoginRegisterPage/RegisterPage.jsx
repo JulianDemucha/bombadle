@@ -16,6 +16,7 @@ import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog.jsx";
 import useInAppBrowserWarning from "../../components/InAppBrowserWarning/useInAppBrowserWarning.js";
 import PasswordStrengthMeter from "../../components/PasswordStrength/PasswordStrengthMeter.jsx";
 import {evaluatePassword, PASSWORD_COMPLEXITY_ERROR} from "../../components/PasswordStrength/passwordRules.js";
+import useAuthProviders from "./useAuthProviders.js";
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const MIN_PASSWORD_LEN = 8;
@@ -108,6 +109,7 @@ function RegisterPage() {
     const merge = useAnonymousMergePrompt();
     const recovery = useAccountRecovery();
     const inAppBrowserWarning = useInAppBrowserWarning();
+    const providers = useAuthProviders();
 
     const setUsernameError = useCallback((msg) => {
         setErrors(prev => ({...prev, username: msg}));
@@ -335,16 +337,20 @@ function RegisterPage() {
                     {loading ? "Ładowanie..." : "ZAREJESTRUJ SIĘ"}
                 </button>
 
-                <div className="divider">LUB</div>
+                {providers.google && (
+                    <>
+                        <div className="divider">LUB</div>
 
-                <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
-                    ZALOGUJ PRZEZ GOOGLE
-                </button>
-                <p className="google-consent-note">
-                    Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"
-                                                              rel="noopener noreferrer">regulamin</a> i{" "}
-                    <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności</a>.
-                </p>
+                        <button type="button" className="login-with-google-btn" onClick={handleGoogleLogin}>
+                            ZALOGUJ PRZEZ GOOGLE
+                        </button>
+                        <p className="google-consent-note">
+                            Logując się przez Google, akceptujesz <a href="/regulamin.html" target="_blank"
+                                                                      rel="noopener noreferrer">regulamin</a> i{" "}
+                            <a href="/privacy_policy.html" target="_blank" rel="noopener noreferrer">politykę prywatności</a>.
+                        </p>
+                    </>
+                )}
 
                 <div className="loginFooter">
                     Masz już konto? <a href="/login">Zaloguj się</a>
