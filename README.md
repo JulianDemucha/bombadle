@@ -1,5 +1,10 @@
 # Bombadle
 
+[![CI](https://github.com/JulianDemucha/bombadle/actions/workflows/bombadle-ci.yml/badge.svg?branch=dev)](https://github.com/JulianDemucha/bombadle/actions/workflows/bombadle-ci.yml)
+[![CD](https://github.com/JulianDemucha/bombadle/actions/workflows/cd.yml/badge.svg?branch=master)](https://github.com/JulianDemucha/bombadle/actions/workflows/cd.yml)
+[![codecov](https://codecov.io/gh/JulianDemucha/bombadle/branch/dev/graph/badge.svg)](https://codecov.io/gh/JulianDemucha/bombadle)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A daily guessing game based on the Polish animated series *Kapitan Bomba*. Live at [bombadle.pl](https://bombadle.pl).
 
 New puzzles go live every day at 07:00 (Europe/Warsaw), the same for everyone.
@@ -61,10 +66,14 @@ npm run dev                 # http://localhost:5173
 
 ### Testing
 - JUnit 5, over 500 tests: unit tests plus Spring Boot integration tests on a real PostgreSQL via Testcontainers (daily reset, cache eviction, leaderboards, anonymous merge, access control)
-- JaCoCo coverage of unit and integration tests, published by CI
+- JaCoCo coverage of unit and integration tests, reported to Codecov by CI
 
 ### Infrastructure
 - Docker: multi-stage backend image (JDK build, JRE runtime, non-root user, health check). Compose profiles for dev (Mailpit catches emails) and prod
 - nginx with TLS 1.2/1.3, HTTP/2 and Let's Encrypt auto-renewal, serving the SPA and proxying the API
 - GitHub Actions: CI on feature branches and pull requests, CD on `master` (tests, images to GHCR tagged with the commit SHA, deploy over SSH)
 - Zero-downtime blue/green deploys: the new backend must be healthy and pass a smoke test through the real domain before traffic moves, otherwise nginx is switched back automatically. Frontend releases are versioned and swapped with an atomic symlink
+
+## License
+
+The source code is released under the [MIT License](LICENSE). Characters, images and quotes from *Kapitan Bomba* belong to their respective rights holders and are not covered by it.
